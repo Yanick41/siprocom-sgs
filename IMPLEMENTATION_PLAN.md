@@ -913,7 +913,7 @@ Direct mapping of §10 of the cahier des charges to implementation and proof.
 
 | # | Question | Blocks | Default if unanswered |
 |---|---|---|---|
-| Q1 | Cloud hosting or internal server? (§8) | Phase 8 | Build cloud-first; Docker path stays available |
+| Q1 | Cloud hosting or internal server? (§8) | Phase 8 | **Dev runs on local PostgreSQL 17** (already installed on the dev machine); Neon/Docker decision still open for production |
 | Q2 | How many warehouses at go-live? | Phase 1 seed, UI density | Model supports N; seed with 3 |
 | Q3 | Currency and decimal precision? | Phase 2 formatting | XOF, 0 decimals — **confirm** |
 | Q4 | Lot/batch tracking needed, or informational only? | Phase 3 scope | Field captured, not enforced FEFO in v1 |
@@ -984,7 +984,7 @@ Use these exact English terms in code; use the French in the FR UI.
 | Phase | Status | Started | Completed |
 |---|---|---|---|
 | 0 — Foundations | ✅ Complete | 2026-08-08 | 2026-08-08 |
-| 1 — Data model & auth | 🟡 In progress — schema written & generated; migration, seed and auth pending | 2026-08-08 | |
+| 1 — Data model & auth | ✅ Complete | 2026-08-08 | 2026-08-08 |
 | 2 — Reference data + shell | ⬜ Not started | | |
 | 3 — Stock engine | ⬜ Not started | | |
 | 4 — Stock UI | ⬜ Not started | | |
