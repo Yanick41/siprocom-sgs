@@ -20,7 +20,8 @@
     "reports": "Rapports & tendances",
     "users": "Utilisateurs",
     "auditLog": "Journal d'audit",
-    "settings": "Paramètres"
+    "settings": "Paramètres",
+    "administration": "Administration"
   },
   "actions": {
     "create": "Créer",

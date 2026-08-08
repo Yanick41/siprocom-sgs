@@ -1,0 +1,61 @@
+{
+  "categories": {
+    "title": "Catégories",
+    "subtitle": "Organisation des produits par catégorie et sous-catégorie",
+    "new": "Nouvelle catégorie",
+    "createTitle": "Nouvelle catégorie",
+    "editTitle": "Modifier la catégorie",
+    "nameFr": "Nom (français)",
+    "nameEn": "Nom (anglais)",
+    "parent": "Catégorie parente",
+    "parentHint": "Laisser vide pour créer une catégorie principale",
+    "noParent": "Aucune (catégorie principale)",
+    "productCount_one": "{{count}} produit",
+    "productCount_other": "{{count}} produits",
+    "confirmDelete": "Supprimer la catégorie « {{name}} » ?",
+    "toast": {
+      "created": "Catégorie créée",
+      "updated": "Catégorie mise à jour",
+      "deleted": "Catégorie supprimée"
+    }
+  },
+  "suppliers": {
+    "title": "Fournisseurs",
+    "subtitle": "Carnet d'adresses des fournisseurs",
+    "new": "Nouveau fournisseur",
+    "createTitle": "Nouveau fournisseur",
+    "editTitle": "Modifier le fournisseur",
+    "name": "Raison sociale",
+    "contact": "Personne à contacter",
+    "phone": "Téléphone",
+    "email": "Email",
+    "address": "Adresse",
+    "productCount": "Produits",
+    "searchPlaceholder": "Nom, contact, email…",
+    "toast": {
+      "created": "Fournisseur créé",
+      "updated": "Fournisseur mis à jour",
+      "deactivated": "Fournisseur désactivé"
+    }
+  },
+  "warehouses": {
+    "title": "Entrepôts",
+    "subtitle": "Sites de stockage et emplacements",
+    "new": "Nouvel entrepôt",
+    "createTitle": "Nouvel entrepôt",
+    "editTitle": "Modifier l'entrepôt",
+    "code": "Code",
+    "codeHint": "Majuscules, chiffres et tirets. Non modifiable après création.",
+    "name": "Nom",
+    "address": "Adresse",
+    "manager": "Responsable",
+    "productCount": "Références",
+    "active": "Actif",
+    "inactive": "Inactif",
+    "isActive": "Entrepôt actif",
+    "toast": {
+      "created": "Entrepôt créé",
+      "updated": "Entrepôt mis à jour"
+    }
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "categories": {
+    "title": "Categories",
+    "subtitle": "Product organisation by category and sub-category",
+    "new": "New category",
+    "createTitle": "New category",
+    "editTitle": "Edit category",
+    "nameFr": "Name (French)",
+    "nameEn": "Name (English)",
+    "parent": "Parent category",
+    "parentHint": "Leave empty to create a top-level category",
+    "noParent": "None (top-level category)",
+    "productCount_one": "{{count}} product",
+    "productCount_other": "{{count}} products",
+    "confirmDelete": "Delete the category “{{name}}”?",
+    "toast": {
+      "created": "Category created",
+      "updated": "Category updated",
+      "deleted": "Category deleted"
+    }
+  },
+  "suppliers": {
+    "title": "Suppliers",
+    "subtitle": "Supplier directory",
+    "new": "New supplier",
+    "createTitle": "New supplier",
+    "editTitle": "Edit supplier",
+    "name": "Company name",
+    "contact": "Contact person",
+    "phone": "Phone",
+    "email": "Email",
+    "address": "Address",
+    "productCount": "Products",
+    "searchPlaceholder": "Name, contact, email…",
+    "toast": {
+      "created": "Supplier created",
+      "updated": "Supplier updated",
+      "deactivated": "Supplier deactivated"
+    }
+  },
+  "warehouses": {
+    "title": "Warehouses",
+    "subtitle": "Storage sites and locations",
+    "new": "New warehouse",
+    "createTitle": "New warehouse",
+    "editTitle": "Edit warehouse",
+    "code": "Code",
+    "codeHint": "Uppercase letters, digits and dashes. Cannot be changed after creation.",
+    "name": "Name",
+    "address": "Address",
+    "manager": "Manager",
+    "productCount": "References",
+    "active": "Active",
+    "inactive": "Inactive",
+    "isActive": "Warehouse active",
+    "toast": {
+      "created": "Warehouse created",
+      "updated": "Warehouse updated"
+    }
+  }
+}

@@ -985,7 +985,7 @@ Use these exact English terms in code; use the French in the FR UI.
 |---|---|---|---|
 | 0 — Foundations | ✅ Complete | 2026-08-08 | 2026-08-08 |
 | 1 — Data model & auth | ✅ Complete | 2026-08-08 | 2026-08-08 |
-| 2 — Reference data + shell | ⬜ Not started | | |
+| 2 — Reference data + shell | ✅ Complete | 2026-08-08 | 2026-08-08 |
 | 3 — Stock engine | ⬜ Not started | | |
 | 4 — Stock UI | ⬜ Not started | | |
 | 5 — Alerts | ⬜ Not started | | |

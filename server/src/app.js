@@ -11,6 +11,10 @@ const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
 
 const healthRoutes = require('./routes/health.routes');
 const authRoutes = require('./routes/auth.routes');
+const categoryRoutes = require('./routes/category.routes');
+const supplierRoutes = require('./routes/supplier.routes');
+const warehouseRoutes = require('./routes/warehouse.routes');
+const productRoutes = require('./routes/product.routes');
 
 const app = express();
 
@@ -39,10 +43,12 @@ app.use(cookieParser());
 // ---- routes -------------------------------------------------------------
 app.use('/api/health', healthRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/suppliers', supplierRoutes);
+app.use('/api/warehouses', warehouseRoutes);
+app.use('/api/products', productRoutes);
 
 // Feature routers are mounted here as each phase lands:
-// app.use('/api/categories', categoryRoutes);  // Phase 2
-// app.use('/api/products', productRoutes);     // Phase 2
 // app.use('/api/stock', stockRoutes);          // Phase 3
 // app.use('/api/alerts', alertRoutes);         // Phase 5
 // app.use('/api/reports', reportRoutes);       // Phase 6

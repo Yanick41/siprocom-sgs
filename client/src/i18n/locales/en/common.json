@@ -20,7 +20,8 @@
     "reports": "Reports & trends",
     "users": "Users",
     "auditLog": "Audit log",
-    "settings": "Settings"
+    "settings": "Settings",
+    "administration": "Administration"
   },
   "actions": {
     "create": "Create",

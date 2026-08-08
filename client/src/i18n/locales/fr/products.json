@@ -1,0 +1,48 @@
+{
+  "title": "Produits",
+  "subtitle": "Fiches produits, seuils et fournisseurs associés",
+  "empty": "Aucun produit ne correspond à ces critères",
+  "columns": {
+    "stock": "Stock total",
+    "threshold": "Seuil min / max",
+    "sellPrice": "Prix de vente",
+    "buyPrice": "Prix d'achat"
+  },
+  "status": {
+    "active": "Actifs",
+    "inactive": "Inactifs"
+  },
+  "filters": {
+    "searchPlaceholder": "Référence, désignation, code-barres…",
+    "allCategories": "Toutes les catégories",
+    "allStatuses": "Tous les statuts",
+    "allStock": "Tous les niveaux",
+    "stockState": "Niveau de stock",
+    "lowStock": "Sous le seuil minimum",
+    "outOfStock": "En rupture",
+    "overStock": "En surstock"
+  },
+  "actions": {
+    "new": "Nouveau produit"
+  },
+  "form": {
+    "createTitle": "Nouveau produit",
+    "editTitle": "Modifier le produit",
+    "designationFr": "Désignation (français)",
+    "designationEn": "Désignation (anglais)",
+    "designationEnHint": "Facultatif — la désignation française sera utilisée si ce champ est vide",
+    "barcode": "Code-barres",
+    "minThreshold": "Seuil minimum",
+    "minThresholdHint": "Une alerte est générée en dessous de ce niveau",
+    "maxThreshold": "Seuil maximum",
+    "maxThresholdHint": "Facultatif — alerte de surstock au-delà",
+    "buyPrice": "Prix d'achat",
+    "sellPrice": "Prix de vente",
+    "suppliers": "Fournisseurs"
+  },
+  "toast": {
+    "created": "Produit créé",
+    "updated": "Produit mis à jour",
+    "deactivated": "Produit désactivé"
+  }
+}

@@ -7,6 +7,7 @@ import { Toaster } from 'react-hot-toast';
 import './i18n'; // must be imported before any component calls useTranslation
 import './index.css';
 import App from './App.jsx';
+import { AuthProvider } from './context/AuthContext';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,8 +29,11 @@ createRoot(document.getElementById('root')).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <App />
-        <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
+        {/* AuthProvider sits inside the router so it can react to navigation. */}
+        <AuthProvider>
+          <App />
+          <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
+        </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>
   </StrictMode>
