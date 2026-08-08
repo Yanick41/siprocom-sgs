@@ -1,0 +1,92 @@
+{
+  "app": {
+    "name": "SIPROCOM",
+    "subtitle": "Système de Gestion de Stock",
+    "shortName": "SGS"
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "products": "Produits",
+    "categories": "Catégories",
+    "suppliers": "Fournisseurs",
+    "warehouses": "Entrepôts",
+    "receipts": "Bons d'entrée",
+    "issues": "Bons de sortie",
+    "transfers": "Transferts",
+    "adjustments": "Inventaire",
+    "stock": "État du stock",
+    "movements": "Journal de stock",
+    "alerts": "Alertes",
+    "reports": "Rapports & tendances",
+    "users": "Utilisateurs",
+    "auditLog": "Journal d'audit",
+    "settings": "Paramètres"
+  },
+  "actions": {
+    "create": "Créer",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "close": "Fermer",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "reset": "Réinitialiser",
+    "export": "Exporter",
+    "exportExcel": "Exporter en Excel",
+    "exportPdf": "Exporter en PDF",
+    "print": "Imprimer",
+    "validate": "Valider",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "retry": "Réessayer",
+    "add": "Ajouter",
+    "view": "Consulter"
+  },
+  "states": {
+    "loading": "Chargement…",
+    "empty": "Aucun résultat",
+    "emptyHint": "Aucune donnée à afficher pour le moment.",
+    "error": "Une erreur est survenue",
+    "noResults": "Aucun résultat pour cette recherche"
+  },
+  "language": {
+    "label": "Langue",
+    "change": "Changer de langue"
+  },
+  "units": {
+    "unit": "unité",
+    "piece": "pièce",
+    "kg": "kg",
+    "litre": "L",
+    "box": "carton",
+    "pack": "paquet"
+  },
+  "fields": {
+    "reference": "Référence",
+    "designation": "Désignation",
+    "category": "Catégorie",
+    "supplier": "Fournisseur",
+    "warehouse": "Entrepôt",
+    "quantity": "Quantité",
+    "unit": "Unité",
+    "date": "Date",
+    "status": "Statut",
+    "reason": "Motif",
+    "user": "Utilisateur",
+    "createdAt": "Créé le",
+    "updatedAt": "Modifié le",
+    "notes": "Remarques",
+    "actions": "Actions"
+  },
+  "pagination": {
+    "showing": "{{from}}–{{to}} sur {{total}}",
+    "rowsPerPage": "Lignes par page",
+    "page": "Page {{page}} sur {{totalPages}}"
+  },
+  "footer": {
+    "version": "Version {{version}}"
+  }
+}

@@ -1,0 +1,78 @@
+@import 'tailwindcss';
+
+/*
+ * Design tokens. Tailwind 4 exposes every @theme entry as a utility
+ * (bg-sgs-navy, text-sgs-accent, …). Palette derived from the SIPROCOM
+ * cahier des charges cover page.
+ */
+@theme {
+  --color-sgs-navy: #1e3a5f;
+  --color-sgs-navy-dark: #14283f;
+  --color-sgs-navy-light: #2d5486;
+  --color-sgs-accent: #4a7ab8;
+
+  --color-sgs-success: #16a34a;
+  --color-sgs-warning: #d97706;
+  --color-sgs-danger: #dc2626;
+  --color-sgs-info: #0284c7;
+
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased;
+    font-family: var(--font-sans);
+  }
+
+  /* Visible focus everywhere — accessibility requirement (§5 Ergonomie). */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-sgs-accent;
+  }
+}
+
+@layer components {
+  /*
+   * Field-team ergonomics: every interactive control is at least 44px tall
+   * so magasiniers can hit it on a tablet. See IMPLEMENTATION_PLAN.md §10 Phase 4.
+   *
+   * Tailwind 4 cannot @apply one custom component class inside another, so the
+   * shared base is declared once via a selector list rather than by composition.
+   */
+  .btn,
+  .btn-primary,
+  .btn-secondary,
+  .btn-danger {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-4
+           text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply bg-sgs-navy text-white hover:bg-sgs-navy-dark;
+  }
+
+  .btn-secondary {
+    @apply border border-slate-300 bg-white text-slate-700 hover:bg-slate-50;
+  }
+
+  .btn-danger {
+    @apply bg-sgs-danger text-white hover:bg-red-700;
+  }
+
+  .input {
+    @apply min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm
+           placeholder:text-slate-400 focus:border-sgs-accent focus:ring-2 focus:ring-sgs-accent/20;
+  }
+
+  .card {
+    @apply rounded-xl border border-slate-200 bg-white shadow-sm;
+  }
+
+  .label {
+    @apply mb-1.5 block text-sm font-medium text-slate-700;
+  }
+}

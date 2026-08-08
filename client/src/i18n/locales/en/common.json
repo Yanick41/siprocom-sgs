@@ -1,0 +1,92 @@
+{
+  "app": {
+    "name": "SIPROCOM",
+    "subtitle": "Stock Management System",
+    "shortName": "SMS"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "products": "Products",
+    "categories": "Categories",
+    "suppliers": "Suppliers",
+    "warehouses": "Warehouses",
+    "receipts": "Goods receipts",
+    "issues": "Goods issues",
+    "transfers": "Transfers",
+    "adjustments": "Stock count",
+    "stock": "Stock overview",
+    "movements": "Stock ledger",
+    "alerts": "Alerts",
+    "reports": "Reports & trends",
+    "users": "Users",
+    "auditLog": "Audit log",
+    "settings": "Settings"
+  },
+  "actions": {
+    "create": "Create",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "close": "Close",
+    "search": "Search",
+    "filter": "Filter",
+    "reset": "Reset",
+    "export": "Export",
+    "exportExcel": "Export to Excel",
+    "exportPdf": "Export to PDF",
+    "print": "Print",
+    "validate": "Validate",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "retry": "Retry",
+    "add": "Add",
+    "view": "View"
+  },
+  "states": {
+    "loading": "Loading…",
+    "empty": "No results",
+    "emptyHint": "There is no data to display yet.",
+    "error": "Something went wrong",
+    "noResults": "No results for this search"
+  },
+  "language": {
+    "label": "Language",
+    "change": "Change language"
+  },
+  "units": {
+    "unit": "unit",
+    "piece": "piece",
+    "kg": "kg",
+    "litre": "L",
+    "box": "box",
+    "pack": "pack"
+  },
+  "fields": {
+    "reference": "Reference",
+    "designation": "Designation",
+    "category": "Category",
+    "supplier": "Supplier",
+    "warehouse": "Warehouse",
+    "quantity": "Quantity",
+    "unit": "Unit",
+    "date": "Date",
+    "status": "Status",
+    "reason": "Reason",
+    "user": "User",
+    "createdAt": "Created at",
+    "updatedAt": "Updated at",
+    "notes": "Notes",
+    "actions": "Actions"
+  },
+  "pagination": {
+    "showing": "{{from}}–{{to}} of {{total}}",
+    "rowsPerPage": "Rows per page",
+    "page": "Page {{page}} of {{totalPages}}"
+  },
+  "footer": {
+    "version": "Version {{version}}"
+  }
+}
