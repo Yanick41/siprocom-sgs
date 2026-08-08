@@ -20,6 +20,7 @@
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
     "db:reset": "prisma migrate reset",
+    "test:stock": "node scripts/test-stock-engine.js",
     "format": "prettier --write \"**/*.{js,json,md}\""
   },
   "dependencies": {

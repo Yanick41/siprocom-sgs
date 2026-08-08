@@ -15,6 +15,9 @@ const categoryRoutes = require('./routes/category.routes');
 const supplierRoutes = require('./routes/supplier.routes');
 const warehouseRoutes = require('./routes/warehouse.routes');
 const productRoutes = require('./routes/product.routes');
+const stockRoutes = require('./routes/stock.routes');
+const receiptRoutes = require('./routes/receipt.routes');
+const issueRoutes = require('./routes/issue.routes');
 
 const app = express();
 
@@ -47,9 +50,11 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/suppliers', supplierRoutes);
 app.use('/api/warehouses', warehouseRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/stock', stockRoutes);
+app.use('/api/receipts', receiptRoutes);
+app.use('/api/issues', issueRoutes);
 
 // Feature routers are mounted here as each phase lands:
-// app.use('/api/stock', stockRoutes);          // Phase 3
 // app.use('/api/alerts', alertRoutes);         // Phase 5
 // app.use('/api/reports', reportRoutes);       // Phase 6
 

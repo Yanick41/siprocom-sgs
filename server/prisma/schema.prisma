@@ -215,7 +215,11 @@ model StockMovement {
   type         MovementType
   productId    String
   warehouseId  String
-  quantity     Int // always positive; `type` carries the sign
+  /// IN and OUT are always positive — `type` carries the sign.
+  /// ADJUSTMENT is SIGNED: positive for a surplus found at inventory, negative
+  /// for shrinkage. The ledger sum is therefore always:
+  ///   SUM(CASE WHEN type = 'OUT' THEN -quantity ELSE quantity END)
+  quantity     Int
   balanceAfter Int // stock snapshot after this movement — makes audits trivial
   unitCost     Decimal?     @db.Decimal(12, 2)
   lotNumber    String?
