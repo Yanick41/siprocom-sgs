@@ -7,6 +7,7 @@ const cookieParser = require('cookie-parser');
 
 const config = require('./config/env');
 const logger = require('./lib/logger');
+const { ForbiddenError } = require('./lib/errors');
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
 
 const healthRoutes = require('./routes/health.routes');
@@ -31,13 +32,27 @@ app.disable('x-powered-by');
 
 app.use(helmet());
 
+/**
+ * In development, Vite falls back to 5174, 5175… whenever the configured port is
+ * already taken, and the resulting CORS rejection is baffling to debug from the
+ * browser. Any loopback origin is therefore accepted locally; production keeps
+ * the strict allowlist, which is where it actually protects anything.
+ */
+const isLoopbackOrigin = (origin) =>
+  /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\]):\d+$/.test(origin);
+
 app.use(
   cors({
     origin(origin, callback) {
       // Same-origin / server-to-server requests carry no Origin header.
       if (!origin || config.clientUrls.includes(origin)) return callback(null, true);
-      logger.warn({ origin }, 'Blocked by CORS allowlist');
-      return callback(new Error('NOT_ALLOWED_BY_CORS'));
+      if (!config.isProduction && isLoopbackOrigin(origin)) return callback(null, true);
+
+      logger.warn({ origin, allowed: config.clientUrls }, 'Blocked by CORS allowlist');
+      // A plain Error surfaces as a 500 "Internal server error", which tells the
+      // user nothing. Reject with a typed error so the envelope carries a code
+      // the client can actually translate.
+      return callback(new ForbiddenError('CORS_ORIGIN_NOT_ALLOWED', { origin }));
     },
     credentials: true, // required for the httpOnly auth cookie
   })

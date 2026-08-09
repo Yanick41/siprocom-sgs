@@ -26,5 +26,6 @@
   "INTERNAL_ERROR": "Internal server error. Please try again shortly.",
   "NETWORK_ERROR": "Cannot reach the server. Check your connection.",
   "TOO_MANY_REQUESTS": "Too many attempts. Please try again in a few minutes.",
-  "UNKNOWN": "An unexpected error occurred."
+  "UNKNOWN": "An unexpected error occurred.",
+  "CORS_ORIGIN_NOT_ALLOWED": "Origin not allowed. Check the address used to reach the application."
 }
