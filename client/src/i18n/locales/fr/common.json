@@ -19,7 +19,6 @@
     "reports": "Rapports & tendances",
     "users": "Utilisateurs",
     "auditLog": "Journal d'audit",
-    "settings": "Paramètres",
     "administration": "Administration",
     "stockLevels": "État du stock"
   },
@@ -44,7 +43,8 @@
     "previous": "Précédent",
     "retry": "Réessayer",
     "add": "Ajouter",
-    "view": "Consulter"
+    "view": "Consulter",
+    "viewAll": "Tout voir"
   },
   "states": {
     "loading": "Chargement…",

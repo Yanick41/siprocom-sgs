@@ -57,5 +57,41 @@
       "created": "Warehouse created",
       "updated": "Warehouse updated"
     }
+  },
+  "users": {
+    "title": "Users",
+    "subtitle": "Accounts and access rights",
+    "new": "New user",
+    "createTitle": "New user",
+    "editTitle": "Edit user",
+    "name": "Name",
+    "email": "Email",
+    "role": "Role",
+    "locale": "Language",
+    "password": "Password",
+    "newPassword": "New password",
+    "passwordHint": "Leave empty to keep the current password",
+    "passwordMin": "8 characters minimum",
+    "lastLogin": "Last login",
+    "active": "Active",
+    "inactive": "Inactive",
+    "isActive": "Account active",
+    "you": "(you)",
+    "cannotDisableSelf": "not possible on your own account",
+    "searchPlaceholder": "Name or email…",
+    "toast": {
+      "created": "User created",
+      "updated": "User updated"
+    }
+  },
+  "audit": {
+    "title": "Audit log",
+    "subtitle": "Traceability of logins and sensitive actions",
+    "timestamp": "Timestamp",
+    "user": "User",
+    "action": "Action",
+    "entity": "Entity",
+    "ip": "IP address",
+    "allActions": "All actions"
   }
 }

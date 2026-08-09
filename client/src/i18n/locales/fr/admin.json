@@ -57,5 +57,41 @@
       "created": "Entrepôt créé",
       "updated": "Entrepôt mis à jour"
     }
+  },
+  "users": {
+    "title": "Utilisateurs",
+    "subtitle": "Comptes et droits d'accès",
+    "new": "Nouvel utilisateur",
+    "createTitle": "Nouvel utilisateur",
+    "editTitle": "Modifier l'utilisateur",
+    "name": "Nom",
+    "email": "Email",
+    "role": "Rôle",
+    "locale": "Langue",
+    "password": "Mot de passe",
+    "newPassword": "Nouveau mot de passe",
+    "passwordHint": "Laisser vide pour conserver le mot de passe actuel",
+    "passwordMin": "8 caractères minimum",
+    "lastLogin": "Dernière connexion",
+    "active": "Actif",
+    "inactive": "Inactif",
+    "isActive": "Compte actif",
+    "you": "(vous)",
+    "cannotDisableSelf": "impossible sur votre propre compte",
+    "searchPlaceholder": "Nom ou email…",
+    "toast": {
+      "created": "Utilisateur créé",
+      "updated": "Utilisateur mis à jour"
+    }
+  },
+  "audit": {
+    "title": "Journal d'audit",
+    "subtitle": "Traçabilité des connexions et des actions sensibles",
+    "timestamp": "Horodatage",
+    "user": "Utilisateur",
+    "action": "Action",
+    "entity": "Entité",
+    "ip": "Adresse IP",
+    "allActions": "Toutes les actions"
   }
 }

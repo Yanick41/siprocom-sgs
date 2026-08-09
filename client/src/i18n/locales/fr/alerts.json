@@ -1,0 +1,23 @@
+{
+  "title": "Alertes de stock",
+  "subtitle": "Produits sous le seuil minimum ou en surstock",
+  "empty": "Aucune alerte — tous les niveaux sont dans les seuils",
+  "allTypes": "Tous les types",
+  "currentQuantity": "Stock actuel",
+  "threshold": "Seuil",
+  "triggeredAt": "Déclenchée le",
+  "acknowledge": "Marquer comme prise en compte",
+  "badge": "{{count}} alerte(s) en cours",
+  "type": {
+    "MIN_THRESHOLD": "Sous le seuil minimum",
+    "MAX_THRESHOLD": "Surstock"
+  },
+  "status": {
+    "OPEN": "Ouverte",
+    "ACKNOWLEDGED": "Prise en compte",
+    "RESOLVED": "Résolue"
+  },
+  "toast": {
+    "acknowledged": "Alerte prise en compte"
+  }
+}

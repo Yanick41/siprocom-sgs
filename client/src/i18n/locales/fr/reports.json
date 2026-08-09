@@ -1,0 +1,41 @@
+{
+  "title": "Rapports et analyses",
+  "subtitle": "Tendances, stock dormant, synthèses et valorisation",
+  "lastDays": "{{days}} j",
+  "never": "Jamais",
+  "recentMovements": "Derniers mouvements",
+  "kpi": {
+    "products": "Produits actifs",
+    "openAlerts": "Alertes en cours",
+    "movementsToday": "Mouvements aujourd'hui",
+    "stockValue": "Valeur du stock",
+    "totalQuantity": "Quantité totale"
+  },
+  "chart": {
+    "movements30d": "Entrées / sorties sur 30 jours",
+    "trending": "Produits les plus mouvementés",
+    "quantityOut": "Quantité sortie"
+  },
+  "lowStock": {
+    "title": "Produits sous le seuil",
+    "empty": "Aucun produit sous son seuil minimum"
+  },
+  "tab": {
+    "trending": "Produits tendance",
+    "dormant": "Stock dormant",
+    "summary": "Synthèse par catégorie",
+    "valuation": "Valorisation"
+  },
+  "column": {
+    "totalOut": "Quantité sortie",
+    "movementCount": "Nb mouvements",
+    "avgDailyOut": "Moy. / jour",
+    "currentStock": "Stock actuel",
+    "lastMovement": "Dernier mouvement",
+    "tiedUpValue": "Valeur immobilisée",
+    "productCount": "Nb produits",
+    "totalQuantity": "Quantité",
+    "buyValue": "Valeur d'achat",
+    "sellValue": "Valeur de vente"
+  }
+}

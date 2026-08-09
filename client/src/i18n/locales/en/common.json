@@ -19,7 +19,6 @@
     "reports": "Reports & trends",
     "users": "Users",
     "auditLog": "Audit log",
-    "settings": "Settings",
     "administration": "Administration",
     "stockLevels": "Stock levels"
   },
@@ -44,7 +43,8 @@
     "previous": "Previous",
     "retry": "Retry",
     "add": "Add",
-    "view": "View"
+    "view": "View",
+    "viewAll": "View all"
   },
   "states": {
     "loading": "Loading…",
