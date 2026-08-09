@@ -12,16 +12,16 @@
     "warehouses": "Warehouses",
     "receipts": "Goods receipts",
     "issues": "Goods issues",
-    "transfers": "Transfers",
     "adjustments": "Stock count",
     "stock": "Stock overview",
-    "movements": "Stock ledger",
+    "movements": "Movements",
     "alerts": "Alerts",
     "reports": "Reports & trends",
     "users": "Users",
     "auditLog": "Audit log",
     "settings": "Settings",
-    "administration": "Administration"
+    "administration": "Administration",
+    "stockLevels": "Stock levels"
   },
   "actions": {
     "create": "Create",
@@ -80,7 +80,11 @@
     "createdAt": "Created at",
     "updatedAt": "Updated at",
     "notes": "Notes",
-    "actions": "Actions"
+    "actions": "Actions",
+    "type": "Type",
+    "from": "From",
+    "to": "To",
+    "minThreshold": "Min threshold"
   },
   "pagination": {
     "showing": "{{from}}–{{to}} of {{total}}",
@@ -89,5 +93,8 @@
   },
   "footer": {
     "version": "Version {{version}}"
+  },
+  "filters": {
+    "all": "All"
   }
 }

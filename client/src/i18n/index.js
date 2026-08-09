@@ -7,11 +7,13 @@ import frAuth from './locales/fr/auth.json';
 import frErrors from './locales/fr/errors.json';
 import frProducts from './locales/fr/products.json';
 import frAdmin from './locales/fr/admin.json';
+import frStock from './locales/fr/stock.json';
 import enCommon from './locales/en/common.json';
 import enAuth from './locales/en/auth.json';
 import enErrors from './locales/en/errors.json';
 import enProducts from './locales/en/products.json';
 import enAdmin from './locales/en/admin.json';
+import enStock from './locales/en/stock.json';
 
 export const SUPPORTED_LANGUAGES = [
   { code: 'fr', label: 'Français', flag: '🇫🇷' },
@@ -26,12 +28,12 @@ i18n
   .use(initReactI18next)
   .init({
     resources: {
-      fr: { common: frCommon, auth: frAuth, errors: frErrors, products: frProducts, admin: frAdmin },
-      en: { common: enCommon, auth: enAuth, errors: enErrors, products: enProducts, admin: enAdmin },
+      fr: { common: frCommon, auth: frAuth, errors: frErrors, products: frProducts, admin: frAdmin, stock: frStock },
+      en: { common: enCommon, auth: enAuth, errors: enErrors, products: enProducts, admin: enAdmin, stock: enStock },
     },
     fallbackLng: DEFAULT_LANGUAGE,
     supportedLngs: SUPPORTED_LANGUAGES.map((l) => l.code),
-    ns: ['common', 'auth', 'errors', 'products', 'admin'],
+    ns: ['common', 'auth', 'errors', 'products', 'admin', 'stock'],
     defaultNS: 'common',
     detection: {
       order: ['localStorage', 'navigator'],

@@ -1,7 +1,3 @@
-import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
-
 /**
  * Excel and PDF export (§4.6, acceptance criterion 6: "sans perte de données").
  *
@@ -12,6 +8,10 @@ import autoTable from 'jspdf-autotable';
  *   `value` returns the RAW value (number stays a number). `render` is not used
  *   here on purpose: it returns JSX, and a spreadsheet needs real numbers to
  *   remain sortable and summable.
+ *
+ * The libraries are imported dynamically: together they weigh ~750 kB, which
+ * would otherwise land in the initial bundle for every magasinier on a tablet
+ * who never exports anything. They load on the first click instead.
  */
 
 const cellValue = (row, column) => {
@@ -21,7 +21,9 @@ const cellValue = (row, column) => {
 
 const stamp = () => new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
 
-export function exportToExcel({ columns, rows, filename, sheetName = 'Export' }) {
+export async function exportToExcel({ columns, rows, filename, sheetName = 'Export' }) {
+  const XLSX = await import('xlsx');
+
   const data = rows.map((row) => {
     const record = {};
     for (const column of columns) record[column.header] = cellValue(row, column);
@@ -43,7 +45,7 @@ export function exportToExcel({ columns, rows, filename, sheetName = 'Export' })
   XLSX.writeFile(book, `${filename}-${stamp()}.xlsx`);
 }
 
-export function exportToPdf({
+export async function exportToPdf({
   columns,
   rows,
   filename,
@@ -52,6 +54,11 @@ export function exportToPdf({
   locale = 'fr',
   orientation = 'landscape',
 }) {
+  const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+    import('jspdf'),
+    import('jspdf-autotable'),
+  ]);
+
   const doc = new jsPDF({ orientation, unit: 'mm', format: 'a4' });
   const pageWidth = doc.internal.pageSize.getWidth();
 

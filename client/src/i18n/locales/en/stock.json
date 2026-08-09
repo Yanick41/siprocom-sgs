@@ -1,0 +1,118 @@
+{
+  "status": {
+    "DRAFT": "Draft",
+    "VALIDATED": "Validated",
+    "CANCELLED": "Cancelled"
+  },
+  "document": {
+    "number": "Document no.",
+    "lines": "Lines",
+    "lineCount": "Lines",
+    "addLine": "Add a line",
+    "saveDraft": "Save draft",
+    "cancel": "Cancel document",
+    "cancelReasonPrompt": "Reason for cancellation (required):",
+    "toast": {
+      "cancelled": "Document cancelled, compensating movements recorded"
+    }
+  },
+  "receipt": {
+    "title": "Goods receipts",
+    "subtitle": "Supplier deliveries and returns",
+    "new": "New goods receipt",
+    "createTitle": "New goods receipt",
+    "validate": "Validate receipt",
+    "supplier": "Supplier",
+    "warehouse": "Receiving warehouse",
+    "purchaseOrderRef": "Purchase order ref.",
+    "unitPrice": "Unit price",
+    "totalValue": "Total value",
+    "toast": {
+      "created": "Goods receipt created",
+      "validated": "Receipt validated, stock updated"
+    }
+  },
+  "receiptReason": {
+    "PURCHASE": "Supplier purchase",
+    "RETURN_CUSTOMER": "Customer return",
+    "ADJUSTMENT": "Adjustment",
+    "TRANSFER_IN": "Incoming transfer"
+  },
+  "issue": {
+    "title": "Goods issues",
+    "subtitle": "Sales, transfers, damage and internal use",
+    "new": "New goods issue",
+    "createTitle": "New goods issue",
+    "validate": "Validate issue",
+    "recipient": "Recipient",
+    "sourceWarehouse": "Source warehouse",
+    "destWarehouse": "Destination warehouse",
+    "available": "Available",
+    "availableInWarehouse": "Available in this warehouse: {{quantity}}",
+    "shortageWarning": "Stock is insufficient on at least one line. Validation will be refused.",
+    "allowNegative": "Allow negative stock (this action is audited)",
+    "toast": {
+      "created": "Goods issue created",
+      "validated": "Issue validated, stock updated"
+    }
+  },
+  "issueReason": {
+    "SALE": "Sale",
+    "TRANSFER": "Transfer",
+    "DAMAGE": "Damage",
+    "SAMPLE": "Sample",
+    "INTERNAL": "Internal use",
+    "RETURN_SUPPLIER": "Supplier return",
+    "OTHER": "Other"
+  },
+  "levels": {
+    "title": "Stock levels",
+    "subtitle": "Available quantities by product and warehouse",
+    "allWarehouses": "All warehouses",
+    "allStates": "All states",
+    "quantity": "Quantity",
+    "state": "State"
+  },
+  "state": {
+    "OK": "Normal",
+    "BELOW_MIN": "Below threshold",
+    "ABOVE_MAX": "Overstocked",
+    "OUT_OF_STOCK": "Out of stock"
+  },
+  "movements": {
+    "title": "Movement journal",
+    "subtitle": "Complete, traceable history of every movement",
+    "allTypes": "All types",
+    "balanceAfter": "Balance after",
+    "user": "User",
+    "empty": "No movement in this period"
+  },
+  "movementType": {
+    "IN": "Inbound",
+    "OUT": "Outbound",
+    "ADJUSTMENT": "Adjustment"
+  },
+  "adjustment": {
+    "title": "Inventory adjustment",
+    "subtitle": "Stock correction after a physical count",
+    "new": "New adjustment",
+    "product": "Product",
+    "theoretical": "Theoretical stock",
+    "counted": "Counted quantity",
+    "difference": "Difference",
+    "reason": "Reason (required)",
+    "reasonPlaceholder": "e.g. physical count of 15/03, damage found",
+    "submit": "Record adjustment",
+    "noDifference": "No difference: theoretical stock matches the count.",
+    "toast": {
+      "done": "Adjustment recorded ({{delta}})"
+    }
+  },
+  "reconcile": {
+    "title": "Consistency check",
+    "run": "Run the check",
+    "consistent": "Consistent: all {{checked}} stock levels match the ledger.",
+    "drifted": "{{drifted}} discrepancy(ies) found across {{checked}} levels.",
+    "description": "Recomputes every stock level from the movement journal and reports any divergence."
+  }
+}

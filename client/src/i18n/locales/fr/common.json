@@ -12,16 +12,16 @@
     "warehouses": "Entrepôts",
     "receipts": "Bons d'entrée",
     "issues": "Bons de sortie",
-    "transfers": "Transferts",
     "adjustments": "Inventaire",
     "stock": "État du stock",
-    "movements": "Journal de stock",
+    "movements": "Mouvements",
     "alerts": "Alertes",
     "reports": "Rapports & tendances",
     "users": "Utilisateurs",
     "auditLog": "Journal d'audit",
     "settings": "Paramètres",
-    "administration": "Administration"
+    "administration": "Administration",
+    "stockLevels": "État du stock"
   },
   "actions": {
     "create": "Créer",
@@ -80,7 +80,11 @@
     "createdAt": "Créé le",
     "updatedAt": "Modifié le",
     "notes": "Remarques",
-    "actions": "Actions"
+    "actions": "Actions",
+    "type": "Type",
+    "from": "Du",
+    "to": "Au",
+    "minThreshold": "Seuil min"
   },
   "pagination": {
     "showing": "{{from}}–{{to}} sur {{total}}",
@@ -89,5 +93,8 @@
   },
   "footer": {
     "version": "Version {{version}}"
+  },
+  "filters": {
+    "all": "Tous"
   }
 }

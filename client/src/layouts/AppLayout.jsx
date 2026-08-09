@@ -22,10 +22,12 @@ const NAV_SECTIONS = [
     titleKey: 'nav.stock',
     items: [
       { to: '/receipts', labelKey: 'nav.receipts', icon: FiLogIn, permission: 'stock.view' },
+      // Transfers are a goods issue with reason=TRANSFER, so they live under /issues
+      // rather than getting a route of their own.
       { to: '/issues', labelKey: 'nav.issues', icon: FiLogOut, permission: 'stock.view' },
-      { to: '/transfers', labelKey: 'nav.transfers', icon: FiRepeat, permission: 'stock.view' },
+      { to: '/stock', labelKey: 'nav.stockLevels', icon: FiBarChart2, permission: 'stock.view' },
+      { to: '/movements', labelKey: 'nav.movements', icon: FiRepeat, permission: 'stock.view' },
       { to: '/adjustments', labelKey: 'nav.adjustments', icon: FiClipboard, permission: 'stock.write' },
-      { to: '/stock', labelKey: 'nav.stock', icon: FiBarChart2, permission: 'stock.view' },
     ],
   },
   {

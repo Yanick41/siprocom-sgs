@@ -9,6 +9,11 @@ import ProductsPage from '@/features/products/ProductsPage';
 import CategoriesPage from '@/features/categories/CategoriesPage';
 import SuppliersPage from '@/features/suppliers/SuppliersPage';
 import WarehousesPage from '@/features/warehouses/WarehousesPage';
+import ReceiptsPage from '@/features/stock/ReceiptsPage';
+import IssuesPage from '@/features/stock/IssuesPage';
+import StockLevelsPage from '@/features/stock/StockLevelsPage';
+import MovementsPage from '@/features/stock/MovementsPage';
+import AdjustmentPage from '@/features/stock/AdjustmentPage';
 
 /**
  * Routes land as their phase completes — see IMPLEMENTATION_PLAN.md §9.
@@ -29,6 +34,48 @@ export default function App() {
         }
       >
         <Route path="/dashboard" element={<DashboardPage />} />
+
+        <Route
+          path="/receipts"
+          element={
+            <ProtectedRoute permission="stock.view">
+              <ReceiptsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/issues"
+          element={
+            <ProtectedRoute permission="stock.view">
+              <IssuesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/stock"
+          element={
+            <ProtectedRoute permission="stock.view">
+              <StockLevelsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/movements"
+          element={
+            <ProtectedRoute permission="stock.view">
+              <MovementsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/adjustments"
+          element={
+            <ProtectedRoute permission="stock.write">
+              <AdjustmentPage />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/products"
           element={

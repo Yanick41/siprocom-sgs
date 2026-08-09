@@ -1,0 +1,118 @@
+{
+  "status": {
+    "DRAFT": "Brouillon",
+    "VALIDATED": "Validé",
+    "CANCELLED": "Annulé"
+  },
+  "document": {
+    "number": "N° de bon",
+    "lines": "Lignes",
+    "lineCount": "Lignes",
+    "addLine": "Ajouter une ligne",
+    "saveDraft": "Enregistrer le brouillon",
+    "cancel": "Annuler le bon",
+    "cancelReasonPrompt": "Motif de l'annulation (obligatoire) :",
+    "toast": {
+      "cancelled": "Bon annulé, mouvements compensatoires enregistrés"
+    }
+  },
+  "receipt": {
+    "title": "Bons d'entrée",
+    "subtitle": "Réceptions fournisseurs et retours",
+    "new": "Nouveau bon d'entrée",
+    "createTitle": "Nouveau bon d'entrée",
+    "validate": "Valider l'entrée",
+    "supplier": "Fournisseur",
+    "warehouse": "Entrepôt de réception",
+    "purchaseOrderRef": "Réf. bon de commande",
+    "unitPrice": "Prix unitaire",
+    "totalValue": "Valeur totale",
+    "toast": {
+      "created": "Bon d'entrée créé",
+      "validated": "Entrée validée, stock mis à jour"
+    }
+  },
+  "receiptReason": {
+    "PURCHASE": "Achat fournisseur",
+    "RETURN_CUSTOMER": "Retour client",
+    "ADJUSTMENT": "Ajustement",
+    "TRANSFER_IN": "Transfert entrant"
+  },
+  "issue": {
+    "title": "Bons de sortie",
+    "subtitle": "Ventes, transferts, casses et besoins internes",
+    "new": "Nouveau bon de sortie",
+    "createTitle": "Nouveau bon de sortie",
+    "validate": "Valider la sortie",
+    "recipient": "Destinataire",
+    "sourceWarehouse": "Entrepôt d'origine",
+    "destWarehouse": "Entrepôt de destination",
+    "available": "Disponible",
+    "availableInWarehouse": "Disponible dans cet entrepôt : {{quantity}}",
+    "shortageWarning": "Le stock est insuffisant sur au moins une ligne. La validation sera refusée.",
+    "allowNegative": "Autoriser un stock négatif (action tracée)",
+    "toast": {
+      "created": "Bon de sortie créé",
+      "validated": "Sortie validée, stock mis à jour"
+    }
+  },
+  "issueReason": {
+    "SALE": "Vente",
+    "TRANSFER": "Transfert",
+    "DAMAGE": "Casse",
+    "SAMPLE": "Échantillon",
+    "INTERNAL": "Besoin interne",
+    "RETURN_SUPPLIER": "Retour fournisseur",
+    "OTHER": "Autre"
+  },
+  "levels": {
+    "title": "État du stock",
+    "subtitle": "Quantités disponibles par produit et par entrepôt",
+    "allWarehouses": "Tous les entrepôts",
+    "allStates": "Tous les états",
+    "quantity": "Quantité",
+    "state": "État"
+  },
+  "state": {
+    "OK": "Normal",
+    "BELOW_MIN": "Sous le seuil",
+    "ABOVE_MAX": "Surstock",
+    "OUT_OF_STOCK": "Rupture"
+  },
+  "movements": {
+    "title": "Journal des mouvements",
+    "subtitle": "Historique complet et traçable de tous les mouvements",
+    "allTypes": "Tous les types",
+    "balanceAfter": "Solde après",
+    "user": "Utilisateur",
+    "empty": "Aucun mouvement sur cette période"
+  },
+  "movementType": {
+    "IN": "Entrée",
+    "OUT": "Sortie",
+    "ADJUSTMENT": "Ajustement"
+  },
+  "adjustment": {
+    "title": "Ajustement d'inventaire",
+    "subtitle": "Correction du stock après comptage physique",
+    "new": "Nouvel ajustement",
+    "product": "Produit",
+    "theoretical": "Stock théorique",
+    "counted": "Quantité comptée",
+    "difference": "Écart",
+    "reason": "Motif (obligatoire)",
+    "reasonPlaceholder": "Ex. : inventaire physique du 15/03, casse constatée",
+    "submit": "Enregistrer l'ajustement",
+    "noDifference": "Aucun écart : le stock théorique correspond au comptage.",
+    "toast": {
+      "done": "Ajustement enregistré ({{delta}})"
+    }
+  },
+  "reconcile": {
+    "title": "Contrôle de cohérence",
+    "run": "Lancer le contrôle",
+    "consistent": "Cohérent : les {{checked}} niveaux de stock correspondent au grand livre.",
+    "drifted": "{{drifted}} écart(s) détecté(s) sur {{checked}} niveaux.",
+    "description": "Recalcule chaque niveau de stock à partir du journal des mouvements et signale toute divergence."
+  }
+}
