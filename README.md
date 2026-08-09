@@ -1,109 +1,188 @@
-# SIPROCOM — SGS (Système de Gestion de Stock)
+# SIPROCOM SGS — Système de Gestion de Stock
 
-Bilingual (FR/EN) stock management system: stock entries, stock issues, real-time
-multi-warehouse stock levels, threshold alerts, and product trend analytics.
+Application web de gestion des entrées, sorties et niveaux de stock, avec suivi
+des produits en tendance et alertes de seuil.
 
-> **Development is driven by [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).**
-> Conventions and hard rules live in [CLAUDE.md](CLAUDE.md).
+Répond au `Cahier_des_charges_SIPROCOM_SGS.pdf` v1.0.
+**[IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)** reste la référence pour le
+modèle de données, les règles métier et la matrice des droits.
+
+---
+
+## Ce que fait le système
+
+| Domaine | Couverture |
+|---|---|
+| **Produits** | Fiches, catégories à 2 niveaux, fournisseurs, seuils min/max, code-barres |
+| **Entrées** | Bons de réception, association fournisseur et bon de commande, prix d'achat, lots |
+| **Sorties** | Bons de sortie (vente, casse, échantillon, besoin interne), destinataire |
+| **Transferts** | Sortie d'un entrepôt = entrée sur l'autre, dans une seule transaction |
+| **Inventaire** | Ajustement manuel avec motif obligatoire, contrôle de cohérence |
+| **Stock** | Niveaux temps réel par produit / entrepôt / global, journal complet |
+| **Alertes** | Seuil minimum et surstock, automatiques, liste consolidée exportable |
+| **Rapports** | Produits tendance, stock dormant, synthèses, valorisation — export Excel et PDF |
+| **Sécurité** | 4 rôles, mots de passe hachés, journal d'audit des actions sensibles |
+| **Bilingue** | Français (défaut) et anglais, y compris avant connexion |
+
+---
 
 ## Stack
 
-| | |
-|---|---|
-| Frontend | React 19 · Vite 8 · Tailwind 4 · react-i18next · React Query · Recharts |
-| Backend | Node 24 · Express 5 · Prisma 6 · PostgreSQL · JWT (httpOnly cookie) |
-| Hosting | Vercel + Neon (free tier) — Docker path documented for on-premise |
+| Couche | Choix | Pourquoi |
+|---|---|---|
+| Client | React 19 + Vite + Tailwind 4 | Rapide à charger sur tablette, découpage par écran |
+| Serveur | Express 5 + Prisma 6 | API REST simple, requêtes typées |
+| Base | PostgreSQL 17 | Transactions ACID — indispensable pour l'intégrité du stock |
+| Auth | JWT en cookie httpOnly | Illisible par JavaScript, contrairement au localStorage |
 
-## Prerequisites
+---
 
-- Node.js 20+ (developed on 24)
-- A PostgreSQL database — [Neon](https://neon.tech) free tier is the default choice
+## Démarrage local
 
-## Setup
-
-### 1. Database
-
-Create a free project at [neon.tech](https://neon.tech), then copy both connection
-strings (pooled and direct).
-
-### 2. Server
+**Prérequis :** Node.js 20+, PostgreSQL 17.
 
 ```bash
+# 1. Serveur
 cd server
 npm install
-cp .env.example .env      # then fill in DATABASE_URL and DIRECT_URL
-npm run db:migrate        # creates the schema
-npm run db:seed           # demo data (Phase 1)
-npm run dev               # http://localhost:4000
-```
+cp .env.example .env          # renseigner DATABASE_URL et JWT_SECRET
+npx prisma migrate dev
+npm run db:seed               # jeu de démonstration : 24 produits, 90 jours d'historique
+npm run dev                   # http://localhost:4000
 
-Generate a JWT secret with:
-
-```bash
-node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
-```
-
-### 3. Client
-
-```bash
+# 2. Client (autre terminal)
 cd client
 npm install
-npm run dev               # http://localhost:5173
+npm run dev                   # http://localhost:5173
 ```
 
-Vite proxies `/api` to `localhost:4000`, so the browser sees a single origin and the
-auth cookie behaves exactly as it will in production.
+**Comptes de démonstration** — mot de passe `Siprocom2026!` :
 
-### 4. Verify
-
-Open <http://localhost:5173/status> — the page reports API, database, environment and
-locale. Switch FR ↔ EN with the toggle to confirm i18n is wired.
-
-## Scripts
-
-### Server
-
-| Command | Purpose |
+| Rôle | Email |
 |---|---|
-| `npm run dev` | Start with nodemon |
-| `npm run db:migrate` | Create/apply a migration locally |
-| `npm run db:deploy` | Apply migrations in production |
-| `npm run db:seed` | Load demo data |
-| `npm run db:studio` | Browse data in Prisma Studio |
-| `npm run db:reset` | Drop, re-migrate and re-seed |
+| Administrateur | `admin@siprocom.com` |
+| Magasinier | `magasinier@siprocom.com` |
+| Responsable achats | `achats@siprocom.com` |
+| Direction | `direction@siprocom.com` |
 
-### Client
+---
 
-| Command | Purpose |
-|---|---|
-| `npm run dev` | Vite dev server |
-| `npm run build` | Production build |
-| `npm run lint` | oxlint |
-| `npm run i18n:check` | **Fail if FR and EN translations have drifted** |
+## Commandes
 
-## Project layout
+```bash
+# server
+npm run dev              # nodemon
+npm run db:seed          # réinitialise le jeu de démonstration
+npm run test:stock       # vérification du moteur de stock (16 tests)
+npx prisma studio        # explorateur de base
+npx prisma migrate deploy   # migrations en production
 
-```
-client/src/
-  api/         axios instance, one module per resource
-  components/  shared UI
-  features/    one folder per domain module
-  hooks/
-  i18n/        locales/{en,fr}/*.json
-  lib/         formatters, permissions, exporters
-server/src/
-  config/      validated env access
-  lib/         prisma, logger, errors
-  middleware/  auth, authorize, errorHandler
-  routes/      HTTP layer — parse + authorize only
-  services/    business logic, owns transactions
-  validators/  zod schemas
+# client
+npm run dev
+npm run build
+npm run i18n:check       # vérifie que FR et EN sont synchronisés
 ```
 
-**Layering rule:** `routes → services → prisma`. Stock mutations happen only in
-`services/stock.service.js`.
+---
 
-## Status
+## Déploiement
 
-Phase 0 (Foundations) complete. See the progress tracker at the bottom of
-[IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).
+### Option A — serveur interne (Docker)
+
+```bash
+cp .env.docker.example .env    # renseigner POSTGRES_PASSWORD et JWT_SECRET
+docker compose up -d
+docker compose exec api npx prisma migrate deploy
+```
+
+Client sur `:8080`, API sur `:4000`. Le port PostgreSQL n'est volontairement
+pas publié sur l'hôte.
+
+### Option B — hébergement cloud
+
+Base managée (Neon, Supabase, RDS), API et client déployés séparément.
+Mettre `ENABLE_SCHEDULER=false` et déclencher `POST /api/alerts/sweep`
+(en-tête `x-cron-secret`) depuis le planificateur de la plateforme : sur
+plusieurs instances, le planificateur intégré s'exécuterait en double.
+
+### Reprise des données existantes
+
+```bash
+# Toujours commencer par --dry-run : rien n'est écrit, tout est signalé.
+node scripts/import-data.js --products produits.csv --dry-run
+node scripts/import-data.js --products produits.csv
+node scripts/import-data.js --stock stock-initial.csv --user admin@siprocom.com
+```
+
+Les stocks initiaux entrent comme mouvements d'ajustement, jamais en écriture
+directe : le grand livre est ainsi complet dès le premier jour et le contrôle de
+cohérence passe immédiatement après la mise en production. Le script est
+idempotent — le relancer ne double aucun stock.
+
+---
+
+## Les règles qui garantissent l'intégrité
+
+Ces quatre points sont ce qui distingue un stock fiable d'un stock approximatif.
+
+**1. Toute mutation passe par `server/src/services/stock.service.js`.**
+Aucune route n'écrit dans `stock_levels` ni `stock_movements`. C'est cette règle
+unique qui rend l'intégrité démontrable plutôt qu'espérée.
+
+**2. Le contrôle « pas de stock négatif » est dans la clause `WHERE`.**
+
+```sql
+UPDATE stock_levels SET quantity = quantity - $n
+WHERE "productId" = $p AND "warehouseId" = $w AND quantity >= $n
+RETURNING quantity
+```
+
+PostgreSQL réévalue la condition **après** avoir pris le verrou de ligne. Deux
+magasiniers qui vendent la dernière unité au même instant : un seul passe. Un
+`SELECT` puis `UPDATE` les aurait laissés passer tous les deux.
+
+**3. `stock_movements` est en ajout seul.** Aucune modification, aucune
+suppression. Une annulation crée des mouvements compensatoires — l'historique
+reste vrai.
+
+**4. Le stock est prouvable.** `GET /api/stock/reconcile` recalcule chaque
+niveau à partir du journal et signale toute divergence. Ce contrôle est
+exécutable à tout moment depuis l'écran Ajustement.
+
+---
+
+## Tests
+
+```bash
+cd server && npm run test:stock
+```
+
+16 vérifications, dont celle qui compte le plus : **20 sorties simultanées pour
+10 unités disponibles — exactement 10 réussissent, le stock finit à 0, jamais
+négatif.**
+
+Sont également couverts : le retour arrière d'une transaction dont une ligne
+échoue, la numérotation sans trou sous concurrence, et la réconciliation du
+grand livre sur toute la base.
+
+---
+
+## Sauvegarde
+
+```bash
+# Sauvegarde
+docker compose exec db pg_dump -U siprocom siprocom_sgs > backups/sgs-$(date +%F).sql
+
+# Restauration
+docker compose exec -T db psql -U siprocom siprocom_sgs < backups/sgs-2026-08-09.sql
+```
+
+À automatiser quotidiennement et à tester périodiquement — une sauvegarde
+jamais restaurée n'est pas une sauvegarde.
+
+---
+
+## Conventions
+
+Voir [CLAUDE.md](CLAUDE.md) : aucune chaîne visible en dur, validation zod sur
+chaque endpoint, erreurs API sous forme de codes, suppression logique uniquement.

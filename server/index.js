@@ -3,6 +3,7 @@
 const app = require('./src/app');
 const config = require('./src/config/env');
 const logger = require('./src/lib/logger');
+const { startScheduler } = require('./src/lib/scheduler');
 
 // Vercel imports the app and handles listening itself.
 if (!process.env.VERCEL) {
@@ -10,8 +11,11 @@ if (!process.env.VERCEL) {
     logger.info(`SIPROCOM SGS API listening on http://localhost:${config.port} [${config.nodeEnv}]`);
   });
 
+  const scheduler = startScheduler();
+
   const shutdown = (signal) => {
     logger.info(`${signal} received — shutting down`);
+    scheduler?.stop();
     server.close(() => process.exit(0));
     // Don't hang forever on lingering keep-alive sockets.
     setTimeout(() => process.exit(1), 10_000).unref();

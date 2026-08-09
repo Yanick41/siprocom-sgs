@@ -45,3 +45,4 @@ test-results/
 # Scratch
 tmp/
 *.tmp
+backups/

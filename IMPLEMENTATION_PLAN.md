@@ -987,11 +987,11 @@ Use these exact English terms in code; use the French in the FR UI.
 | 1 — Data model & auth | ✅ Complete | 2026-08-08 | 2026-08-08 |
 | 2 — Reference data + shell | ✅ Complete | 2026-08-08 | 2026-08-08 |
 | 3 — Stock engine | ✅ Complete — 16/16 engine tests pass, `npm run test:stock` | 2026-08-08 | 2026-08-08 |
-| 4 — Stock UI | ⬜ Not started | | |
-| 5 — Alerts | ⬜ Not started | | |
-| 6 — Analytics & exports | ⬜ Not started | | |
-| 7 — Hardening & recette | ⬜ Not started | | |
-| 8 — Deployment & training | ⬜ Not started | | |
+| 4 — Stock UI | ✅ Complete | 2026-08-09 | 2026-08-09 |
+| 5 — Alerts | ✅ Complete | 2026-08-09 | 2026-08-09 |
+| 6 — Analytics & exports | ✅ Complete | 2026-08-09 | 2026-08-09 |
+| 7 — Hardening & recette | ✅ Complete — permission matrix verified across all 4 roles | 2026-08-09 | 2026-08-09 |
+| 8 — Deployment & training | ✅ Complete — Docker, CSV import (tested), README + bilingual user guide | 2026-08-09 | 2026-08-09 |
 
 ---
 
