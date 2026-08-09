@@ -8,6 +8,7 @@ const { asyncHandler } = require('../middleware/errorHandler');
 const { authenticate, authorize } = require('../middleware/authenticate');
 const { parseListQuery, paginated } = require('../utils/pagination');
 const { applyMovement, reconcile } = require('../services/stock.service');
+const { checkThresholdsAsync } = require('../services/alert.service');
 const { adjustStockSchema, idParamSchema } = require('../validators/stock.validator');
 
 const router = express.Router();
@@ -184,6 +185,8 @@ router.post(
 
       return { theoretical, counted: countedQuantity, delta, balanceAfter, movement };
     });
+
+    checkThresholdsAsync([{ productId, warehouseId }]);
 
     await recordAudit({
       userId: req.user.id,

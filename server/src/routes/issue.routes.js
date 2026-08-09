@@ -9,6 +9,16 @@ const { authenticate, authorize } = require('../middleware/authenticate');
 const { parseListQuery, paginated } = require('../utils/pagination');
 const { applyMovements } = require('../services/stock.service');
 const { allocateNumber } = require('../services/counter.service');
+const { checkThresholdsAsync } = require('../services/alert.service');
+
+/** Both warehouses are affected on a transfer, so both must be re-checked. */
+const affectedPairs = (doc) =>
+  doc.lines.flatMap((line) => [
+    { productId: line.productId, warehouseId: doc.warehouseId },
+    ...(doc.destWarehouseId
+      ? [{ productId: line.productId, warehouseId: doc.destWarehouseId }]
+      : []),
+  ]);
 const {
   createIssueSchema,
   updateIssueSchema,
@@ -230,6 +240,8 @@ router.post(
       });
     });
 
+    checkThresholdsAsync(affectedPairs(issue));
+
     await recordAudit({
       userId: req.user.id,
       action: allowNegative ? 'VALIDATE_ISSUE_NEGATIVE_OVERRIDE' : 'VALIDATE_ISSUE',
@@ -295,6 +307,8 @@ router.post(
         include: DOC_INCLUDE,
       });
     });
+
+    checkThresholdsAsync(affectedPairs(issue));
 
     await recordAudit({
       userId: req.user.id,

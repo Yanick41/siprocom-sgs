@@ -48,3 +48,55 @@ export const warehousesApi = {
   create: (data) => api.post('/warehouses', data),
   update: ({ id, ...data }) => api.patch(`/warehouses/${id}`, data),
 };
+
+export const stockApi = {
+  levels: (params) => api.get(`/stock${qs(params)}`),
+  byProduct: (id) => api.get(`/stock/product/${id}`),
+  movements: (params) => api.get(`/stock/movements${qs(params)}`),
+  adjust: (data) => api.post('/stock/adjust', data),
+  reconcile: () => api.get('/stock/reconcile'),
+};
+
+export const receiptsApi = {
+  list: (params) => api.get(`/receipts${qs(params)}`),
+  get: (id) => api.get(`/receipts/${id}`),
+  create: (data) => api.post('/receipts', data),
+  update: ({ id, ...data }) => api.patch(`/receipts/${id}`, data),
+  validate: (id) => api.post(`/receipts/${id}/validate`),
+  cancel: ({ id, reason }) => api.post(`/receipts/${id}/cancel`, { reason }),
+};
+
+export const issuesApi = {
+  list: (params) => api.get(`/issues${qs(params)}`),
+  get: (id) => api.get(`/issues/${id}`),
+  create: (data) => api.post('/issues', data),
+  update: ({ id, ...data }) => api.patch(`/issues/${id}`, data),
+  validate: ({ id, allowNegative = false }) =>
+    api.post(`/issues/${id}/validate`, { allowNegative }),
+  cancel: ({ id, reason }) => api.post(`/issues/${id}/cancel`, { reason }),
+};
+
+export const alertsApi = {
+  list: (params) => api.get(`/alerts${qs(params)}`),
+  count: () => api.get('/alerts/count'),
+  acknowledge: (id) => api.post(`/alerts/${id}/acknowledge`),
+};
+
+export const reportsApi = {
+  dashboard: (params) => api.get(`/reports/dashboard${qs(params)}`),
+  trending: (params) => api.get(`/reports/trending${qs(params)}`),
+  dormant: (params) => api.get(`/reports/dormant${qs(params)}`),
+  movementsSummary: (params) => api.get(`/reports/movements-summary${qs(params)}`),
+  valuation: (params) => api.get(`/reports/valuation${qs(params)}`),
+};
+
+export const usersApi = {
+  list: (params) => api.get(`/users${qs(params)}`),
+  create: (data) => api.post('/users', data),
+  update: ({ id, ...data }) => api.patch(`/users/${id}`, data),
+};
+
+export const auditApi = {
+  list: (params) => api.get(`/audit-logs${qs(params)}`),
+  actions: () => api.get('/audit-logs/actions'),
+};

@@ -9,6 +9,7 @@ const { authenticate, authorize } = require('../middleware/authenticate');
 const { parseListQuery, paginated } = require('../utils/pagination');
 const { applyMovements } = require('../services/stock.service');
 const { allocateNumber } = require('../services/counter.service');
+const { checkThresholdsAsync } = require('../services/alert.service');
 const {
   createReceiptSchema,
   updateReceiptSchema,
@@ -179,6 +180,11 @@ router.post(
       });
     });
 
+    // BR-8: post-commit, so alerting never extends the movement's locks.
+    checkThresholdsAsync(
+      receipt.lines.map((l) => ({ productId: l.productId, warehouseId: receipt.warehouseId }))
+    );
+
     await recordAudit({
       userId: req.user.id,
       action: 'VALIDATE_RECEIPT',
@@ -230,6 +236,10 @@ router.post(
         include: DOC_INCLUDE,
       });
     });
+
+    checkThresholdsAsync(
+      receipt.lines.map((l) => ({ productId: l.productId, warehouseId: receipt.warehouseId }))
+    );
 
     await recordAudit({
       userId: req.user.id,

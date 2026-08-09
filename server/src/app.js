@@ -18,6 +18,10 @@ const productRoutes = require('./routes/product.routes');
 const stockRoutes = require('./routes/stock.routes');
 const receiptRoutes = require('./routes/receipt.routes');
 const issueRoutes = require('./routes/issue.routes');
+const alertRoutes = require('./routes/alert.routes');
+const reportRoutes = require('./routes/report.routes');
+const userRoutes = require('./routes/user.routes');
+const auditRoutes = require('./routes/audit.routes');
 
 const app = express();
 
@@ -53,8 +57,10 @@ app.use('/api/products', productRoutes);
 app.use('/api/stock', stockRoutes);
 app.use('/api/receipts', receiptRoutes);
 app.use('/api/issues', issueRoutes);
-
-// Feature routers are mounted here as each phase lands:
+app.use('/api/alerts', alertRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/audit-logs', auditRoutes);
 // app.use('/api/alerts', alertRoutes);         // Phase 5
 // app.use('/api/reports', reportRoutes);       // Phase 6
 
