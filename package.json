@@ -15,11 +15,13 @@
     "db:reset": "npm --prefix server exec -- prisma migrate reset --force && npm run db:seed",
     "db:studio": "npm --prefix server exec -- prisma studio",
     "build": "npm --prefix client run build",
-    "test": "npm --prefix server run test:stock",
+    "test": "npm run test:stock && npm run test:ui",
     "i18n:check": "npm --prefix client run i18n:check",
     "check": "npm run i18n:check && npm run build && npm run test",
     "stop": "node scripts/stop.js",
-    "doctor": "node scripts/doctor.js"
+    "doctor": "node scripts/doctor.js",
+    "test:stock": "npm --prefix server run test:stock",
+    "test:ui": "npm --prefix client run test"
   },
   "devDependencies": {
     "concurrently": "^9.1.2",

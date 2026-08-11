@@ -5,8 +5,26 @@ import { FiChevronLeft, FiChevronRight, FiInbox, FiAlertCircle } from 'react-ico
  * Shared list table: loading / empty / error states, sorting and pagination.
  * Every list screen uses this so the three non-happy states are never forgotten.
  *
- * columns: [{ key, header, render?, sortable?, align?, className? }]
+ * columns: [{ key, header, render?, value?, sortable?, align?, className? }]
+ *
+ *   render(row)  JSX for the cell — badges, icons, formatting
+ *   value(row)   the raw value: what Excel and PDF export, and what this table
+ *                falls back to when there is no `render`
+ *   key          last resort, read straight off the row
+ *
+ * `value` is understood here rather than only by the exporters. It was not,
+ * originally, and three screens rendered `row[key]` instead — which for a
+ * joined relation is an object, and React throws on an object child. Every
+ * cell now resolves through the same function.
  */
+const renderCell = (row, column) => {
+  if (column.render) return column.render(row);
+  if (column.value) {
+    const value = column.value(row);
+    return value === null || value === undefined ? '' : value;
+  }
+  return row[column.key];
+};
 export default function DataTable({
   columns,
   rows,
@@ -107,7 +125,7 @@ export default function DataTable({
                         col.align === 'right' ? 'text-right' : ''
                       } ${col.className || ''}`}
                     >
-                      {col.render ? col.render(row) : row[col.key]}
+                      {renderCell(row, col)}
                     </td>
                   ))}
                 </tr>

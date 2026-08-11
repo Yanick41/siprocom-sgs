@@ -5,7 +5,9 @@ import { useTranslation } from 'react-i18next';
 import { authApi } from '@/api/resources';
 import { can } from '@/lib/permissions';
 
-const AuthContext = createContext(null);
+// Exported so tests can mount a screen with a chosen role without standing up
+// the whole provider and its /auth/me round trip.
+export const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const queryClient = useQueryClient();

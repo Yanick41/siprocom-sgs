@@ -245,7 +245,7 @@ export default function ReportsPage() {
       )}
 
       <DataTable
-        columns={columns.map((c) => ({ ...c, render: c.render || ((row) => c.value(row)) }))}
+        columns={columns}
         rows={rows}
         isLoading={ACTIVE.query.isLoading}
         isError={ACTIVE.query.isError}

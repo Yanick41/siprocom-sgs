@@ -1,7 +1,20 @@
 {
   "permissions": {
     "allow": [
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(npx vitest *)",
+      "Bash(sed -i \"s|console.log\\(document.body.innerHTML.slice\\(0, 500\\)\\);|require\\('fs'\\).writeFileSync\\('dbg-out.txt', document.body.textContent.slice\\(0,600\\)\\);|\" src/__tests__/dbg.test.jsx)",
+      "Bash(rm -f src/__tests__/dbg.test.jsx dbg-out.txt)",
+      "Bash(cp src/components/DataTable.jsx /tmp/DataTable.ok.jsx)",
+      "Bash(sed -i 's|{renderCell\\(row, col\\)}|{col.render ? col.render\\(row\\) : row[col.key]}|' src/components/DataTable.jsx)",
+      "Bash(cp src/features/stock/MovementsPage.jsx /tmp/Mov.ok.jsx)",
+      "Bash(cp src/features/alerts/AlertsPage.jsx /tmp/Al.ok.jsx)",
+      "Bash(sed -i \"s|{ key: 'warehouse', header: t\\('common:fields.warehouse'\\), value: \\(m\\) => m.warehouse.name },|{ key: 'warehouse', header: t\\('common:fields.warehouse'\\), render: \\(m\\) => m.warehouse },|\" src/features/stock/MovementsPage.jsx)",
+      "Bash(sed -i \"s|{ key: 'warehouse', header: t\\('common:fields.warehouse'\\), value: \\(a\\) => a.warehouse.name },|{ key: 'warehouse', header: t\\('common:fields.warehouse'\\), render: \\(a\\) => a.warehouse },|\" src/features/alerts/AlertsPage.jsx)",
+      "Bash(xargs echo \"  Movements casse:\")",
+      "Bash(xargs echo \"  Alerts casse:\")",
+      "Bash(grep -n \"render: \\(m\\) => m.warehouse$\\\\|render: \\(m\\) => m.warehouse }\" src/features/stock/MovementsPage.jsx)",
+      "Bash(grep -n \"render: \\(a\\) => a.warehouse$\\\\|render: \\(a\\) => a.warehouse }\" src/features/alerts/AlertsPage.jsx)"
     ]
   }
 }

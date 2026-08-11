@@ -36,6 +36,14 @@ export default defineConfig({
       },
     },
   },
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./vitest.setup.js'],
+    // Rendering every screen is the point of this suite; the default 5s is not
+    // enough for the chart-heavy ones on a cold run.
+    testTimeout: 20_000,
+  },
   build: {
     outDir: 'dist',
     sourcemap: false,

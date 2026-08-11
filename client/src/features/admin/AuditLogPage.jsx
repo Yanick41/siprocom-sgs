@@ -107,7 +107,7 @@ export default function AuditLogPage() {
       </div>
 
       <DataTable
-        columns={columns.map((c) => ({ ...c, render: c.render || ((row) => c.value(row)) }))}
+        columns={columns}
         rows={rows}
         pagination={logsQuery.data?.pagination}
         isLoading={logsQuery.isLoading}
