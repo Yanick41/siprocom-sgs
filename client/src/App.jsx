@@ -1,10 +1,11 @@
-import { lazy, Suspense } from 'react';
+import { Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 import ProtectedRoute from '@/components/ProtectedRoute';
 import AppLayout from '@/layouts/AppLayout';
 import LoginPage from '@/features/auth/LoginPage';
+import lazyWithRetry from '@/lib/lazyWithRetry';
 
 /**
  * Routes are code-split per screen.
@@ -16,22 +17,25 @@ import LoginPage from '@/features/auth/LoginPage';
  *
  * Login stays eager — it is the first thing an unauthenticated visitor needs,
  * and a spinner before the sign-in form would be a poor first impression.
+ *
+ * lazyWithRetry, not lazy: a chunk can become unreachable after a deploy or a
+ * Vite re-optimisation, and the screen should recover instead of failing.
  */
-const SystemStatusPage = lazy(() => import('@/features/system/SystemStatusPage'));
-const DashboardPage = lazy(() => import('@/features/dashboard/DashboardPage'));
-const ProductsPage = lazy(() => import('@/features/products/ProductsPage'));
-const CategoriesPage = lazy(() => import('@/features/categories/CategoriesPage'));
-const SuppliersPage = lazy(() => import('@/features/suppliers/SuppliersPage'));
-const WarehousesPage = lazy(() => import('@/features/warehouses/WarehousesPage'));
-const ReceiptsPage = lazy(() => import('@/features/stock/ReceiptsPage'));
-const IssuesPage = lazy(() => import('@/features/stock/IssuesPage'));
-const StockLevelsPage = lazy(() => import('@/features/stock/StockLevelsPage'));
-const MovementsPage = lazy(() => import('@/features/stock/MovementsPage'));
-const AdjustmentPage = lazy(() => import('@/features/stock/AdjustmentPage'));
-const AlertsPage = lazy(() => import('@/features/alerts/AlertsPage'));
-const ReportsPage = lazy(() => import('@/features/reports/ReportsPage'));
-const UsersPage = lazy(() => import('@/features/admin/UsersPage'));
-const AuditLogPage = lazy(() => import('@/features/admin/AuditLogPage'));
+const SystemStatusPage = lazyWithRetry(() => import('@/features/system/SystemStatusPage'), 'status');
+const DashboardPage = lazyWithRetry(() => import('@/features/dashboard/DashboardPage'), 'dashboard');
+const ProductsPage = lazyWithRetry(() => import('@/features/products/ProductsPage'), 'products');
+const CategoriesPage = lazyWithRetry(() => import('@/features/categories/CategoriesPage'), 'categories');
+const SuppliersPage = lazyWithRetry(() => import('@/features/suppliers/SuppliersPage'), 'suppliers');
+const WarehousesPage = lazyWithRetry(() => import('@/features/warehouses/WarehousesPage'), 'warehouses');
+const ReceiptsPage = lazyWithRetry(() => import('@/features/stock/ReceiptsPage'), 'receipts');
+const IssuesPage = lazyWithRetry(() => import('@/features/stock/IssuesPage'), 'issues');
+const StockLevelsPage = lazyWithRetry(() => import('@/features/stock/StockLevelsPage'), 'stock');
+const MovementsPage = lazyWithRetry(() => import('@/features/stock/MovementsPage'), 'movements');
+const AdjustmentPage = lazyWithRetry(() => import('@/features/stock/AdjustmentPage'), 'adjustments');
+const AlertsPage = lazyWithRetry(() => import('@/features/alerts/AlertsPage'), 'alerts');
+const ReportsPage = lazyWithRetry(() => import('@/features/reports/ReportsPage'), 'reports');
+const UsersPage = lazyWithRetry(() => import('@/features/admin/UsersPage'), 'users');
+const AuditLogPage = lazyWithRetry(() => import('@/features/admin/AuditLogPage'), 'audit');
 
 function ScreenFallback() {
   const { t } = useTranslation();

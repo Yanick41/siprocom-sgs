@@ -9,7 +9,10 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "format": "prettier --write \"src/**/*.{js,jsx,json,css}\"",
-    "i18n:check": "node scripts/check-translations.js"
+    "i18n:check": "node scripts/check-translations.js",
+    "doctor": "npm --prefix .. run doctor",
+    "stop": "npm --prefix .. run stop",
+    "dev:all": "npm --prefix .. run dev"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.7.1",
