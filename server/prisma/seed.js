@@ -65,28 +65,32 @@ const SUPPLIERS = [
 ];
 
 const PRODUCTS = [
-  // subCategory, reference, designation, designationEn, unit, min, max, buy, sell, popularity (0-1 drives rotation)
-  ['Sodas', 'BOI-001', 'Coca-Cola 33cl (pack 24)', 'Coca-Cola 33cl (24-pack)', 'carton', 20, 200, 4800, 6000, 0.95],
-  ['Sodas', 'BOI-002', 'Fanta Orange 33cl (pack 24)', 'Fanta Orange 33cl (24-pack)', 'carton', 15, 150, 4600, 5800, 0.8],
-  ['Sodas', 'BOI-003', 'Sprite 33cl (pack 24)', 'Sprite 33cl (24-pack)', 'carton', 15, 150, 4600, 5800, 0.6],
-  ['Eaux', 'BOI-010', 'Eau minérale 1.5L (pack 6)', 'Mineral water 1.5L (6-pack)', 'carton', 40, 400, 1800, 2500, 0.98],
-  ['Eaux', 'BOI-011', 'Eau minérale 50cl (pack 12)', 'Mineral water 50cl (12-pack)', 'carton', 30, 300, 1500, 2200, 0.85],
-  ['Jus', 'BOI-020', 'Jus d\'orange 1L', 'Orange juice 1L', 'unit', 25, 200, 900, 1400, 0.7],
-  ['Jus', 'BOI-021', 'Jus d\'ananas 1L', 'Pineapple juice 1L', 'unit', 20, 150, 900, 1400, 0.45],
-  ['Jus', 'BOI-022', 'Nectar mangue 1L', 'Mango nectar 1L', 'unit', 15, 100, 950, 1500, 0.15],
+  // subCategory, reference, designation, designationEn, unit, min, max, buy, sell,
+  // popularity (0-1 drives rotation), unitsPerCarton, cartonSellPrice
+  //
+  // Drinks carry a carton factor so the packaging feature is exercised by the
+  // demo data: a dataset that never triggers a feature cannot reveal it broken.
+  ['Sodas', 'BOI-001', 'Coca-Cola 33cl (pack 24)', 'Coca-Cola 33cl (24-pack)', 'bottle', 20, 200, 4800, 6000, 0.95, 24, 132000],
+  ['Sodas', 'BOI-002', 'Fanta Orange 33cl (pack 24)', 'Fanta Orange 33cl (24-pack)', 'bottle', 15, 150, 4600, 5800, 0.8, 24, 127000],
+  ['Sodas', 'BOI-003', 'Sprite 33cl (pack 24)', 'Sprite 33cl (24-pack)', 'bottle', 15, 150, 4600, 5800, 0.6, 24, 127000],
+  ['Eaux', 'BOI-010', 'Eau minérale 1.5L (pack 6)', 'Mineral water 1.5L (6-pack)', 'bottle', 40, 400, 1800, 2500, 0.98, 6, 14500],
+  ['Eaux', 'BOI-011', 'Eau minérale 50cl (pack 12)', 'Mineral water 50cl (12-pack)', 'bottle', 30, 300, 1500, 2200, 0.85, 12, 25000],
+  ['Jus', 'BOI-020', 'Jus d\'orange 1L', 'Orange juice 1L', 'bottle', 25, 200, 900, 1400, 0.7, 12, 16000],
+  ['Jus', 'BOI-021', 'Jus d\'ananas 1L', 'Pineapple juice 1L', 'bottle', 20, 150, 900, 1400, 0.45, 12, 16000],
+  ['Jus', 'BOI-022', 'Nectar mangue 1L', 'Mango nectar 1L', 'bottle', 15, 100, 950, 1500, 0.15, 12, 17000],
   ['Conserves', 'ALI-001', 'Tomate concentrée 400g', 'Tomato paste 400g', 'unit', 50, 500, 450, 700, 0.9],
   ['Conserves', 'ALI-002', 'Sardines à l\'huile 125g', 'Sardines in oil 125g', 'unit', 40, 400, 550, 850, 0.75],
   ['Conserves', 'ALI-003', 'Haricots rouges 400g', 'Red beans 400g', 'unit', 30, 250, 500, 800, 0.35],
-  ['Céréales', 'ALI-010', 'Riz parfumé 25kg', 'Fragrant rice 25kg', 'sac', 10, 100, 14000, 17500, 0.92],
-  ['Céréales', 'ALI-011', 'Semoule de blé 5kg', 'Wheat semolina 5kg', 'sac', 15, 120, 3200, 4200, 0.5],
-  ['Céréales', 'ALI-012', 'Farine de blé 50kg', 'Wheat flour 50kg', 'sac', 8, 60, 22000, 27000, 0.4],
+  ['Céréales', 'ALI-010', 'Riz parfumé 25kg', 'Fragrant rice 25kg', 'bag', 10, 100, 14000, 17500, 0.92],
+  ['Céréales', 'ALI-011', 'Semoule de blé 5kg', 'Wheat semolina 5kg', 'bag', 15, 120, 3200, 4200, 0.5],
+  ['Céréales', 'ALI-012', 'Farine de blé 50kg', 'Wheat flour 50kg', 'bag', 8, 60, 22000, 27000, 0.4],
   ['Détergents', 'ENT-001', 'Savon de lessive 500g', 'Laundry soap 500g', 'unit', 40, 350, 350, 550, 0.88],
   ['Détergents', 'ENT-002', 'Eau de javel 1L', 'Bleach 1L', 'unit', 30, 250, 400, 650, 0.65],
   ['Détergents', 'ENT-003', 'Liquide vaisselle 750ml', 'Dish soap 750ml', 'unit', 25, 200, 800, 1200, 0.55],
   ['Papeterie', 'ENT-010', 'Papier hygiénique (pack 8)', 'Toilet paper (8-pack)', 'carton', 20, 180, 1800, 2600, 0.72],
   ['Papeterie', 'ENT-011', 'Serviettes en papier', 'Paper towels', 'carton', 15, 120, 1500, 2200, 0.3],
   ['Papeterie', 'ENT-012', 'Mouchoirs boîte 100', 'Tissues box of 100', 'unit', 20, 150, 600, 950, 0.08],
-  ['Emballage', 'EMB-001', 'Sachet plastique 30x40 (x100)', 'Plastic bag 30x40 (x100)', 'paquet', 30, 300, 1200, 1800, 0.78],
+  ['Emballage', 'EMB-001', 'Sachet plastique 30x40 (x100)', 'Plastic bag 30x40 (x100)', 'pack', 30, 300, 1200, 1800, 0.78],
   ['Emballage', 'EMB-002', 'Carton d\'emballage moyen', 'Medium packing box', 'unit', 50, 500, 250, 400, 0.6],
   ['Emballage', 'EMB-003', 'Ruban adhésif 50m', 'Adhesive tape 50m', 'unit', 25, 200, 450, 700, 0.42],
   ['Emballage', 'EMB-004', 'Film étirable 2kg', 'Stretch film 2kg', 'unit', 10, 80, 3500, 4800, 0.05],
@@ -198,7 +202,7 @@ async function main() {
 
   // ---- products ----------------------------------------------------------
   const products = [];
-  for (const [cat, reference, designation, designationEn, unit, min, max, buy, sell, popularity] of PRODUCTS) {
+  for (const [cat, reference, designation, designationEn, unit, min, max, buy, sell, popularity, unitsPerCarton, cartonSellPrice] of PRODUCTS) {
     const product = await prisma.product.create({
       data: {
         reference,
@@ -210,6 +214,8 @@ async function main() {
         maxThreshold: max,
         buyPrice: buy,
         sellPrice: sell,
+        unitsPerCarton: unitsPerCarton ?? null,
+        cartonSellPrice: cartonSellPrice ?? null,
       },
     });
     // Each product gets one or two suppliers.

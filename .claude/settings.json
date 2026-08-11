@@ -27,7 +27,8 @@
       "Bash(xargs echo \"  mouvements utilisant baseQuantity :\")",
       "Bash(node --check receipt.routes.js)",
       "Bash(xargs echo \"  mouvements en unites de base :\")",
-      "Bash(xargs echo \"  PATCH re-resout les lignes :\")"
+      "Bash(xargs echo \"  PATCH re-resout les lignes :\")",
+      "Bash(node --check seed.js)"
     ]
   }
 }
