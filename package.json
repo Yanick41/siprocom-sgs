@@ -22,7 +22,8 @@
     "doctor": "node scripts/doctor.js",
     "test:stock": "npm --prefix server run test:stock",
     "test:ui": "npm --prefix client run test",
-    "create-admin": "npm --prefix server run create-admin --"
+    "create-admin": "npm --prefix server run create-admin --",
+    "prod": "node scripts/prod.js"
   },
   "devDependencies": {
     "concurrently": "^9.1.2",
