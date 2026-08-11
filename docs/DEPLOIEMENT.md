@@ -72,15 +72,13 @@ Une seule migration existe (`20260808054208_init`), elle crée les 15 tables.
 **Créer le premier administrateur :**
 
 ```bash
-DATABASE_URL="<pooled>" npx prisma studio
+npm run create-admin -- --email admin@siprocom.com --name "Prénom Nom" --password "TON-MOT-DE-PASSE-ICI"
 ```
 
-Ajoute une ligne dans `users` : `email`, `name`, `role = ADMIN`, `isActive = true`,
-et un `password` haché par :
-
-```bash
-node -e "require('bcryptjs').hash('LE_MOT_DE_PASSE', 10).then(console.log)"
-```
+Le mot de passe est haché avec bcrypt avant d'atteindre la base ; il n'est ni
+stocké ni journalisé en clair. Le script refuse les mots de passe de moins de
+12 caractères et ceux qui figurent dans les listes courantes. Il crée ou met à
+jour **une seule ligne** et ne supprime jamais rien.
 
 > ⚠️ **N'exécute jamais `npm run db:seed` en production.** Il commence par
 > `deleteMany()` sur toutes les tables et créerait les 4 comptes de démo avec

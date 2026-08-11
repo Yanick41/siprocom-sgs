@@ -24,7 +24,8 @@
     "format": "prettier --write \"**/*.{js,json,md}\"",
     "doctor": "npm --prefix .. run doctor",
     "stop": "npm --prefix .. run stop",
-    "dev:all": "npm --prefix .. run dev"
+    "dev:all": "npm --prefix .. run dev",
+    "create-admin": "node scripts/create-admin.js"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

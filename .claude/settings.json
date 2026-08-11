@@ -15,7 +15,10 @@
       "Bash(xargs echo \"  Alerts casse:\")",
       "Bash(grep -n \"render: \\(m\\) => m.warehouse$\\\\|render: \\(m\\) => m.warehouse }\" src/features/stock/MovementsPage.jsx)",
       "Bash(grep -n \"render: \\(a\\) => a.warehouse$\\\\|render: \\(a\\) => a.warehouse }\" src/features/alerts/AlertsPage.jsx)",
-      "Bash(node --check src/config/env.js)"
+      "Bash(node --check src/config/env.js)",
+      "Bash(grep -vE \"warn |pris.ly|^$\")",
+      "Bash(xargs echo \"  lignes parasites:\")",
+      "Bash(xargs echo \"  sorties collees:\")"
     ]
   }
 }

@@ -21,7 +21,8 @@
     "stop": "node scripts/stop.js",
     "doctor": "node scripts/doctor.js",
     "test:stock": "npm --prefix server run test:stock",
-    "test:ui": "npm --prefix client run test"
+    "test:ui": "npm --prefix client run test",
+    "create-admin": "npm --prefix server run create-admin --"
   },
   "devDependencies": {
     "concurrently": "^9.1.2",
