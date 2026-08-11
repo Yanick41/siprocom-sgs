@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { FiPlus, FiCheck, FiX } from 'react-icons/fi';
+import { FiPlus, FiCheck, FiX, FiPrinter, FiFileText } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
 import { issuesApi, productsApi, stockApi } from '@/api/resources';
@@ -14,6 +14,8 @@ import StatusBadge from '@/components/StatusBadge';
 import { useErrorMessage } from '@/hooks/useErrorMessage';
 import { formatDate, formatQuantity } from '@/lib/format';
 import DocumentLinesEditor from './DocumentLinesEditor';
+import InvoiceView from './InvoiceView';
+import { buildInvoice, downloadInvoicePdf } from './invoice';
 
 const STATUS_TONE = { DRAFT: 'neutral', VALIDATED: 'success', CANCELLED: 'danger' };
 
@@ -215,7 +217,11 @@ function IssueFormModal({ onClose, onCreated }) {
                 recipient: form.recipient || null,
                 destWarehouseId: isTransfer ? form.destWarehouseId : null,
                 notes: form.notes || null,
-                lines: validLines.map((l) => ({ productId: l.productId, quantity: Number(l.quantity) })),
+                lines: validLines.map((l) => ({
+                  productId: l.productId,
+                  quantity: Number(l.quantity),
+                  packaging: l.packaging ?? 'UNIT',
+                })),
               });
             }}
             className="btn-primary"
@@ -308,6 +314,10 @@ function IssueDetailModal({ id, onClose, canValidate, canCancel, isAdmin, onVali
 
   const hasShortage = doc?.lines?.some((line) => line.sufficient === false);
 
+  // Built once and shared by the on-screen view and the PDF, so the two cannot
+  // show different figures.
+  const invoice = doc?.status === 'VALIDATED' ? buildInvoice(doc, { t, lng }) : null;
+
   return (
     <Modal
       open
@@ -320,6 +330,24 @@ function IssueDetailModal({ id, onClose, canValidate, canCancel, isAdmin, onVali
             <button type="button" onClick={onClose} className="btn-secondary">
               {t('common:actions.close')}
             </button>
+            {/* An invoice only exists for goods that actually left: a draft has
+                moved nothing and must not be handed to a customer. */}
+            {doc.status === 'VALIDATED' && invoice && (
+              <>
+                <button type="button" onClick={() => window.print()} className="btn-secondary">
+                  <FiPrinter className="size-4" />
+                  {t('stock:invoice.print')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => downloadInvoicePdf(invoice, { t })}
+                  className="btn-secondary"
+                >
+                  <FiFileText className="size-4" />
+                  PDF
+                </button>
+              </>
+            )}
             {doc.status === 'VALIDATED' && canCancel && (
               <button
                 type="button"
@@ -410,6 +438,14 @@ function IssueDetailModal({ id, onClose, canValidate, canCancel, isAdmin, onVali
               </tbody>
             </table>
           </div>
+
+          {/* Shown rather than hidden behind the print dialog, so the figures
+              can be checked before the sheet is handed over. */}
+          {invoice && (
+            <div className="rounded-lg border border-slate-200">
+              <InvoiceView invoice={invoice} />
+            </div>
+          )}
 
           {/* BR-3: the override is deliberate, admin-only, and audited. */}
           {doc.status === 'DRAFT' && hasShortage && (

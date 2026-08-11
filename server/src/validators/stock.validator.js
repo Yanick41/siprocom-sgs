@@ -5,9 +5,13 @@ const { z } = require('zod');
 const uuid = z.string().uuid();
 const positiveInt = z.coerce.number().int().positive();
 
+const packaging = z.enum(['UNIT', 'CARTON']).default('UNIT');
+
 const receiptLineSchema = z.object({
   productId: uuid,
+  /// Quantity in `packaging` units; the server converts it to base units.
   quantity: positiveInt,
+  packaging,
   unitPrice: z.coerce.number().min(0).default(0),
   lotNumber: z.string().trim().max(60).optional().nullable(),
 });
@@ -27,6 +31,9 @@ const updateReceiptSchema = createReceiptSchema.partial();
 const issueLineSchema = z.object({
   productId: uuid,
   quantity: positiveInt,
+  packaging,
+  /// Optional override; otherwise taken from the product's price list.
+  unitPrice: z.coerce.number().min(0).optional(),
 });
 
 const createIssueSchema = z

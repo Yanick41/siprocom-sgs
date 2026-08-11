@@ -60,6 +60,8 @@ const createProductSchema = z
     maxThreshold: z.coerce.number().int().min(0).optional().nullable(),
     buyPrice: z.coerce.number().min(0).default(0),
     sellPrice: z.coerce.number().min(0).default(0),
+    unitsPerCarton: z.coerce.number().int().min(2).optional().nullable(),
+    cartonSellPrice: z.coerce.number().min(0).optional().nullable(),
     isActive: z.boolean().optional(),
     supplierIds: z.array(uuid).optional(),
   })
@@ -82,6 +84,8 @@ const updateProductSchema = z
     maxThreshold: z.coerce.number().int().min(0).optional().nullable(),
     buyPrice: z.coerce.number().min(0).optional(),
     sellPrice: z.coerce.number().min(0).optional(),
+    unitsPerCarton: z.coerce.number().int().min(2).optional().nullable(),
+    cartonSellPrice: z.coerce.number().min(0).optional().nullable(),
     isActive: z.boolean().optional(),
     supplierIds: z.array(uuid).optional(),
   })

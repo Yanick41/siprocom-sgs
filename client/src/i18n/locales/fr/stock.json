@@ -14,7 +14,8 @@
     "cancelReasonPrompt": "Motif de l'annulation (obligatoire) :",
     "toast": {
       "cancelled": "Bon annulé, mouvements compensatoires enregistrés"
-    }
+    },
+    "packaging": "Emballage"
   },
   "receipt": {
     "title": "Bons d'entrée",
@@ -114,5 +115,16 @@
     "consistent": "Cohérent : les {{checked}} niveaux de stock correspondent au grand livre.",
     "drifted": "{{drifted}} écart(s) détecté(s) sur {{checked}} niveaux.",
     "description": "Recalcule chaque niveau de stock à partir du journal des mouvements et signale toute divergence."
+  },
+  "invoice": {
+    "title": "BON DE SORTIE",
+    "designation": "DÉSIGNATION",
+    "quantity": "QTE",
+    "unitPrice": "PRIX UNITAIRE",
+    "lineTotal": "PRIX TOTAL",
+    "grandTotal": "TOTAL GÉNÉRAL",
+    "print": "Imprimer",
+    "issuedBy": "Établi par",
+    "receivedBy": "Reçu par"
   }
 }

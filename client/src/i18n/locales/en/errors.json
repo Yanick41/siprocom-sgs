@@ -30,5 +30,8 @@
   "CORS_ORIGIN_NOT_ALLOWED": "Origin not allowed. Check the address used to reach the application.",
   "SETUP_ALREADY_DONE": "An administrator account already exists. Use the sign-in page.",
   "PASSWORD_TOO_SHORT": "The password must be at least 12 characters.",
-  "PASSWORDS_DO_NOT_MATCH": "The two passwords do not match."
+  "PASSWORDS_DO_NOT_MATCH": "The two passwords do not match.",
+  "PRODUCT_NOT_SOLD_BY_CARTON": "This product is not sold by the carton. Set \"units per carton\" on the product record.",
+  "CARTON_PRICE_MISSING": "No carton price is defined for this product.",
+  "UNKNOWN_PACKAGING": "Unknown packaging."
 }

@@ -14,7 +14,8 @@
     "cancelReasonPrompt": "Reason for cancellation (required):",
     "toast": {
       "cancelled": "Document cancelled, compensating movements recorded"
-    }
+    },
+    "packaging": "Packaging"
   },
   "receipt": {
     "title": "Goods receipts",
@@ -114,5 +115,16 @@
     "consistent": "Consistent: all {{checked}} stock levels match the ledger.",
     "drifted": "{{drifted}} discrepancy(ies) found across {{checked}} levels.",
     "description": "Recomputes every stock level from the movement journal and reports any divergence."
+  },
+  "invoice": {
+    "title": "DELIVERY NOTE",
+    "designation": "DESIGNATION",
+    "quantity": "QTY",
+    "unitPrice": "UNIT PRICE",
+    "lineTotal": "TOTAL",
+    "grandTotal": "GRAND TOTAL",
+    "print": "Print",
+    "issuedBy": "Issued by",
+    "receivedBy": "Received by"
   }
 }

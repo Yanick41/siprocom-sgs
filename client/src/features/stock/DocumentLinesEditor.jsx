@@ -26,15 +26,38 @@ export default function DocumentLinesEditor({
   const update = (index, patch) =>
     onChange(lines.map((line, i) => (i === index ? { ...line, ...patch } : line)));
 
-  const addLine = () => onChange([...lines, { productId: '', quantity: 1, unitPrice: 0 }]);
+  const productById = new Map(products.map((p) => [p.id, p]));
+
+  /**
+   * Selecting a product that is not sold by the carton must reset the line's
+   * packaging, otherwise a leftover CARTON silently reaches the server and is
+   * rejected there instead of here.
+   */
+  const selectProduct = (index, productId) => {
+    const product = productById.get(productId);
+    const keepsCarton = product?.unitsPerCarton >= 2;
+    update(index, { productId, ...(keepsCarton ? {} : { packaging: 'UNIT' }) });
+  };
+
+  const addLine = () =>
+    onChange([...lines, { productId: '', quantity: 1, unitPrice: 0, packaging: 'UNIT' }]);
   const removeLine = (index) => onChange(lines.filter((_, i) => i !== index));
 
   return (
     <div className="space-y-2">
       {lines.map((line, index) => {
+        const product = productById.get(line.productId);
+        const factor = product?.unitsPerCarton ?? 0;
+        const sellsByCarton = factor >= 2;
+        const packaging = line.packaging ?? 'UNIT';
+
+        // What the line will actually take out of stock, in base units.
+        const baseQuantity =
+          Number(line.quantity || 0) * (packaging === 'CARTON' ? factor : 1);
+
         const available = availability?.get(line.productId);
-        const insufficient =
-          availability && line.productId && (available ?? 0) < Number(line.quantity || 0);
+        // Compared in base units: 3 cartons of 12 need 36 on the shelf, not 3.
+        const insufficient = availability && line.productId && (available ?? 0) < baseQuantity;
 
         return (
           <div
@@ -49,7 +72,7 @@ export default function DocumentLinesEditor({
                 <select
                   id={`line-product-${index}`}
                   value={line.productId}
-                  onChange={(e) => update(index, { productId: e.target.value })}
+                  onChange={(e) => selectProduct(index, e.target.value)}
                   className="input"
                 >
                   <option value="">—</option>
@@ -74,6 +97,25 @@ export default function DocumentLinesEditor({
                   className="input"
                 />
               </div>
+
+              {/* Only offered when the product actually has a carton factor —
+                  an option that always errors is worse than no option. */}
+              {sellsByCarton && (
+                <div className="w-32">
+                  <label htmlFor={`line-pack-${index}`} className="label text-xs">
+                    {t('stock:document.packaging')}
+                  </label>
+                  <select
+                    id={`line-pack-${index}`}
+                    value={packaging}
+                    onChange={(e) => update(index, { packaging: e.target.value })}
+                    className="input"
+                  >
+                    <option value="UNIT">{t(`common:units.${product.unit}`, { defaultValue: product.unit })}</option>
+                    <option value="CARTON">{t('common:units.carton')}</option>
+                  </select>
+                </div>
+              )}
 
               {withPrice && (
                 <div className="w-32">
@@ -101,16 +143,30 @@ export default function DocumentLinesEditor({
               </button>
             </div>
 
-            {availability && line.productId && (
+            {line.productId && (
               <p
-                className={`mt-2 flex items-center gap-1.5 text-xs ${
+                className={`mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs ${
                   insufficient ? 'font-medium text-sgs-danger' : 'text-slate-500'
                 }`}
               >
                 {insufficient && <FiAlertTriangle className="size-3.5" />}
-                {t('stock:issue.availableInWarehouse', {
-                  quantity: formatQuantity(available ?? 0, lng),
-                })}
+
+                {/* The conversion is shown as it is typed, so the operator sees
+                    what leaves the shelf rather than trusting the arithmetic. */}
+                {packaging === 'CARTON' && baseQuantity > 0 && (
+                  <span className="font-medium">
+                    = {formatQuantity(baseQuantity, lng)}{' '}
+                    {t(`common:units.${product.unit}`, { defaultValue: product.unit })}
+                  </span>
+                )}
+
+                {availability && (
+                  <span>
+                    {t('stock:issue.availableInWarehouse', {
+                      quantity: formatQuantity(available ?? 0, lng),
+                    })}
+                  </span>
+                )}
               </p>
             )}
           </div>

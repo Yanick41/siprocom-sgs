@@ -76,3 +76,54 @@
     @apply mb-1.5 block text-sm font-medium text-slate-700;
   }
 }
+
+/* ---------------------------------------------------------------- printing */
+/*
+ * When an invoice is on screen, printing must produce the invoice alone — not
+ * the sidebar, the modal chrome or the buttons around it. Everything is hidden
+ * and the invoice is lifted out of the dialog to take the sheet.
+ */
+@media print {
+  body:has(#sgs-invoice) > * {
+    display: none !important;
+  }
+
+  body:has(#sgs-invoice)::before {
+    content: '';
+    display: block;
+  }
+
+  #sgs-invoice {
+    position: absolute !important;
+    inset: 0 !important;
+    display: block !important;
+    width: 100% !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
+
+  /* Every ancestor of the invoice stays visible so it is not clipped away. */
+  body:has(#sgs-invoice) *:has(#sgs-invoice) {
+    display: block !important;
+    position: static !important;
+    overflow: visible !important;
+    max-height: none !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    border: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* A table row split across two sheets is unreadable. */
+  #sgs-invoice tr {
+    break-inside: avoid;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 15mm;
+  }
+}

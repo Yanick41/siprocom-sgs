@@ -184,6 +184,7 @@ function ReceiptFormModal({ onClose, onCreated }) {
                 lines: validLines.map((l) => ({
                   productId: l.productId,
                   quantity: Number(l.quantity),
+                  packaging: l.packaging ?? 'UNIT',
                   unitPrice: Number(l.unitPrice || 0),
                 })),
               });

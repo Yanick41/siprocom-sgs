@@ -10,6 +10,7 @@ const { parseListQuery, paginated } = require('../utils/pagination');
 const { applyMovements } = require('../services/stock.service');
 const { allocateNumber } = require('../services/counter.service');
 const { checkThresholdsAsync } = require('../services/alert.service');
+const { resolveReceiptLine } = require('../services/packaging.service');
 const {
   createReceiptSchema,
   updateReceiptSchema,
@@ -27,7 +28,12 @@ const DOC_INCLUDE = {
   validatedBy: { select: { id: true, name: true } },
   lines: {
     include: {
-      product: { select: { id: true, reference: true, designation: true, designationEn: true, unit: true } },
+      product: {
+        select: {
+          id: true, reference: true, designation: true, designationEn: true,
+          unit: true, unitsPerCarton: true, sellPrice: true, cartonSellPrice: true,
+        },
+      },
     },
   },
 };
@@ -90,6 +96,19 @@ router.post(
   asyncHandler(async (req, res) => {
     const { lines, ...data } = createReceiptSchema.parse(req.body);
 
+    // Receiving 3 cartons of 12 must add 36 bottles, so the conversion happens
+    // before anything is stored — the same resolution the issue side uses.
+    const products = await prisma.product.findMany({
+      where: { id: { in: [...new Set(lines.map((l) => l.productId))] } },
+    });
+    const productById = new Map(products.map((p) => [p.id, p]));
+
+    const resolvedLines = lines.map((line) => {
+      const product = productById.get(line.productId);
+      if (!product) throw new NotFoundError('Product', line.productId);
+      return resolveReceiptLine(product, line);
+    });
+
     const receipt = await prisma.$transaction(async (tx) => {
       const number = await allocateNumber(tx, 'RECEIPT');
       return tx.goodsReceipt.create({
@@ -98,7 +117,7 @@ router.post(
           number,
           status: 'DRAFT',
           createdById: req.user.id,
-          lines: { create: lines },
+          lines: { create: resolvedLines },
         },
         include: DOC_INCLUDE,
       });
@@ -129,11 +148,26 @@ router.patch(
     if (!existing) throw new NotFoundError('GoodsReceipt', id);
     if (existing.status !== 'DRAFT') throw new ConflictError('DOCUMENT_NOT_DRAFT');
 
+    // Edited lines are re-resolved: an unchanged `packaging` still needs its
+    // baseQuantity recomputed against the product's current factor.
+    let resolvedEditLines = null;
+    if (lines) {
+      const editProducts = await prisma.product.findMany({
+        where: { id: { in: [...new Set(lines.map((l) => l.productId))] } },
+      });
+      const editById = new Map(editProducts.map((p) => [p.id, p]));
+      resolvedEditLines = lines.map((line) => {
+        const product = editById.get(line.productId);
+        if (!product) throw new NotFoundError('Product', line.productId);
+        return resolveReceiptLine(product, line);
+      });
+    }
+
     const receipt = await prisma.$transaction(async (tx) => {
-      if (lines) {
+      if (resolvedEditLines) {
         await tx.goodsReceiptLine.deleteMany({ where: { receiptId: id } });
         await tx.goodsReceiptLine.createMany({
-          data: lines.map((line) => ({ ...line, receiptId: id })),
+          data: resolvedEditLines.map((line) => ({ ...line, receiptId: id })),
         });
       }
       return tx.goodsReceipt.update({ where: { id }, data, include: DOC_INCLUDE });
@@ -163,7 +197,7 @@ router.post(
           type: 'IN',
           productId: line.productId,
           warehouseId: doc.warehouseId,
-          quantity: line.quantity,
+          quantity: line.baseQuantity,
           unitCost: line.unitPrice,
           lotNumber: line.lotNumber,
           reason: doc.reason,
@@ -221,7 +255,7 @@ router.post(
             type: 'OUT',
             productId: line.productId,
             warehouseId: doc.warehouseId,
-            quantity: line.quantity,
+            quantity: line.baseQuantity,
             reason: `Annulation ${doc.number}: ${reason}`,
             refType: 'GoodsReceipt',
             refId: doc.id,

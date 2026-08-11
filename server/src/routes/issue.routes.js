@@ -10,6 +10,7 @@ const { parseListQuery, paginated } = require('../utils/pagination');
 const { applyMovements } = require('../services/stock.service');
 const { allocateNumber } = require('../services/counter.service');
 const { checkThresholdsAsync } = require('../services/alert.service');
+const { resolveIssueLine } = require('../services/packaging.service');
 
 /** Both warehouses are affected on a transfer, so both must be re-checked. */
 const affectedPairs = (doc) =>
@@ -37,7 +38,12 @@ const DOC_INCLUDE = {
   validatedBy: { select: { id: true, name: true } },
   lines: {
     include: {
-      product: { select: { id: true, reference: true, designation: true, designationEn: true, unit: true } },
+      product: {
+        select: {
+          id: true, reference: true, designation: true, designationEn: true,
+          unit: true, unitsPerCarton: true, sellPrice: true, cartonSellPrice: true,
+        },
+      },
     },
   },
 };
@@ -100,10 +106,12 @@ router.get(
         select: { productId: true, quantity: true },
       });
       const available = new Map(levels.map((l) => [l.productId, l.quantity]));
+      // Availability is compared against baseQuantity: 3 cartons of 12 need 36
+      // bottles on the shelf, not 3.
       issue.lines = issue.lines.map((line) => ({
         ...line,
         available: available.get(line.productId) ?? 0,
-        sufficient: (available.get(line.productId) ?? 0) >= line.quantity,
+        sufficient: (available.get(line.productId) ?? 0) >= line.baseQuantity,
       }));
     }
 
@@ -123,6 +131,20 @@ router.post(
       if (!dest) throw new NotFoundError('Warehouse', data.destWarehouseId);
     }
 
+    // Conversion happens once, here, against the product's current factor and
+    // price — both are then frozen on the line, so a later change to either
+    // cannot rewrite what this document says.
+    const products = await prisma.product.findMany({
+      where: { id: { in: [...new Set(lines.map((l) => l.productId))] } },
+    });
+    const productById = new Map(products.map((p) => [p.id, p]));
+
+    const resolvedLines = lines.map((line) => {
+      const product = productById.get(line.productId);
+      if (!product) throw new NotFoundError('Product', line.productId);
+      return resolveIssueLine(product, line);
+    });
+
     const issue = await prisma.$transaction(async (tx) => {
       const number = await allocateNumber(tx, 'ISSUE');
       return tx.goodsIssue.create({
@@ -131,7 +153,7 @@ router.post(
           number,
           status: 'DRAFT',
           createdById: req.user.id,
-          lines: { create: lines },
+          lines: { create: resolvedLines },
         },
         include: DOC_INCLUDE,
       });
@@ -162,10 +184,27 @@ router.patch(
     if (!existing) throw new NotFoundError('GoodsIssue', id);
     if (existing.status !== 'DRAFT') throw new ConflictError('DOCUMENT_NOT_DRAFT');
 
+    // Edited lines are re-resolved, not stored raw: an untouched `packaging`
+    // still needs its baseQuantity and price recomputed.
+    let resolvedLines = null;
+    if (lines) {
+      const products = await prisma.product.findMany({
+        where: { id: { in: [...new Set(lines.map((l) => l.productId))] } },
+      });
+      const productById = new Map(products.map((p) => [p.id, p]));
+      resolvedLines = lines.map((line) => {
+        const product = productById.get(line.productId);
+        if (!product) throw new NotFoundError('Product', line.productId);
+        return resolveIssueLine(product, line);
+      });
+    }
+
     const issue = await prisma.$transaction(async (tx) => {
-      if (lines) {
+      if (resolvedLines) {
         await tx.goodsIssueLine.deleteMany({ where: { issueId: id } });
-        await tx.goodsIssueLine.createMany({ data: lines.map((l) => ({ ...l, issueId: id })) });
+        await tx.goodsIssueLine.createMany({
+          data: resolvedLines.map((l) => ({ ...l, issueId: id })),
+        });
       }
       return tx.goodsIssue.update({ where: { id }, data, include: DOC_INCLUDE });
     });
@@ -206,7 +245,7 @@ router.post(
           type: 'OUT',
           productId: line.productId,
           warehouseId: doc.warehouseId,
-          quantity: line.quantity,
+          quantity: line.baseQuantity,
           reason: doc.reason,
           refType: 'GoodsIssue',
           refId: doc.id,
@@ -224,7 +263,7 @@ router.post(
             type: 'IN',
             productId: line.productId,
             warehouseId: doc.destWarehouseId,
-            quantity: line.quantity,
+            quantity: line.baseQuantity,
             reason: `Transfert ${doc.number}`,
             refType: 'GoodsIssue',
             refId: doc.id,
@@ -275,7 +314,7 @@ router.post(
             type: 'IN',
             productId: line.productId,
             warehouseId: doc.warehouseId,
-            quantity: line.quantity,
+            quantity: line.baseQuantity,
             reason: `Annulation ${doc.number}: ${reason}`,
             refType: 'GoodsIssue',
             refId: doc.id,
@@ -291,7 +330,7 @@ router.post(
               type: 'OUT',
               productId: line.productId,
               warehouseId: doc.destWarehouseId,
-              quantity: line.quantity,
+              quantity: line.baseQuantity,
               reason: `Annulation transfert ${doc.number}`,
               refType: 'GoodsIssue',
               refId: doc.id,

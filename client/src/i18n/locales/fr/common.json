@@ -60,10 +60,13 @@
   "units": {
     "unit": "unité",
     "piece": "pièce",
+    "bottle": "bouteille",
+    "carton": "carton",
+    "crate": "casier",
+    "pack": "paquet",
+    "bag": "sac",
     "kg": "kg",
-    "litre": "L",
-    "box": "carton",
-    "pack": "paquet"
+    "litre": "L"
   },
   "fields": {
     "reference": "Référence",

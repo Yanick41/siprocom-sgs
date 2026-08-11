@@ -7,8 +7,8 @@ import { productsApi, suppliersApi } from '@/api/resources';
 import { useErrorMessage } from '@/hooks/useErrorMessage';
 import Modal from '@/components/Modal';
 import FormField from '@/components/FormField';
+import { UNITS, canonicalUnit } from '@/lib/units';
 
-const UNITS = ['unit', 'piece', 'kg', 'litre', 'box', 'pack', 'carton', 'sac', 'paquet'];
 
 export default function ProductFormModal({ product, categories, onClose, onSaved }) {
   const { t, i18n } = useTranslation(['products', 'common', 'errors']);
@@ -26,6 +26,7 @@ export default function ProductFormModal({ product, categories, onClose, onSaved
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm({
     defaultValues: {
@@ -34,14 +35,28 @@ export default function ProductFormModal({ product, categories, onClose, onSaved
       designationEn: product?.designationEn ?? '',
       barcode: product?.barcode ?? '',
       categoryId: product?.categoryId ?? '',
-      unit: product?.unit ?? 'unit',
+      unit: canonicalUnit(product?.unit) ?? 'unit',
       minThreshold: product?.minThreshold ?? 0,
       maxThreshold: product?.maxThreshold ?? '',
       buyPrice: product?.buyPrice ?? 0,
       sellPrice: product?.sellPrice ?? 0,
+      unitsPerCarton: product?.unitsPerCarton ?? '',
+      cartonSellPrice: product?.cartonSellPrice ?? '',
       supplierIds: product?.suppliers?.map((s) => s.supplierId) ?? [],
     },
   });
+
+  // The carton fields only make sense together, so the price appears once a
+  // factor is entered rather than sitting empty on every product.
+  const unitsPerCarton = Number(watch('unitsPerCarton')) || 0;
+  const sellsByCarton = unitsPerCarton >= 2;
+  const sellPrice = Number(watch('sellPrice')) || 0;
+  const cartonSellPrice = Number(watch('cartonSellPrice')) || 0;
+
+  // A hint, never a block: a carton cheaper than its contents is usually a typo,
+  // but a clearance rate is a legitimate reason to want exactly that.
+  const cartonPriceLooksWrong =
+    sellsByCarton && cartonSellPrice > 0 && sellPrice > 0 && cartonSellPrice < sellPrice;
 
   const mutation = useMutation({
     mutationFn: (values) =>
@@ -56,6 +71,13 @@ export default function ProductFormModal({ product, categories, onClose, onSaved
       ...values,
       // Empty optional fields must be null, not "" — the API distinguishes them.
       maxThreshold: values.maxThreshold === '' ? null : Number(values.maxThreshold),
+      unitsPerCarton: values.unitsPerCarton === '' ? null : Number(values.unitsPerCarton),
+      // Clearing the factor must clear the price too, or a product that is no
+      // longer sold by the carton keeps a carton price nobody can reach.
+      cartonSellPrice:
+        values.unitsPerCarton === '' || values.cartonSellPrice === ''
+          ? null
+          : Number(values.cartonSellPrice),
       designationEn: values.designationEn || null,
       barcode: values.barcode || null,
       supplierIds: Array.isArray(values.supplierIds) ? values.supplierIds : [values.supplierIds].filter(Boolean),
@@ -171,6 +193,46 @@ export default function ProductFormModal({ product, categories, onClose, onSaved
           <FormField label={t('products:form.sellPrice')} name="sellPrice" error={errors.sellPrice}>
             {(props) => <input {...props} type="number" min="0" step="1" {...register('sellPrice')} />}
           </FormField>
+        </div>
+
+        {/* Carton sales — optional. The unit above stays the base unit that
+            stock, thresholds and alerts are counted in. */}
+        <div className="rounded-lg border border-slate-200 p-4">
+          <p className="mb-3 text-sm font-medium text-slate-700">{t('products:form.cartonSection')}</p>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FormField
+              label={t('products:form.unitsPerCarton')}
+              name="unitsPerCarton"
+              error={errors.unitsPerCarton}
+              hint={t('products:form.unitsPerCartonHint')}
+            >
+              {(props) => (
+                <input {...props} type="number" min="2" placeholder="12" {...register('unitsPerCarton')} />
+              )}
+            </FormField>
+
+            {sellsByCarton && (
+              <FormField
+                label={t('products:form.cartonSellPrice')}
+                name="cartonSellPrice"
+                error={errors.cartonSellPrice}
+                hint={t('products:form.cartonSellPriceHint', {
+                  reference: (unitsPerCarton * sellPrice).toLocaleString('fr-FR'),
+                })}
+              >
+                {(props) => (
+                  <input {...props} type="number" min="0" step="1" {...register('cartonSellPrice')} />
+                )}
+              </FormField>
+            )}
+          </div>
+
+          {cartonPriceLooksWrong && (
+            <p className="mt-2 rounded-lg bg-amber-50 p-2 text-xs text-amber-800">
+              {t('products:form.cartonPriceWarning')}
+            </p>
+          )}
         </div>
 
         <FormField label={t('products:form.suppliers')} name="supplierIds" error={errors.supplierIds}>

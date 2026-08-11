@@ -20,7 +20,14 @@
       "Bash(xargs echo \"  lignes parasites:\")",
       "Bash(xargs echo \"  sorties collees:\")",
       "Bash(node --check src/routes/auth.routes.js)",
-      "Bash(grep -n \"^const loginLimiter\\\\|^const cookieOptions\\\\|^const publicUser\\\\|First-run setup\\\\|// GET /api/auth/setup-status\\\\|// POST /api/auth/setup$\\\\|// POST /api/auth/login\" src/routes/auth.routes.js)"
+      "Bash(grep -n \"^const loginLimiter\\\\|^const cookieOptions\\\\|^const publicUser\\\\|First-run setup\\\\|// GET /api/auth/setup-status\\\\|// POST /api/auth/setup$\\\\|// POST /api/auth/login\" src/routes/auth.routes.js)",
+      "Bash(grep -vE \"^\\\\s*///|^\\\\s*$\")",
+      "Bash(xargs -I{} cat \"prisma/migrations/{}/migration.sql\")",
+      "Bash(node --check issue.routes.js)",
+      "Bash(xargs echo \"  mouvements utilisant baseQuantity :\")",
+      "Bash(node --check receipt.routes.js)",
+      "Bash(xargs echo \"  mouvements en unites de base :\")",
+      "Bash(xargs echo \"  PATCH re-resout les lignes :\")"
     ]
   }
 }

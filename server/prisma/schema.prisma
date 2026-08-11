@@ -26,6 +26,13 @@ enum Role {
   DIRECTION
 }
 
+/// How a quantity was entered on a document line. Stock is always stored in the
+/// product's base unit; this records what the operator actually typed.
+enum Packaging {
+  UNIT
+  CARTON
+}
+
 enum MovementType {
   IN
   OUT
@@ -149,28 +156,44 @@ model Warehouse {
 }
 
 model Product {
-  id            String   @id @default(uuid())
-  reference     String   @unique
+  id            String  @id @default(uuid())
+  reference     String  @unique
   designation   String
   designationEn String?
-  barcode       String?  @unique
+  barcode       String? @unique
   categoryId    String
-  unit          String   @default("unit")
-  minThreshold  Int      @default(0)
-  maxThreshold  Int?
-  buyPrice      Decimal  @default(0) @db.Decimal(12, 2)
-  sellPrice     Decimal  @default(0) @db.Decimal(12, 2)
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
 
-  category      Category           @relation(fields: [categoryId], references: [id])
-  suppliers     ProductSupplier[]
-  stockLevels   StockLevel[]
-  movements     StockMovement[]
-  alerts        Alert[]
-  receiptLines  GoodsReceiptLine[]
-  issueLines    GoodsIssueLine[]
+  /// The BASE unit — bottle, kilo, piece. Stock levels, thresholds, alerts and
+  /// the movement ledger are all expressed in this unit and nothing else.
+  unit String @default("unit")
+
+  /// Bottles per carton. Null means the product is never sold by the carton.
+  /// Used only to convert what an operator types into base units; stock itself
+  /// never holds cartons.
+  unitsPerCarton Int?
+
+  /// Thresholds are in base units, so an alert means "fewer than N bottles"
+  /// regardless of how the goods were received.
+  minThreshold Int  @default(0)
+  maxThreshold Int?
+
+  buyPrice        Decimal  @default(0) @db.Decimal(12, 2)
+  /// Price for ONE base unit.
+  sellPrice       Decimal  @default(0) @db.Decimal(12, 2)
+  /// Price for one full carton. Entered explicitly rather than derived, so a
+  /// wholesale rate is never silently overwritten by a unit-price change.
+  cartonSellPrice Decimal? @db.Decimal(12, 2)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  category     Category           @relation(fields: [categoryId], references: [id])
+  suppliers    ProductSupplier[]
+  stockLevels  StockLevel[]
+  movements    StockMovement[]
+  alerts       Alert[]
+  receiptLines GoodsReceiptLine[]
+  issueLines   GoodsIssueLine[]
 
   @@index([categoryId])
   @@index([isActive])
@@ -279,12 +302,19 @@ model GoodsReceipt {
 }
 
 model GoodsReceiptLine {
-  id        String   @id @default(uuid())
-  receiptId String
-  productId String
-  quantity  Int
-  unitPrice Decimal  @default(0) @db.Decimal(12, 2)
-  lotNumber String?
+  id           String    @id @default(uuid())
+  receiptId    String
+  productId    String
+  /// Quantity as entered, in  units: 3 means 3 cartons.
+  quantity     Int
+  packaging    Packaging @default(UNIT)
+  /// What actually moves in stock, in base units: 3 cartons of 12 -> 36.
+  /// Stored rather than recomputed — changing unitsPerCarton later must not
+  /// rewrite the history of documents already posted.
+  baseQuantity Int       @default(0)
+  /// Price for one  unit at the time of the receipt.
+  unitPrice    Decimal   @default(0) @db.Decimal(12, 2)
+  lotNumber    String?
 
   receipt GoodsReceipt @relation(fields: [receiptId], references: [id], onDelete: Cascade)
   product Product      @relation(fields: [productId], references: [id])
@@ -323,10 +353,17 @@ model GoodsIssue {
 }
 
 model GoodsIssueLine {
-  id        String @id @default(uuid())
-  issueId   String
-  productId String
-  quantity  Int
+  id           String    @id @default(uuid())
+  issueId      String
+  productId    String
+  /// Quantity as entered, in  units.
+  quantity     Int
+  packaging    Packaging @default(UNIT)
+  /// What actually leaves stock, in base units.
+  baseQuantity Int       @default(0)
+  /// Unit price frozen when the issue was created, so an invoice reprinted a
+  /// year later shows what was billed, not today's price list.
+  unitPrice    Decimal   @default(0) @db.Decimal(12, 2)
 
   issue   GoodsIssue @relation(fields: [issueId], references: [id], onDelete: Cascade)
   product Product    @relation(fields: [productId], references: [id])
