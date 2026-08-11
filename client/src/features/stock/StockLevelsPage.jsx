@@ -13,7 +13,7 @@ import { exportToExcel, exportToPdf } from '@/lib/export';
 const STATE_TONE = { OK: 'success', BELOW_MIN: 'warning', ABOVE_MAX: 'info', OUT_OF_STOCK: 'danger' };
 
 export default function StockLevelsPage() {
-  const { t, i18n } = useTranslation(['stock', 'common']);
+  const { t, i18n } = useTranslation(['stock', 'common', 'products']);
   const lng = i18n.resolvedLanguage;
   const translateError = useErrorMessage();
 
@@ -95,7 +95,7 @@ export default function StockLevelsPage() {
             type="search"
             value={filters.search}
             onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value, page: 1 }))}
-            placeholder={t('products:filters.searchPlaceholder', { ns: 'products' })}
+            placeholder={t('products:filters.searchPlaceholder')}
             aria-label={t('common:actions.search')}
             className="input pl-9"
           />

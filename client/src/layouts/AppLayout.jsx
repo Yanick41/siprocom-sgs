@@ -148,7 +148,7 @@ export default function AppLayout() {
                 to="/alerts"
                 className="relative flex size-11 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-700"
                 aria-label={t('common:nav.alerts')}
-                title={t('alerts:badge', { count: openAlerts, ns: 'alerts' })}
+                title={t('alerts:badge', { count: openAlerts })}
               >
                 <FiBell className="size-5" />
                 {openAlerts > 0 && (

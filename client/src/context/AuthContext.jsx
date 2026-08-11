@@ -73,6 +73,12 @@ export function AuthProvider({ children }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+/**
+ * Exported alongside the provider, which costs this file fast refresh: editing
+ * it triggers a full reload rather than an HMR patch. Splitting the hook out
+ * would touch the fifteen files that import it, for a file that is now stable
+ * and rarely edited — not a trade worth making.
+ */
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) throw new Error('useAuth must be used within an AuthProvider');

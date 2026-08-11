@@ -6,6 +6,8 @@ const TONES = {
   neutral: 'bg-slate-100 text-slate-600 ring-slate-500/20',
 };
 
+// stockTone lives in @/lib/stockState — keeping this file to a single component
+// export is what lets fast refresh patch it without a full page reload.
 export default function StatusBadge({ tone = 'neutral', children }) {
   return (
     <span
@@ -14,15 +16,4 @@ export default function StatusBadge({ tone = 'neutral', children }) {
       {children}
     </span>
   );
-}
-
-/**
- * Maps a stock level against its thresholds to a tone.
- * Single source of truth so every screen colours stock identically.
- */
-export function stockTone(quantity, minThreshold, maxThreshold) {
-  if (quantity <= 0) return 'danger';
-  if (quantity < minThreshold) return 'warning';
-  if (maxThreshold != null && quantity > maxThreshold) return 'info';
-  return 'success';
 }

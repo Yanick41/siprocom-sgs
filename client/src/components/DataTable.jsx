@@ -17,6 +17,8 @@ export default function DataTable({
   onPageChange,
   sort,
   onSortChange,
+  // The index is passed through so callers can fall back to it for aggregate
+  // rows that carry no id — report rows grouped by category, for instance.
   getRowKey = (row) => row.id,
   onRowClick,
   emptyMessage,
@@ -92,9 +94,9 @@ export default function DataTable({
 
             {!isLoading &&
               !isError &&
-              rows.map((row) => (
+              rows.map((row, index) => (
                 <tr
-                  key={getRowKey(row)}
+                  key={getRowKey(row, index)}
                   onClick={onRowClick ? () => onRowClick(row) : undefined}
                   className={onRowClick ? 'cursor-pointer hover:bg-slate-50' : ''}
                 >

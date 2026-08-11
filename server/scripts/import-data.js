@@ -134,7 +134,8 @@ async function importProducts(file, { dryRun }) {
       const existing = await prisma.product.findUnique({ where: { reference: row.reference } });
 
       if (dryRun) {
-        existing ? (report.updated += 1) : (report.created += 1);
+        if (existing) report.updated += 1;
+        else report.created += 1;
         continue;
       }
 

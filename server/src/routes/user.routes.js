@@ -37,7 +37,8 @@ const updateUserSchema = z.object({
 const idParamSchema = z.object({ id: z.string().uuid() });
 
 /** The hash must never leave the server, not even to an admin. */
-const publicUser = ({ password, ...user }) => user;
+// eslint-disable-next-line no-unused-vars -- destructured purely to drop it
+const publicUser = ({ password: _hash, ...user }) => user;
 
 // GET /api/users
 router.get(
