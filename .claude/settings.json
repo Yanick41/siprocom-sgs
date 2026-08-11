@@ -14,7 +14,8 @@
       "Bash(xargs echo \"  Movements casse:\")",
       "Bash(xargs echo \"  Alerts casse:\")",
       "Bash(grep -n \"render: \\(m\\) => m.warehouse$\\\\|render: \\(m\\) => m.warehouse }\" src/features/stock/MovementsPage.jsx)",
-      "Bash(grep -n \"render: \\(a\\) => a.warehouse$\\\\|render: \\(a\\) => a.warehouse }\" src/features/alerts/AlertsPage.jsx)"
+      "Bash(grep -n \"render: \\(a\\) => a.warehouse$\\\\|render: \\(a\\) => a.warehouse }\" src/features/alerts/AlertsPage.jsx)",
+      "Bash(node --check src/config/env.js)"
     ]
   }
 }

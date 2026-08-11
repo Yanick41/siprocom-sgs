@@ -21,33 +21,43 @@ import { lazy } from 'react';
  * the error boundary instead of reloading forever. The flag clears on success,
  * so a later unrelated failure still gets its own retry.
  */
-const RELOAD_FLAG = 'sgs:chunk-reload';
+/**
+ * The guard is keyed per chunk and expires, rather than being one flag for the
+ * whole session. A single global flag meant that after any one recovery, every
+ * later chunk failure — a different screen, minutes apart, a different cause —
+ * went straight to the error boundary instead of recovering.
+ */
+const RELOAD_KEY = (name) => `sgs:chunk-reload:${name}`;
+const RELOAD_WINDOW_MS = 15_000;
+
+function reloadedRecently(name) {
+  const at = Number(window.sessionStorage?.getItem(RELOAD_KEY(name)));
+  return Boolean(at) && Date.now() - at < RELOAD_WINDOW_MS;
+}
 
 export default function lazyWithRetry(importer, name = 'screen') {
   return lazy(async () => {
     try {
       const module = await importer();
-      window.sessionStorage?.removeItem(RELOAD_FLAG);
+      window.sessionStorage?.removeItem(RELOAD_KEY(name));
       return module;
     } catch (error) {
       console.warn(`[SGS] Chunk load failed for ${name}, retrying…`, error);
 
       try {
         const module = await importer();
-        window.sessionStorage?.removeItem(RELOAD_FLAG);
+        window.sessionStorage?.removeItem(RELOAD_KEY(name));
         return module;
       } catch (retryError) {
-        const alreadyReloaded = window.sessionStorage?.getItem(RELOAD_FLAG);
-
-        if (!alreadyReloaded) {
-          window.sessionStorage?.setItem(RELOAD_FLAG, String(Date.now()));
+        if (!reloadedRecently(name)) {
+          window.sessionStorage?.setItem(RELOAD_KEY(name), String(Date.now()));
           window.location.reload();
           // Never settles — the reload replaces this document.
           return new Promise(() => {});
         }
 
-        // Reloading did not help: the chunk is genuinely missing. Surface it
-        // rather than looping.
+        // A reload moments ago did not help: this chunk is genuinely missing.
+        // Surface it rather than looping.
         console.error(`[SGS] Chunk still unreachable after reload: ${name}`);
         throw retryError;
       }

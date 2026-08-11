@@ -1,6 +1,7 @@
 'use strict';
 
 const cron = require('node-cron');
+const config = require('../config/env');
 const logger = require('./logger');
 const { sweepAll } = require('../services/alert.service');
 
@@ -16,7 +17,7 @@ const { sweepAll } = require('../services/alert.service');
  * it off and drive POST /api/alerts/sweep from the platform's scheduler instead.
  */
 function startScheduler() {
-  if (process.env.ENABLE_SCHEDULER !== 'true') {
+  if (!config.enableScheduler) {
     logger.info('Scheduler disabled (set ENABLE_SCHEDULER=true to enable)');
     return null;
   }
@@ -33,7 +34,7 @@ function startScheduler() {
         logger.error({ err: error }, 'Daily alert sweep failed');
       }
     },
-    { timezone: process.env.TZ || 'Africa/Abidjan' }
+    { timezone: config.timezone }
   );
 
   logger.info('Scheduler started — daily alert sweep at 06:00');

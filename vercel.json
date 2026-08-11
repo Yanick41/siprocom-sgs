@@ -1,0 +1,23 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm --prefix client run build",
+  "outputDirectory": "client/dist",
+  "installCommand": "npm --prefix client install && npm --prefix server install",
+  "framework": null,
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/server/index.js" },
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ],
+  "functions": {
+    "server/index.js": {
+      "includeFiles": "server/node_modules/.prisma/**",
+      "maxDuration": 30
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/alerts/sweep",
+      "schedule": "0 6 * * *"
+    }
+  ]
+}

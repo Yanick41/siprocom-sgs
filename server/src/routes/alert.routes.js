@@ -13,20 +13,32 @@ const { idParamSchema } = require('../validators/stock.validator');
 
 const router = express.Router();
 
-// POST /api/alerts/sweep — scheduled backstop (Vercel Cron / node-cron).
-// Declared before `authenticate` because it is machine-to-machine: it carries a
-// shared secret rather than a user session.
-router.post(
-  '/sweep',
-  asyncHandler(async (req, res) => {
-    const provided = req.get('x-cron-secret') || req.query.secret;
-    if (!config.cronSecret || provided !== config.cronSecret) {
-      throw new UnauthorizedError('INVALID_CRON_SECRET');
-    }
-    const result = await sweepAll();
-    res.json({ ok: true, ...result });
-  })
-);
+/**
+ * Scheduled backstop sweep. Machine-to-machine, so it carries a shared secret
+ * rather than a user session — hence it is declared before `authenticate`.
+ *
+ * GET and POST both work: Vercel Cron issues a GET with
+ * `Authorization: Bearer $CRON_SECRET`, while a plain curl or another scheduler
+ * is more naturally a POST with `x-cron-secret`. Supporting only one convention
+ * means the sweep silently never runs on the other platform.
+ *
+ * An empty CRON_SECRET rejects everything: an unauthenticated endpoint that
+ * walks the whole catalogue is not something to leave open by accident.
+ */
+const sweepHandler = asyncHandler(async (req, res) => {
+  const bearer = (req.get('authorization') || '').replace(/^Bearer\s+/i, '');
+  const provided = req.get('x-cron-secret') || bearer || req.query.secret;
+
+  if (!config.cronSecret || provided !== config.cronSecret) {
+    throw new UnauthorizedError('INVALID_CRON_SECRET');
+  }
+
+  const result = await sweepAll();
+  res.json({ ok: true, ...result });
+});
+
+router.get('/sweep', sweepHandler);
+router.post('/sweep', sweepHandler);
 
 router.use(authenticate);
 
