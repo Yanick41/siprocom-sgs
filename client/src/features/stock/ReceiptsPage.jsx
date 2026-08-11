@@ -4,10 +4,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { FiPlus, FiCheck, FiX } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
-import { receiptsApi, productsApi, warehousesApi, suppliersApi } from '@/api/resources';
+import { receiptsApi, productsApi, suppliersApi } from '@/api/resources';
 import { useAuth } from '@/context/AuthContext';
 import { PermissionGate } from '@/components/ProtectedRoute';
 import DataTable from '@/components/DataTable';
+import WarehouseSelect from '@/components/WarehouseSelect';
 import Modal from '@/components/Modal';
 import StatusBadge from '@/components/StatusBadge';
 import { useErrorMessage } from '@/hooks/useErrorMessage';
@@ -149,7 +150,6 @@ function ReceiptFormModal({ onClose, onCreated }) {
   const [lines, setLines] = useState([{ productId: '', quantity: 1, unitPrice: 0 }]);
   const [submitError, setSubmitError] = useState(null);
 
-  const warehousesQuery = useQuery({ queryKey: ['warehouses'], queryFn: () => warehousesApi.list() });
   const suppliersQuery = useQuery({ queryKey: ['suppliers', 'all'], queryFn: () => suppliersApi.list({ limit: 200 }) });
   const productsQuery = useQuery({
     queryKey: ['products', 'picker'],
@@ -203,20 +203,13 @@ function ReceiptFormModal({ onClose, onCreated }) {
 
       <div className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label htmlFor="warehouseId" className="label">{t('stock:receipt.warehouse')}</label>
-            <select
-              id="warehouseId"
-              value={form.warehouseId}
-              onChange={(e) => setForm({ ...form, warehouseId: e.target.value })}
-              className="input"
-            >
-              <option value="">—</option>
-              {(warehousesQuery.data?.items || []).map((w) => (
-                <option key={w.id} value={w.id}>{w.name}</option>
-              ))}
-            </select>
-          </div>
+          <WarehouseSelect
+            id="warehouseId"
+            label={t('stock:receipt.warehouse')}
+            value={form.warehouseId}
+            onChange={(warehouseId) => setForm((f) => ({ ...f, warehouseId }))}
+            required
+          />
 
           <div>
             <label htmlFor="supplierId" className="label">{t('stock:receipt.supplier')}</label>

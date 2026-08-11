@@ -11,6 +11,8 @@ const qs = (params = {}) => {
 };
 
 export const authApi = {
+  setupStatus: () => api.get('/auth/setup-status'),
+  setup: (data) => api.post('/auth/setup', data),
   login: (credentials) => api.post('/auth/login', credentials),
   logout: () => api.post('/auth/logout'),
   me: () => api.get('/auth/me'),

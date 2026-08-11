@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
+import { useQuery } from '@tanstack/react-query';
 import { FiEye, FiEyeOff, FiAlertCircle } from 'react-icons/fi';
 
+import { authApi } from '@/api/resources';
 import { useAuth } from '@/context/AuthContext';
 import { useErrorMessage } from '@/hooks/useErrorMessage';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
@@ -19,14 +21,26 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [submitError, setSubmitError] = useState(null);
 
+  // Cheap and unauthenticated by design: it answers a boolean, nothing more.
+  const setupQuery = useQuery({
+    queryKey: ['auth', 'setup-status'],
+    queryFn: authApi.setupStatus,
+    retry: false,
+    staleTime: 60_000,
+  });
+
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm({ defaultValues: { email: '', password: '' } });
 
-  if (isLoading) return null;
+  if (isLoading || setupQuery.isLoading) return null;
   if (isAuthenticated) return <Navigate to={location.state?.from || '/dashboard'} replace />;
+
+  // An empty database has no account to sign in with, so send the user where
+  // they can actually get in rather than letting them guess at credentials.
+  if (setupQuery.data?.needsSetup) return <Navigate to="/setup" replace />;
 
   const onSubmit = async (values) => {
     setSubmitError(null);

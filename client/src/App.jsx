@@ -21,6 +21,7 @@ import lazyWithRetry from '@/lib/lazyWithRetry';
  * lazyWithRetry, not lazy: a chunk can become unreachable after a deploy or a
  * Vite re-optimisation, and the screen should recover instead of failing.
  */
+const SetupPage = lazyWithRetry(() => import('@/features/auth/SetupPage'), 'setup');
 const SystemStatusPage = lazyWithRetry(() => import('@/features/system/SystemStatusPage'), 'status');
 const DashboardPage = lazyWithRetry(() => import('@/features/dashboard/DashboardPage'), 'dashboard');
 const ProductsPage = lazyWithRetry(() => import('@/features/products/ProductsPage'), 'products');
@@ -59,6 +60,16 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      {/* Redirects to /login as soon as an account exists — the server refuses
+          the underlying endpoint regardless, so this is convenience, not the guard. */}
+      <Route
+        path="/setup"
+        element={
+          <Suspense fallback={<ScreenFallback />}>
+            <SetupPage />
+          </Suspense>
+        }
+      />
       <Route
         path="/status"
         element={

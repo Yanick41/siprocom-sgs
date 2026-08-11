@@ -4,14 +4,15 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
+const { randomUUID } = require('node:crypto');
 
 const config = require('../config/env');
 const prisma = require('../lib/prisma');
-const { UnauthorizedError, ForbiddenError } = require('../lib/errors');
+const { UnauthorizedError, ForbiddenError, ConflictError } = require('../lib/errors');
 const { recordAudit, clientIp } = require('../lib/audit');
 const { asyncHandler } = require('../middleware/errorHandler');
 const { authenticate } = require('../middleware/authenticate');
-const { loginSchema, updateLocaleSchema } = require('../validators/auth.validator');
+const { loginSchema, updateLocaleSchema, setupSchema } = require('../validators/auth.validator');
 
 const router = express.Router();
 
@@ -41,6 +42,79 @@ const publicUser = (user) => ({
   locale: user.locale,
 });
 
+
+/**
+ * First-run setup (§4.7 — accounts are created by an administrator; this is how
+ * the very first one comes into existence on an empty database).
+ *
+ * Open only while the users table is empty. That window is the whole security
+ * model, so it is closed with a conditional INSERT rather than a count-then-
+ * create: under Read Committed, two requests arriving together would both read
+ * zero and both create an administrator. The same discipline as the stock
+ * decrement — the guard belongs in the statement, not around it.
+ */
+
+// GET /api/auth/setup-status — drives the login screen's "create an account" link.
+router.get(
+  '/setup-status',
+  asyncHandler(async (req, res) => {
+    const count = await prisma.user.count();
+    res.json({ needsSetup: count === 0 });
+  })
+);
+
+// POST /api/auth/setup
+router.post(
+  '/setup',
+  loginLimiter,
+  asyncHandler(async (req, res) => {
+    const { name, email, password, locale, warehouseName } = setupSchema.parse(req.body);
+
+    const passwordHash = await bcrypt.hash(password, config.bcryptRounds);
+    const id = randomUUID();
+    const now = new Date();
+
+    // Inserts only if no user exists at all; returns nothing otherwise.
+    const created = await prisma.$queryRaw`
+      INSERT INTO users (id, name, email, password, role, locale, "isActive", "createdAt", "updatedAt")
+      SELECT ${id}, ${name}, ${email}, ${passwordHash}, 'ADMIN', ${locale}, true, ${now}, ${now}
+      WHERE NOT EXISTS (SELECT 1 FROM users)
+      RETURNING id, name, email, role, locale
+    `;
+
+    if (created.length === 0) throw new ConflictError('SETUP_ALREADY_DONE');
+    const user = created[0];
+
+    // A stock system with no warehouse cannot record a single movement, so the
+    // first one is created here rather than left as a step to discover later.
+    const warehouseCount = await prisma.warehouse.count();
+    if (warehouseCount === 0) {
+      await prisma.warehouse.create({
+        data: {
+          code: 'PRINCIPAL',
+          name: warehouseName?.trim() || 'Entrepôt principal',
+          managerName: name,
+        },
+      });
+    }
+
+    await recordAudit({
+      userId: user.id,
+      action: 'SETUP_FIRST_ADMIN',
+      entity: 'User',
+      entityId: user.id,
+      after: { email: user.email },
+      ipAddress: clientIp(req),
+    });
+
+    const token = jwt.sign({ sub: user.id, role: user.role }, config.jwt.secret, {
+      expiresIn: config.jwt.expiresIn,
+    });
+    res.cookie(config.jwt.cookieName, token, cookieOptions());
+
+    res.status(201).json({ user });
+  })
+);
 // POST /api/auth/login
 router.post(
   '/login',

@@ -27,5 +27,8 @@
   "NETWORK_ERROR": "Connexion au serveur impossible. Vérifiez votre réseau.",
   "TOO_MANY_REQUESTS": "Trop de tentatives. Réessayez dans quelques minutes.",
   "UNKNOWN": "Une erreur inattendue est survenue.",
-  "CORS_ORIGIN_NOT_ALLOWED": "Origine non autorisée. Vérifiez l'adresse utilisée pour accéder à l'application."
+  "CORS_ORIGIN_NOT_ALLOWED": "Origine non autorisée. Vérifiez l'adresse utilisée pour accéder à l'application.",
+  "SETUP_ALREADY_DONE": "Un compte administrateur existe déjà. Utilisez la page de connexion.",
+  "PASSWORD_TOO_SHORT": "Le mot de passe doit contenir au moins 12 caractères.",
+  "PASSWORDS_DO_NOT_MATCH": "Les deux mots de passe ne correspondent pas."
 }

@@ -4,9 +4,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { FiCheck, FiShield } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
-import { stockApi, productsApi, warehousesApi } from '@/api/resources';
+import { stockApi, productsApi } from '@/api/resources';
 import { useAuth } from '@/context/AuthContext';
 import { useErrorMessage } from '@/hooks/useErrorMessage';
+import WarehouseSelect from '@/components/WarehouseSelect';
 import { formatQuantity } from '@/lib/format';
 
 /**
@@ -25,7 +26,6 @@ export default function AdjustmentPage() {
   const [form, setForm] = useState({ productId: '', warehouseId: '', countedQuantity: '', reason: '' });
   const [allowNegative, setAllowNegative] = useState(false);
 
-  const warehousesQuery = useQuery({ queryKey: ['warehouses'], queryFn: () => warehousesApi.list() });
   const productsQuery = useQuery({
     queryKey: ['products', 'picker'],
     queryFn: () => productsApi.list({ limit: 200, sort: 'designation', order: 'asc' }),
@@ -81,20 +81,13 @@ export default function AdjustmentPage() {
 
       <div className="card max-w-2xl space-y-4 p-6">
         <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label htmlFor="warehouseId" className="label">{t('common:fields.warehouse')}</label>
-            <select
-              id="warehouseId"
-              value={form.warehouseId}
-              onChange={(e) => setForm({ ...form, warehouseId: e.target.value })}
-              className="input"
-            >
-              <option value="">—</option>
-              {(warehousesQuery.data?.items || []).map((w) => (
-                <option key={w.id} value={w.id}>{w.name}</option>
-              ))}
-            </select>
-          </div>
+          <WarehouseSelect
+            id="warehouseId"
+            label={t('common:fields.warehouse')}
+            value={form.warehouseId}
+            onChange={(warehouseId) => setForm((f) => ({ ...f, warehouseId }))}
+            required
+          />
 
           <div>
             <label htmlFor="productId" className="label">{t('stock:adjustment.product')}</label>

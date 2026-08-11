@@ -92,7 +92,48 @@ const PRODUCTS = [
   ['Emballage', 'EMB-004', 'Film étirable 2kg', 'Stretch film 2kg', 'unit', 10, 80, 3500, 4800, 0.05],
 ];
 
+/**
+ * Refuses to run against anything that is not a local database.
+ *
+ * The seed opens with deleteMany() on every table and then creates four
+ * accounts whose password is published in the README. Pointed at production it
+ * destroys the real data and leaves publicly-known credentials behind.
+ *
+ * A warning in the documentation is not enough: `.env` is edited to point at
+ * production for a migration and then left there, and the next `db:seed` in a
+ * terminal does the damage. I made exactly that mistake against this project's
+ * Neon database. The guard belongs in the script.
+ *
+ * Override deliberately with ALLOW_REMOTE_SEED=yes-destroy-this-database.
+ */
+function assertLocalDatabase(url) {
+  if (process.env.ALLOW_REMOTE_SEED === 'yes-destroy-this-database') {
+    console.warn('\n  ALLOW_REMOTE_SEED is set — seeding a non-local database on purpose.\n');
+    return;
+  }
+
+  let host;
+  try {
+    host = new URL(url).hostname;
+  } catch {
+    throw new Error('DATABASE_URL is unreadable');
+  }
+
+  const isLocal = ['localhost', '127.0.0.1', '::1', 'db', 'postgres'].includes(host);
+  if (!isLocal) {
+    throw new Error(
+      `Refusing to seed a remote database (${host}).\n\n` +
+        '  This script deletes every row and creates demo accounts with a public\n' +
+        '  password. On production that is data loss plus an open door.\n\n' +
+        '  To create the first real administrator instead:\n' +
+        '    npm run create-admin -- --email … --name "…" --password "…"\n'
+    );
+  }
+}
+
 async function main() {
+  assertLocalDatabase(process.env.DATABASE_URL || '');
+
   console.log('Seeding SIPROCOM SGS…\n');
 
   // Order matters: children before parents.

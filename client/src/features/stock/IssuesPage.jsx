@@ -4,10 +4,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { FiPlus, FiCheck, FiX } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
-import { issuesApi, productsApi, warehousesApi, stockApi } from '@/api/resources';
+import { issuesApi, productsApi, stockApi } from '@/api/resources';
 import { useAuth } from '@/context/AuthContext';
 import { PermissionGate } from '@/components/ProtectedRoute';
 import DataTable from '@/components/DataTable';
+import WarehouseSelect from '@/components/WarehouseSelect';
 import Modal from '@/components/Modal';
 import StatusBadge from '@/components/StatusBadge';
 import { useErrorMessage } from '@/hooks/useErrorMessage';
@@ -167,7 +168,6 @@ function IssueFormModal({ onClose, onCreated }) {
   const [lines, setLines] = useState([{ productId: '', quantity: 1 }]);
   const [submitError, setSubmitError] = useState(null);
 
-  const warehousesQuery = useQuery({ queryKey: ['warehouses'], queryFn: () => warehousesApi.list() });
   const productsQuery = useQuery({
     queryKey: ['products', 'picker'],
     queryFn: () => productsApi.list({ limit: 200, sort: 'designation', order: 'asc' }),
@@ -233,24 +233,13 @@ function IssueFormModal({ onClose, onCreated }) {
 
       <div className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label htmlFor="warehouseId" className="label">
-              {t('stock:issue.sourceWarehouse')}
-            </label>
-            <select
-              id="warehouseId"
-              value={form.warehouseId}
-              onChange={(e) => setForm({ ...form, warehouseId: e.target.value })}
-              className="input"
-            >
-              <option value="">—</option>
-              {(warehousesQuery.data?.items || []).map((w) => (
-                <option key={w.id} value={w.id}>
-                  {w.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          <WarehouseSelect
+            id="warehouseId"
+            label={t('stock:issue.sourceWarehouse')}
+            value={form.warehouseId}
+            onChange={(warehouseId) => setForm((f) => ({ ...f, warehouseId }))}
+            required
+          />
 
           <div>
             <label htmlFor="reason" className="label">
@@ -272,26 +261,14 @@ function IssueFormModal({ onClose, onCreated }) {
         </div>
 
         {isTransfer ? (
-          <div>
-            <label htmlFor="destWarehouseId" className="label">
-              {t('stock:issue.destWarehouse')}
-            </label>
-            <select
-              id="destWarehouseId"
-              value={form.destWarehouseId}
-              onChange={(e) => setForm({ ...form, destWarehouseId: e.target.value })}
-              className="input"
-            >
-              <option value="">—</option>
-              {(warehousesQuery.data?.items || [])
-                .filter((w) => w.id !== form.warehouseId)
-                .map((w) => (
-                  <option key={w.id} value={w.id}>
-                    {w.name}
-                  </option>
-                ))}
-            </select>
-          </div>
+          <WarehouseSelect
+            id="destWarehouseId"
+            label={t('stock:issue.destWarehouse')}
+            value={form.destWarehouseId}
+            onChange={(destWarehouseId) => setForm((f) => ({ ...f, destWarehouseId }))}
+            exclude={form.warehouseId}
+            required
+          />
         ) : (
           <div>
             <label htmlFor="recipient" className="label">
