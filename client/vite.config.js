@@ -13,6 +13,10 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    // Fail loudly if 5173 is taken instead of drifting to 5174. A second dev
+    // server on a different port looks identical in the browser but talks to a
+    // stale bundle, and the resulting confusion costs far more than the crash.
+    strictPort: true,
     // Proxy in dev so the browser sees one origin and the auth cookie
     // behaves exactly as it will in production.
     proxy: {

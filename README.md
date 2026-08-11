@@ -39,22 +39,37 @@ modèle de données, les règles métier et la matrice des droits.
 
 ## Démarrage local
 
-**Prérequis :** Node.js 20+, PostgreSQL 17.
+**Prérequis :** Node.js 20+, PostgreSQL 17 démarré.
 
 ```bash
-# 1. Serveur
-cd server
+# 1. Une seule fois — installe tout, applique les migrations, charge la démo
+cp server/.env.example server/.env    # renseigner DATABASE_URL et JWT_SECRET
 npm install
-cp .env.example .env          # renseigner DATABASE_URL et JWT_SECRET
-npx prisma migrate dev
-npm run db:seed               # jeu de démonstration : 24 produits, 90 jours d'historique
-npm run dev                   # http://localhost:4000
+npm run setup
 
-# 2. Client (autre terminal)
-cd client
-npm install
-npm run dev                   # http://localhost:5173
+# 2. À chaque fois — lance l'API et le client ensemble
+npm run dev
 ```
+
+Ouvrez **http://localhost:5173** — l'API tourne sur `:4000`, le client la joint
+via un proxy sur la même origine.
+
+> **Un problème au démarrage ?** `npm run doctor` vérifie Node, les dépendances,
+> le `.env`, les ports et la base, puis indique quoi corriger pour chaque point.
+> `npm run stop` libère les ports si un serveur est resté ouvert.
+
+### Commandes depuis la racine
+
+| Commande | Effet |
+|---|---|
+| `npm run dev` | API + client, sorties préfixées `[API]` / `[WEB]` |
+| `npm run doctor` | Diagnostic avant démarrage |
+| `npm run stop` | Libère les ports 4000 / 5173 |
+| `npm run db:seed` | Recharge le jeu de démonstration |
+| `npm run db:reset` | Réinitialise la base entièrement |
+| `npm run db:studio` | Explorateur de base Prisma |
+| `npm test` | Vérification du moteur de stock (16 tests) |
+| `npm run check` | Traductions + build + tests |
 
 **Comptes de démonstration** — mot de passe `Siprocom2026!` :
 
@@ -67,20 +82,19 @@ npm run dev                   # http://localhost:5173
 
 ---
 
-## Commandes
+### Travailler dans un seul paquet
+
+Les commandes ci-dessus couvrent l'usage courant. Pour n'agir que sur un côté :
 
 ```bash
-# server
-npm run dev              # nodemon
-npm run db:seed          # réinitialise le jeu de démonstration
-npm run test:stock       # vérification du moteur de stock (16 tests)
-npx prisma studio        # explorateur de base
-npx prisma migrate deploy   # migrations en production
+# server/
+npm run dev                 # nodemon seul
+npx prisma migrate dev      # créer une migration en développement
+npx prisma migrate deploy   # appliquer les migrations en production
 
-# client
-npm run dev
+# client/
 npm run build
-npm run i18n:check       # vérifie que FR et EN sont synchronisés
+npm run i18n:check          # vérifie que FR et EN sont synchronisés
 ```
 
 ---
@@ -154,7 +168,7 @@ exécutable à tout moment depuis l'écran Ajustement.
 ## Tests
 
 ```bash
-cd server && npm run test:stock
+npm test
 ```
 
 16 vérifications, dont celle qui compte le plus : **20 sorties simultanées pour

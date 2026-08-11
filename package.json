@@ -1,0 +1,31 @@
+{
+  "name": "siprocom-sgs",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SIPROCOM — Système de Gestion de Stock",
+  "scripts": {
+    "dev": "concurrently --names \"API,WEB\" --prefix-colors \"blue,magenta\" --kill-others \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:server": "npm --prefix server run dev",
+    "_comment:dev:client": "Prisma takes ~10s to load on Windows while Vite is ready in ~1s. Without this wait the browser opens onto proxy 502s and looks broken.",
+    "dev:client": "wait-on -t 90000 tcp:127.0.0.1:4000 && npm --prefix client run dev",
+    "setup": "npm run install:all && npm run db:setup",
+    "install:all": "npm --prefix server install && npm --prefix client install",
+    "db:setup": "npm --prefix server exec -- prisma migrate deploy && npm run db:seed",
+    "db:seed": "npm --prefix server run db:seed",
+    "db:reset": "npm --prefix server exec -- prisma migrate reset --force && npm run db:seed",
+    "db:studio": "npm --prefix server exec -- prisma studio",
+    "build": "npm --prefix client run build",
+    "test": "npm --prefix server run test:stock",
+    "i18n:check": "npm --prefix client run i18n:check",
+    "check": "npm run i18n:check && npm run build && npm run test",
+    "stop": "node scripts/stop.js",
+    "doctor": "node scripts/doctor.js"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "wait-on": "^9.1.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
