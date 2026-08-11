@@ -9,7 +9,40 @@
     <title>SIPROCOM — SGS</title>
   </head>
   <body>
-    <div id="root"></div>
+    <!--
+      #root carries a visible placeholder that React replaces on mount. If the
+      bundle fails to load or throws before mounting, the user sees this instead
+      of a blank white page — the one failure that gives no clue whether the
+      server is down, the port is wrong, or the app crashed.
+    -->
+    <div id="root">
+      <div id="sgs-boot" style="
+        min-height:100vh;display:flex;align-items:center;justify-content:center;
+        font-family:system-ui,sans-serif;color:#64748b;background:#f1f5f9;text-align:center;padding:1.5rem">
+        <div>
+          <p style="font-weight:700;color:#1e3a5f;font-size:1.25rem;margin:0 0 .25rem">SIPROCOM</p>
+          <p style="margin:0;font-size:.9rem">Chargement… · Loading…</p>
+          <p id="sgs-boot-error" style="display:none;margin:1rem 0 0;font-size:.85rem;color:#b91c1c;max-width:30rem">
+            L'application n'a pas pu démarrer. Vérifiez que le serveur tourne (<code>npm run dev</code>),
+            puis rechargez.<br />
+            <span style="color:#94a3b8">The application failed to start. Check the dev server is
+            running, then reload.</span>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // If React has not replaced the placeholder after 10s, the bundle never
+      // ran — surface that rather than leaving a spinner forever.
+      setTimeout(function () {
+        var boot = document.getElementById('sgs-boot');
+        if (boot && document.body.contains(boot)) {
+          document.getElementById('sgs-boot-error').style.display = 'block';
+        }
+      }, 10000);
+    </script>
+
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

@@ -33,14 +33,29 @@ const fail = (msg, fix) => {
   if (fix) console.log(`      \x1b[90m→ ${fix}\x1b[0m`);
 };
 
-/** Resolves true when something is already listening on the port. */
-const portInUse = (port) =>
+/**
+ * Resolves true when something is already listening on the port.
+ *
+ * Connects rather than trying to bind. Binding is unreliable here: the API
+ * listens on :: and Vite on ::1, and on Windows a bind to 127.0.0.1 succeeds
+ * against both — so the bind test reported busy ports as free. Both loopback
+ * stacks are probed because a server on ::1 is invisible from 127.0.0.1.
+ */
+const canConnect = (port, host) =>
   new Promise((resolve) => {
-    const server = net.createServer();
-    server.once('error', (err) => resolve(err.code === 'EADDRINUSE'));
-    server.once('listening', () => server.close(() => resolve(false)));
-    server.listen(port, '127.0.0.1');
+    const socket = net.connect({ port, host });
+    const done = (result) => {
+      socket.destroy();
+      resolve(result);
+    };
+    socket.setTimeout(700);
+    socket.once('connect', () => done(true));
+    socket.once('timeout', () => done(false));
+    socket.once('error', () => done(false));
   });
+
+const portInUse = async (port) =>
+  (await canConnect(port, '127.0.0.1')) || (await canConnect(port, '::1'));
 
 function parseEnv(file) {
   if (!fs.existsSync(file)) return null;
@@ -94,7 +109,7 @@ async function main() {
   // ---- Ports --------------------------------------------------------------
   for (const [port, name] of [
     [4000, 'API'],
-    [5173, 'client'],
+    [5280, 'client'],
   ]) {
     if (await portInUse(port)) {
       warn(`Port ${port} (${name}) is already in use`, 'npm run stop — or close the other terminal');
@@ -157,7 +172,7 @@ async function main() {
     console.log(`\x1b[33m${warnings} warning(s)\x1b[0m — \x1b[1mnpm run dev\x1b[0m should still work.\n`);
   } else {
     console.log('Everything checks out. Start with \x1b[1mnpm run dev\x1b[0m\n');
-    console.log('  Client   \x1b[36mhttp://localhost:5173\x1b[0m');
+    console.log('  Client   \x1b[36mhttp://localhost:5280\x1b[0m');
     console.log('  API      \x1b[36mhttp://localhost:4000\x1b[0m\n');
     console.log('  Sign in  admin@siprocom.com / Siprocom2026!\n');
   }

@@ -11,7 +11,7 @@
 
 const { execSync } = require('node:child_process');
 
-const PORTS = [4000, 5173, 5174, 5175];
+const PORTS = [4000, 5280, 5281, 5173, 5174];
 const isWindows = process.platform === 'win32';
 
 /**

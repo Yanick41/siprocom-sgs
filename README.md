@@ -51,7 +51,7 @@ npm run setup
 npm run dev
 ```
 
-Ouvrez **http://localhost:5173** — l'API tourne sur `:4000`, le client la joint
+Ouvrez **http://localhost:5280** — l'API tourne sur `:4000`, le client la joint
 via un proxy sur la même origine.
 
 > **Un problème au démarrage ?** `npm run doctor` vérifie Node, les dépendances,
@@ -64,7 +64,7 @@ via un proxy sur la même origine.
 |---|---|
 | `npm run dev` | API + client, sorties préfixées `[API]` / `[WEB]` |
 | `npm run doctor` | Diagnostic avant démarrage |
-| `npm run stop` | Libère les ports 4000 / 5173 |
+| `npm run stop` | Libère les ports 4000 / 5280 |
 | `npm run db:seed` | Recharge le jeu de démonstration |
 | `npm run db:reset` | Réinitialise la base entièrement |
 | `npm run db:studio` | Explorateur de base Prisma |
