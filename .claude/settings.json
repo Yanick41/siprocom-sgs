@@ -28,7 +28,9 @@
       "Bash(node --check receipt.routes.js)",
       "Bash(xargs echo \"  mouvements en unites de base :\")",
       "Bash(xargs echo \"  PATCH re-resout les lignes :\")",
-      "Bash(node --check seed.js)"
+      "Bash(node --check seed.js)",
+      "Bash(git restore *)",
+      "Bash(rm -f placeholder-test.md /tmp/leak.js)"
     ]
   }
 }

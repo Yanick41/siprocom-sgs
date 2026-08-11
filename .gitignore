@@ -3,11 +3,25 @@ node_modules/
 .pnp
 .pnp.js
 
-# Environment — never commit real secrets
+# ---------------------------------------------------------------------------
+# Secrets — nothing below may ever reach a remote.
+#
+# Broad on purpose: `.env` alone would not have covered `.env.neon.local`, and
+# the pattern that is missing is always the one that leaks. `.gitignore` only
+# stops the next commit, so `scripts/check-secrets.js` runs on pre-commit as
+# the real guard.
+# ---------------------------------------------------------------------------
 .env
-.env.local
-.env.*.local
+.env.*
 !.env.example
+!.env.*.example
+
+# Keys and certificates
+*.pem
+*.key
+*.p12
+*.pfx
+!**/public*.pem
 
 # Build output
 dist/
@@ -42,8 +56,11 @@ coverage/
 playwright-report/
 test-results/
 
+# Database dumps — a backup is a full copy of the production data
+backups/
+*.sql.gz
+*.dump
+
 # Scratch
 tmp/
 *.tmp
-backups/
-.env.*.local
