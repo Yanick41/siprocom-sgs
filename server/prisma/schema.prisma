@@ -167,6 +167,12 @@ model Product {
   /// the movement ledger are all expressed in this unit and nothing else.
   unit String @default("unit")
 
+  /// Physical container, independent of both the category and the counting
+  /// unit: a Boisson énergétique exists as a can and as a carton of cans, and a
+  /// water as glass or plastic. Kept separate from  because that one is
+  /// what stock is counted in — this one only describes the packaging.
+  container String?
+
   /// Bottles per carton. Null means the product is never sold by the carton.
   /// Used only to convert what an operator types into base units; stock itself
   /// never holds cartons.

@@ -27,7 +27,8 @@
     "check:secrets": "node scripts/check-secrets.js",
     "hooks:install": "node scripts/install-hooks.js",
     "postinstall": "node scripts/install-hooks.js",
-    "start": "npm --prefix server run start"
+    "start": "npm --prefix server run start",
+    "init-catalogue": "npm --prefix server run init-catalogue"
   },
   "devDependencies": {
     "concurrently": "^9.1.2",

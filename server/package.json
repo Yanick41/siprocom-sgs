@@ -25,7 +25,8 @@
     "doctor": "npm --prefix .. run doctor",
     "stop": "npm --prefix .. run stop",
     "dev:all": "npm --prefix .. run dev",
-    "create-admin": "node scripts/create-admin.js"
+    "create-admin": "node scripts/create-admin.js",
+    "init-catalogue": "node scripts/init-catalogue.js"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

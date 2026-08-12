@@ -8,6 +8,7 @@ import { useErrorMessage } from '@/hooks/useErrorMessage';
 import Modal from '@/components/Modal';
 import FormField from '@/components/FormField';
 import { UNITS, canonicalUnit } from '@/lib/units';
+import { CONTAINERS } from '@/lib/containers';
 
 
 export default function ProductFormModal({ product, categories, onClose, onSaved }) {
@@ -36,6 +37,7 @@ export default function ProductFormModal({ product, categories, onClose, onSaved
       barcode: product?.barcode ?? '',
       categoryId: product?.categoryId ?? '',
       unit: canonicalUnit(product?.unit) ?? 'unit',
+      container: product?.container ?? '',
       minThreshold: product?.minThreshold ?? 0,
       maxThreshold: product?.maxThreshold ?? '',
       buyPrice: product?.buyPrice ?? 0,
@@ -78,6 +80,7 @@ export default function ProductFormModal({ product, categories, onClose, onSaved
         values.unitsPerCarton === '' || values.cartonSellPrice === ''
           ? null
           : Number(values.cartonSellPrice),
+      container: values.container || null,
       designationEn: values.designationEn || null,
       barcode: values.barcode || null,
       supplierIds: Array.isArray(values.supplierIds) ? values.supplierIds : [values.supplierIds].filter(Boolean),
@@ -146,6 +149,24 @@ export default function ProductFormModal({ product, categories, onClose, onSaved
                 {selectableCategories.map((c) => (
                   <option key={c.id} value={c.id}>
                     {lng === 'en' && c.nameEn ? c.nameEn : c.name}
+                  </option>
+                ))}
+              </select>
+            )}
+          </FormField>
+
+          <FormField
+            label={t('products:form.container')}
+            name="container"
+            error={errors.container}
+            hint={t('products:form.containerHint')}
+          >
+            {(props) => (
+              <select {...props} {...register('container')}>
+                <option value="">—</option>
+                {CONTAINERS.map((c) => (
+                  <option key={c} value={c}>
+                    {t(`common:containers.${c}`)}
                   </option>
                 ))}
               </select>

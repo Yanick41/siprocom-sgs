@@ -44,7 +44,9 @@
     "unitsPerCartonHint": "e.g. 12 bottles. Leave empty if the product is not sold by the carton.",
     "cartonSellPrice": "Carton sell price",
     "cartonSellPriceHint": "For reference: {{reference}} F at the unit price",
-    "cartonPriceWarning": "The carton price is below the price of a single unit. Please check."
+    "cartonPriceWarning": "The carton price is below the price of a single unit. Please check.",
+    "container": "Container format",
+    "containerHint": "Optional — independent of the category"
   },
   "toast": {
     "created": "Product created",

@@ -99,5 +99,11 @@
   },
   "filters": {
     "all": "Tous"
+  },
+  "containers": {
+    "glass_bottle": "Bouteille (verre)",
+    "plastic_bottle": "Bouteille plastique",
+    "can": "Canette",
+    "carton_pack": "Carton"
   }
 }
