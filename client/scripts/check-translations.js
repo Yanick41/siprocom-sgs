@@ -1,72 +1,68 @@
-#!/usr/bin/env node
 /**
- * Fails if the FR and EN translation files have drifted apart.
+ * Validates the French translation files: `npm run i18n:check`
  *
- * The bilingual requirement is only as good as its weakest key: a missing
- * translation silently falls back to French for an English user. This guard
- * turns that into a build failure instead. See IMPLEMENTATION_PLAN.md §11 test 10.
+ * It used to compare French against English and fail on any key present in one
+ * and missing from the other. With a single language that comparison is gone,
+ * but the check is not pointless: a malformed JSON file breaks the whole app at
+ * load, and an empty string renders as a blank label that no one notices until
+ * a user asks what the field is for.
  *
- * Usage: npm run i18n:check
+ * Kept rather than deleted — if a second language is ever added, the comparison
+ * comes back here.
  */
-import { readdirSync, readFileSync } from 'node:fs';
-import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
 
-const LOCALES_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'src', 'i18n', 'locales');
-const REFERENCE = 'fr'; // French is the source of truth
-const TARGETS = ['en'];
+import fs from 'node:fs';
+import path from 'node:path';
 
-/** Flattens { a: { b: 1 } } → ["a.b"] */
-function flatten(obj, prefix = '') {
-  return Object.entries(obj).flatMap(([key, value]) => {
-    const path = prefix ? `${prefix}.${key}` : key;
-    return value && typeof value === 'object' && !Array.isArray(value)
-      ? flatten(value, path)
-      : [path];
-  });
-}
+const LOCALES = path.resolve(import.meta.dirname, '..', 'src', 'i18n', 'locales', 'fr');
 
-function loadNamespace(locale, file) {
-  return JSON.parse(readFileSync(join(LOCALES_DIR, locale, file), 'utf8'));
-}
-
-let errorCount = 0;
-const report = (message) => {
-  console.error(`  ✗ ${message}`);
-  errorCount += 1;
-};
-
-const referenceFiles = readdirSync(join(LOCALES_DIR, REFERENCE)).filter((f) => f.endsWith('.json'));
-
-for (const target of TARGETS) {
-  const targetFiles = new Set(readdirSync(join(LOCALES_DIR, target)));
-  console.log(`\nChecking ${REFERENCE} → ${target}`);
-
-  for (const file of referenceFiles) {
-    const ns = file.replace('.json', '');
-
-    if (!targetFiles.has(file)) {
-      report(`${target}/${file} is missing entirely`);
-      continue;
-    }
-
-    const referenceKeys = new Set(flatten(loadNamespace(REFERENCE, file)));
-    const targetKeys = new Set(flatten(loadNamespace(target, file)));
-
-    const missing = [...referenceKeys].filter((k) => !targetKeys.has(k));
-    const extra = [...targetKeys].filter((k) => !referenceKeys.has(k));
-
-    for (const key of missing) report(`${ns}:${key} missing in ${target}`);
-    for (const key of extra) report(`${ns}:${key} exists in ${target} but not in ${REFERENCE}`);
-
-    if (!missing.length && !extra.length) {
-      console.log(`  ✓ ${ns} (${referenceKeys.size} keys)`);
+/** Flattens nested objects to dotted paths so an empty leaf is reportable. */
+function flatten(object, prefix = '') {
+  const out = {};
+  for (const [key, value] of Object.entries(object)) {
+    const full = prefix ? `${prefix}.${key}` : key;
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      Object.assign(out, flatten(value, full));
+    } else {
+      out[full] = value;
     }
   }
+  return out;
 }
 
-if (errorCount > 0) {
-  console.error(`\n${errorCount} translation problem(s) found.\n`);
+const problems = [];
+let total = 0;
+
+console.log('\nChecking French translations\n');
+
+for (const file of fs.readdirSync(LOCALES).filter((f) => f.endsWith('.json'))) {
+  const full = path.join(LOCALES, file);
+  let parsed;
+
+  try {
+    parsed = JSON.parse(fs.readFileSync(full, 'utf8'));
+  } catch (error) {
+    problems.push(`${file}: invalid JSON — ${error.message.split('\n')[0]}`);
+    continue;
+  }
+
+  const flat = flatten(parsed);
+  const empty = Object.entries(flat)
+    .filter(([, value]) => typeof value === 'string' && value.trim() === '')
+    .map(([key]) => key);
+
+  total += Object.keys(flat).length;
+  for (const key of empty) problems.push(`${file}: "${key}" is empty`);
+
+  console.log(`  ${empty.length === 0 ? '✓' : '✗'} ${file.replace('.json', '')} (${Object.keys(flat).length} keys)`);
+}
+
+console.log('');
+
+if (problems.length) {
+  problems.forEach((p) => console.error(`  ${p}`));
+  console.error(`\n${problems.length} problem(s).\n`);
   process.exit(1);
 }
-console.log('\nAll translation files are in sync.\n');
+
+console.log(`All ${total} translation keys are valid.\n`);

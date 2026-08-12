@@ -28,7 +28,7 @@
   "form": {
     "createTitle": "Nouveau produit",
     "editTitle": "Modifier le produit",
-    "designationFr": "Désignation (français)",
+    "designationFr": "Désignation",
     "designationEn": "Désignation (anglais)",
     "designationEnHint": "Facultatif — la désignation française sera utilisée si ce champ est vide",
     "barcode": "Code-barres",

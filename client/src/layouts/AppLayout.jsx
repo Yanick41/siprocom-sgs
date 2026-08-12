@@ -9,7 +9,6 @@ import {
 
 import { useAuth } from '@/context/AuthContext';
 import { alertsApi } from '@/api/resources';
-import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 /**
  * Navigation is declared once with the permission each entry needs; the sidebar
@@ -158,7 +157,6 @@ export default function AppLayout() {
                 )}
               </Link>
             )}
-            <LanguageSwitcher />
             <div className="hidden text-right sm:block">
               <p className="text-sm font-medium leading-tight text-slate-800">{user?.name}</p>
               <p className="text-xs leading-tight text-slate-500">

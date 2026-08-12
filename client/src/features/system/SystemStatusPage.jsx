@@ -2,7 +2,6 @@ import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 
 import api from '@/api/client';
-import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { useErrorMessage } from '@/hooks/useErrorMessage';
 import { formatDateTime } from '@/lib/format';
 
@@ -32,7 +31,6 @@ export default function SystemStatusPage() {
           </h1>
           <p className="text-sm text-slate-500">{t('common:app.subtitle')}</p>
         </div>
-        <LanguageSwitcher />
       </div>
 
       <section className="card p-6">

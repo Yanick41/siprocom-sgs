@@ -8,7 +8,6 @@ import { FiEye, FiEyeOff, FiAlertCircle } from 'react-icons/fi';
 import { authApi } from '@/api/resources';
 import { useAuth } from '@/context/AuthContext';
 import { useErrorMessage } from '@/hooks/useErrorMessage';
-import LanguageSwitcher from '@/components/LanguageSwitcher';
 import FormField from '@/components/FormField';
 
 export default function LoginPage() {
@@ -55,11 +54,6 @@ export default function LoginPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-100 p-4">
       <div className="w-full max-w-md">
-        <div className="mb-6 flex justify-end">
-          {/* Available before authentication — a user who cannot read French
-              must be able to switch the language to sign in. */}
-          <LanguageSwitcher />
-        </div>
 
         <div className="card p-6 sm:p-8">
           <header className="mb-6 text-center">

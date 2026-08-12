@@ -148,7 +148,6 @@ function CategoryFormModal({ category, roots, onClose, onSaved }) {
   } = useForm({
     defaultValues: {
       name: category?.name ?? '',
-      nameEn: category?.nameEn ?? '',
       description: category?.description ?? '',
       parentId: category?.parentId ?? '',
     },
@@ -191,7 +190,6 @@ function CategoryFormModal({ category, roots, onClose, onSaved }) {
           mutation.mutate({
             ...values,
             parentId: values.parentId || null,
-            nameEn: values.nameEn || null,
             description: values.description || null,
           });
         })}
@@ -200,10 +198,6 @@ function CategoryFormModal({ category, roots, onClose, onSaved }) {
       >
         <FormField label={t('admin:categories.nameFr')} name="name" error={errors.name} required>
           {(props) => <input {...props} type="text" {...register('name', { required: 'VALIDATION_FAILED' })} />}
-        </FormField>
-
-        <FormField label={t('admin:categories.nameEn')} name="nameEn" error={errors.nameEn}>
-          {(props) => <input {...props} type="text" {...register('nameEn')} />}
         </FormField>
 
         <FormField

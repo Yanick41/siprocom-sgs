@@ -7,7 +7,6 @@ import { FiEye, FiEyeOff, FiAlertCircle, FiCheckCircle } from 'react-icons/fi';
 
 import { authApi } from '@/api/resources';
 import { useErrorMessage } from '@/hooks/useErrorMessage';
-import LanguageSwitcher from '@/components/LanguageSwitcher';
 import FormField from '@/components/FormField';
 
 /**
@@ -61,9 +60,6 @@ export default function SetupPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-100 p-4">
       <div className="w-full max-w-md">
-        <div className="mb-6 flex justify-end">
-          <LanguageSwitcher />
-        </div>
 
         <div className="card p-6 sm:p-8">
           <header className="mb-6 text-center">

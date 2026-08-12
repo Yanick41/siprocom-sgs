@@ -33,7 +33,6 @@ export default function ProductFormModal({ product, categories, onClose, onSaved
     defaultValues: {
       reference: product?.reference ?? '',
       designation: product?.designation ?? '',
-      designationEn: product?.designationEn ?? '',
       barcode: product?.barcode ?? '',
       categoryId: product?.categoryId ?? '',
       unit: canonicalUnit(product?.unit) ?? 'unit',
@@ -86,7 +85,6 @@ export default function ProductFormModal({ product, categories, onClose, onSaved
           ? null
           : Number(values.cartonSellPrice),
       container: values.container || null,
-      designationEn: values.designationEn || null,
       barcode: values.barcode || null,
       supplierIds: Array.isArray(values.supplierIds) ? values.supplierIds : [values.supplierIds].filter(Boolean),
     });
@@ -135,15 +133,6 @@ export default function ProductFormModal({ product, categories, onClose, onSaved
 
         <FormField label={t('products:form.designationFr')} name="designation" error={errors.designation} required>
           {(props) => <input {...props} type="text" {...register('designation', { required: 'VALIDATION_FAILED' })} />}
-        </FormField>
-
-        <FormField
-          label={t('products:form.designationEn')}
-          name="designationEn"
-          error={errors.designationEn}
-          hint={t('products:form.designationEnHint')}
-        >
-          {(props) => <input {...props} type="text" {...register('designationEn')} />}
         </FormField>
 
         <div className="grid gap-4 sm:grid-cols-2">

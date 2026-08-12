@@ -5,7 +5,7 @@
     "new": "Nouvelle catégorie",
     "createTitle": "Nouvelle catégorie",
     "editTitle": "Modifier la catégorie",
-    "nameFr": "Nom (français)",
+    "nameFr": "Nom",
     "nameEn": "Nom (anglais)",
     "parent": "Catégorie parente",
     "parentHint": "Laisser vide pour créer une catégorie principale",

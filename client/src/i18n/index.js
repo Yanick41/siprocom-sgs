@@ -1,6 +1,5 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import LanguageDetector from 'i18next-browser-languagedetector';
 
 import frCommon from './locales/fr/common.json';
 import frAuth from './locales/fr/auth.json';
@@ -10,25 +9,17 @@ import frAdmin from './locales/fr/admin.json';
 import frStock from './locales/fr/stock.json';
 import frAlerts from './locales/fr/alerts.json';
 import frReports from './locales/fr/reports.json';
-import enCommon from './locales/en/common.json';
-import enAuth from './locales/en/auth.json';
-import enErrors from './locales/en/errors.json';
-import enProducts from './locales/en/products.json';
-import enAdmin from './locales/en/admin.json';
-import enStock from './locales/en/stock.json';
-import enAlerts from './locales/en/alerts.json';
-import enReports from './locales/en/reports.json';
 
-export const SUPPORTED_LANGUAGES = [
-  { code: 'fr', label: 'Français', flag: '🇫🇷' },
-  { code: 'en', label: 'English', flag: '🇬🇧' },
-];
+/**
+ * French only. The i18n layer stays in place rather than inlining 370 strings
+ * across the components: every t() call keeps working, nothing needs rewriting,
+ * and adding a second language later is a file plus one line here.
+ */
+export const SUPPORTED_LANGUAGES = [{ code: 'fr', label: 'Français', flag: '🇫🇷' }];
 
 export const DEFAULT_LANGUAGE = 'fr';
-export const LANGUAGE_STORAGE_KEY = 'sgs_language';
 
 i18n
-  .use(LanguageDetector)
   .use(initReactI18next)
   .init({
     resources: {
@@ -36,20 +27,12 @@ i18n
         common: frCommon, auth: frAuth, errors: frErrors, products: frProducts,
         admin: frAdmin, stock: frStock, alerts: frAlerts, reports: frReports,
       },
-      en: {
-        common: enCommon, auth: enAuth, errors: enErrors, products: enProducts,
-        admin: enAdmin, stock: enStock, alerts: enAlerts, reports: enReports,
-      },
     },
     fallbackLng: DEFAULT_LANGUAGE,
-    supportedLngs: SUPPORTED_LANGUAGES.map((l) => l.code),
+    supportedLngs: ['fr'],
+    lng: 'fr', // fixed: no detection, no stored preference, no negotiation
     ns: ['common', 'auth', 'errors', 'products', 'admin', 'stock', 'alerts', 'reports'],
     defaultNS: 'common',
-    detection: {
-      order: ['localStorage', 'navigator'],
-      lookupLocalStorage: LANGUAGE_STORAGE_KEY,
-      caches: ['localStorage'],
-    },
     interpolation: {
       escapeValue: false, // React already escapes
     },
