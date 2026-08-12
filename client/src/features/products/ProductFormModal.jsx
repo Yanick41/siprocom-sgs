@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 
-import { productsApi, suppliersApi } from '@/api/resources';
+import { productsApi } from '@/api/resources';
 import { useErrorMessage } from '@/hooks/useErrorMessage';
 import Modal from '@/components/Modal';
 import FormField from '@/components/FormField';
@@ -17,12 +17,6 @@ export default function ProductFormModal({ product, categories, onClose, onSaved
   const translateError = useErrorMessage();
   const isEdit = Boolean(product);
   const [submitError, setSubmitError] = useState(null);
-
-  const suppliersQuery = useQuery({
-    queryKey: ['suppliers', 'all'],
-    queryFn: () => suppliersApi.list({ limit: 200 }),
-    staleTime: 5 * 60 * 1000,
-  });
 
   const {
     register,
@@ -45,7 +39,6 @@ export default function ProductFormModal({ product, categories, onClose, onSaved
       cartonBuyPrice: product?.cartonBuyPrice ?? '',
       unitsPerCarton: product?.unitsPerCarton ?? '',
       cartonSellPrice: product?.cartonSellPrice ?? '',
-      supplierIds: product?.suppliers?.map((s) => s.supplierId) ?? [],
     },
   });
 
@@ -86,7 +79,6 @@ export default function ProductFormModal({ product, categories, onClose, onSaved
           : Number(values.cartonSellPrice),
       container: values.container || null,
       barcode: values.barcode || null,
-      supplierIds: Array.isArray(values.supplierIds) ? values.supplierIds : [values.supplierIds].filter(Boolean),
     });
   };
 
@@ -291,17 +283,6 @@ export default function ProductFormModal({ product, categories, onClose, onSaved
           )}
         </div>
 
-        <FormField label={t('products:form.suppliers')} name="supplierIds" error={errors.supplierIds}>
-          {(props) => (
-            <select {...props} multiple size={4} className={`${props.className} h-auto py-2`} {...register('supplierIds')}>
-              {(suppliersQuery.data?.items || []).map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
-          )}
-        </FormField>
       </form>
     </Modal>
   );
