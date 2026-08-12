@@ -165,7 +165,12 @@ describe('every screen renders its fetched data', () => {
           const rendered = view.queryAllByText(dataMarker).length > 0;
           expect(crashed || rendered).toBeTruthy();
         },
-        { timeout: 8000 }
+        // Generous on purpose. waitFor resolves as soon as the condition holds,
+        // so a high ceiling costs nothing on a healthy run — but this suite runs
+        // straight after the production build in `npm run check`, and one test
+        // failed there on contention alone. A flaky suite is worse than a slow
+        // one: it teaches you to ignore red.
+        { timeout: 20000 }
       );
 
       spy.mockRestore();
