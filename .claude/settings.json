@@ -34,7 +34,10 @@
       "Bash(grep -viE \"warn|pris.ly|^$\")",
       "Bash(grep -vE \"injected env|Production —|^\\\\s*\\\\\\\\\\\\$\")",
       "Bash(git grep *)",
-      "Bash(grep -viE \"^\\\\S+:\\\\s*//|\\\\* |comment\")"
+      "Bash(grep -viE \"^\\\\S+:\\\\s*//|\\\\* |comment\")",
+      "Bash(awk '{printf \" %-52s %s\\\\n\", $9, $5}')",
+      "Bash(gh repo *)",
+      "Bash(git -c core.safecrlf=false commit -q -m ' *)"
     ]
   }
 }

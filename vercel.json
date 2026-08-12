@@ -8,8 +8,20 @@
 
   "functions": {
     "api/index.js": {
-      "includeFiles": "server/**",
-      "maxDuration": 30
+      "maxDuration": 30,
+
+      "//": [
+        "Only the Linux query engine is force-included. Vercel traces static",
+        "requires on its own, so node_modules does not need listing — and must",
+        "not be: server/node_modules is 476 MB against a 250 MB limit per",
+        "function, so a broad glob fails at packaging, not at runtime.",
+        "",
+        "The engine itself is loaded dynamically by Prisma at first query, so",
+        "the tracer cannot see it. Miss it and the build succeeds while every",
+        "request dies on 'Query engine library not found' — a deploy that is",
+        "green and broken."
+      ],
+      "includeFiles": "server/node_modules/.prisma/client/libquery_engine-rhel-openssl-3.0.x.so.node"
     }
   },
 
