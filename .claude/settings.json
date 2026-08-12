@@ -37,7 +37,8 @@
       "Bash(grep -viE \"^\\\\S+:\\\\s*//|\\\\* |comment\")",
       "Bash(awk '{printf \" %-52s %s\\\\n\", $9, $5}')",
       "Bash(gh repo *)",
-      "Bash(git -c core.safecrlf=false commit -q -m ' *)"
+      "Bash(git -c core.safecrlf=false commit -q -m ' *)",
+      "Bash(node --check scripts/check-secrets.js)"
     ]
   }
 }

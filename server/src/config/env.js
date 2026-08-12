@@ -23,10 +23,35 @@ const isProduction = NODE_ENV === 'production';
 const requiredInProduction = (key, devFallback) =>
   isProduction ? required(key) : optional(key, devFallback);
 
-const clientUrls = requiredInProduction('CLIENT_URL', 'http://localhost:5280')
-  .split(',')
-  .map((url) => url.trim())
-  .filter(Boolean);
+/**
+ * Vercel publishes the stable production domain of the project at runtime, so
+ * the CORS allowlist can be correct on the very first deploy instead of needing
+ * CLIENT_URL corrected and the whole thing redeployed once the URL is known.
+ *
+ * It is the project's production alias (siprocom-sgs.vercel.app), not the
+ * per-deployment URL, so it does not change with every push. Preview
+ * deployments each get their own hostname and are not covered — deliberately:
+ * an allowlist that accepts any *.vercel.app accepts everyone else's too.
+ */
+const vercelProductionOrigin = process.env.VERCEL_PROJECT_PRODUCTION_URL
+  ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+  : null;
+
+/**
+ * In production CLIENT_URL is required, unless Vercel already told us the
+ * production domain — then that is a better answer than a value typed by hand.
+ * Failing when neither exists is the point: an empty allowlist would otherwise
+ * silently reject every browser.
+ */
+const configuredClientUrl =
+  optional('CLIENT_URL', '') ||
+  vercelProductionOrigin ||
+  (isProduction ? required('CLIENT_URL') : 'http://localhost:5280');
+
+const clientUrls = [
+  ...configuredClientUrl.split(',').map((url) => url.trim()).filter(Boolean),
+  ...(vercelProductionOrigin ? [vercelProductionOrigin] : []),
+].filter((url, index, all) => all.indexOf(url) === index);
 
 // A localhost origin in a production allowlist is almost always a copied dev
 // value, and it hands the CORS allowlist to anything running on the operator's

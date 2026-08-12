@@ -37,13 +37,44 @@ const PATTERNS = [
 /** Documented placeholders must not fail the check they exist to illustrate. */
 const PLACEHOLDER = /(user:pass|CHANGEME|<[^>]+>|xxx|example\.com|YOUR_|\.\.\.|…)/i;
 
+/**
+ * Values that live in .env but are not secrets, and legitimately appear in
+ * source as defaults: loopback URLs, timezones, log levels, durations.
+ *
+ * Without this the check flagged `http://localhost:5280` written as a dev
+ * fallback in config/env.js — technically a match on a .env value, and
+ * completely harmless. A guard that cries wolf gets bypassed with --no-verify,
+ * which costs more than the false positive it was protecting against.
+ */
+const NOT_A_SECRET =
+  /^(https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?(\/.*)?|(true|false)|[a-z]{2,3}|\d+[hmsd]?|(debug|info|warn|error)|[A-Za-z]+\/[A-Za-z_]+|SIPROCOM.*)$/i;
+
+/**
+ * Every env file on this machine, discovered rather than listed.
+ *
+ * A fixed list missed .env.production.local the moment it was created — the
+ * file holding the newest and most sensitive secrets was the one not scanned.
+ * Anything named .env* now counts, except the committed examples.
+ */
+function envFiles() {
+  const found = [];
+  for (const dir of ['', 'server', 'client']) {
+    const full = path.join(ROOT, dir);
+    if (!fs.existsSync(full)) continue;
+    for (const name of fs.readdirSync(full)) {
+      if (!name.startsWith('.env') || name.includes('example')) continue;
+      const file = path.join(full, name);
+      if (fs.statSync(file).isFile()) found.push(file);
+    }
+  }
+  return found;
+}
+
 /** Every literal secret currently configured on this machine. */
 function localSecrets() {
-  const files = ['server/.env', 'server/.env.neon.local', '.env'];
   const values = new Set();
 
-  for (const file of files) {
-    const full = path.join(ROOT, file);
+  for (const full of envFiles()) {
     if (!fs.existsSync(full)) continue;
 
     for (const line of fs.readFileSync(full, 'utf8').split('\n')) {
@@ -52,7 +83,7 @@ function localSecrets() {
 
       const value = match[2].trim().replace(/^["']|["']$/g, '');
       // Short values produce false positives ("true", "8h", "fr").
-      if (value.length < 12 || PLACEHOLDER.test(value)) continue;
+      if (value.length < 12 || PLACEHOLDER.test(value) || NOT_A_SECRET.test(value)) continue;
 
       values.add(value);
 
