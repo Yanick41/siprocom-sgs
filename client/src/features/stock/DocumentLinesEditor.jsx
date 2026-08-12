@@ -55,13 +55,22 @@ export default function DocumentLinesEditor({
     if (!product) return update(index, { productId: '', productLabel: label });
 
     const keepsCarton = product.unitsPerCarton >= 2;
+    const packaging = keepsCarton ? (line0(index)?.packaging ?? 'UNIT') : 'UNIT';
+
     update(index, {
       productId: product.id,
       productLabel: optionLabel(product),
-      ...(keepsCarton ? {} : { packaging: 'UNIT' }),
-      ...(withPrice ? {} : {}),
+      packaging,
+      // Pre-filled from the price list, then editable: a shop quotes a regular
+      // differently from a walk-in, and what is billed must be what prints.
+      unitPrice: priceFor(product, packaging),
     });
   };
+
+  const line0 = (index) => lines[index];
+
+  const priceFor = (product, packaging) =>
+    packaging === 'CARTON' ? Number(product.cartonSellPrice ?? 0) : Number(product.sellPrice ?? 0);
 
   const addLine = () =>
     onChange([...lines, { productId: '', productLabel: '', quantity: 1, unitPrice: 0, packaging: 'UNIT' }]);
@@ -91,13 +100,12 @@ export default function DocumentLinesEditor({
     focusable[current + 1]?.focus();
   };
 
-  const grandTotal = lines.reduce((sum, line) => {
-    const product = productById.get(line.productId);
-    if (!product) return sum;
-    const price =
-      line.packaging === 'CARTON' ? Number(product.cartonSellPrice ?? 0) : Number(product.sellPrice ?? 0);
-    return sum + price * Number(line.quantity || 0);
-  }, 0);
+  // Uses the line's own price, not the product's — an agreed rate must be what
+  // the operator sees totalled before saving.
+  const grandTotal = lines.reduce(
+    (sum, line) => (line.productId ? sum + Number(line.unitPrice || 0) * Number(line.quantity || 0) : sum),
+    0
+  );
 
   return (
     <div className="space-y-2" ref={containerRef}>
@@ -114,11 +122,7 @@ export default function DocumentLinesEditor({
         const packaging = line.packaging ?? 'UNIT';
 
         const baseQuantity = Number(line.quantity || 0) * (packaging === 'CARTON' ? factor : 1);
-        const unitPrice = product
-          ? packaging === 'CARTON'
-            ? Number(product.cartonSellPrice ?? 0)
-            : Number(product.sellPrice ?? 0)
-          : 0;
+        const unitPrice = Number(line.unitPrice ?? 0);
         const lineTotal = unitPrice * Number(line.quantity || 0);
 
         const available = availability?.get(line.productId);
@@ -179,7 +183,12 @@ export default function DocumentLinesEditor({
                     id={`line-pack-${index}`}
                     data-line={index}
                     value={packaging}
-                    onChange={(e) => update(index, { packaging: e.target.value })}
+                    onChange={(e) =>
+                      update(index, {
+                        packaging: e.target.value,
+                        unitPrice: priceFor(product, e.target.value),
+                      })
+                    }
                     onKeyDown={(e) => handleKeyDown(e, index, !withPrice)}
                     className="input"
                   >
@@ -189,10 +198,12 @@ export default function DocumentLinesEditor({
                 </div>
               )}
 
-              {withPrice && (
-                <div className="w-28">
+              {/* Editable on issues too: a shop quotes a regular differently
+                  from a walk-in, and the figure billed is the one that must
+                  reach the invoice — not the price list. */}
+              <div className="w-28">
                   <label htmlFor={`line-price-${index}`} className="label text-xs">
-                    {t('stock:receipt.unitPrice')}
+                    {t('stock:invoice.unitPrice')}
                   </label>
                   <input
                     id={`line-price-${index}`}
@@ -201,11 +212,10 @@ export default function DocumentLinesEditor({
                     min="0"
                     value={line.unitPrice}
                     onChange={(e) => update(index, { unitPrice: e.target.value })}
-                    onKeyDown={(e) => handleKeyDown(e, index, true)}
-                    className="input"
-                  />
-                </div>
-              )}
+                  onKeyDown={(e) => handleKeyDown(e, index, true)}
+                  className="input"
+                />
+              </div>
 
               <button
                 type="button"
@@ -239,18 +249,9 @@ export default function DocumentLinesEditor({
                   </span>
                 )}
 
-                {/* Shown even at zero: a price of 0 F is a missing price list,
-                    and hiding the field would hide the problem. */}
-                {!withPrice && (
-                  <>
-                    <span className={unitPrice > 0 ? 'text-slate-500' : 'font-medium text-amber-700'}>
-                      {t('stock:invoice.unitPrice')} : {formatCurrency(unitPrice, lng)}
-                    </span>
-                    <span className="font-medium text-slate-800">
-                      {t('stock:invoice.lineTotal')} : {formatCurrency(lineTotal, lng)}
-                    </span>
-                  </>
-                )}
+                <span className="font-medium text-slate-800">
+                  {t('stock:invoice.lineTotal')} : {formatCurrency(lineTotal, lng)}
+                </span>
 
                 {availability && (
                   <span className={insufficient ? 'font-medium text-sgs-danger' : 'text-slate-500'}>

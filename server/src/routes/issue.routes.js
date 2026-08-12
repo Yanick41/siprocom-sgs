@@ -88,6 +88,33 @@ router.get(
   })
 );
 
+/**
+ * Customers seen on past issues: GET /api/issues/customers
+ *
+ * Derived from the documents themselves rather than kept in a Customer table.
+ * A shop sells to walk-ins as often as to regulars, and a table would mean a
+ * record for every one of them — while the documents already hold the answer.
+ *
+ * Most recent details win: a customer who moved should not be offered the old
+ * address. Declared before /:id so "customers" is not read as an id.
+ */
+router.get(
+  '/customers',
+  asyncHandler(async (req, res) => {
+    const rows = await prisma.$queryRaw`
+      SELECT DISTINCT ON (lower(recipient))
+             recipient,
+             "recipientPhone" AS phone,
+             "recipientAddress" AS address
+      FROM goods_issues
+      WHERE recipient IS NOT NULL AND btrim(recipient) <> ''
+      ORDER BY lower(recipient), "issueDate" DESC
+      LIMIT 500
+    `;
+    res.json({ items: rows });
+  })
+);
+
 // GET /api/issues/:id
 // Drafts also report live availability per line so the UI can warn before validation.
 router.get(

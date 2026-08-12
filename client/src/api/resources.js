@@ -69,6 +69,7 @@ export const receiptsApi = {
 };
 
 export const issuesApi = {
+  customers: () => api.get('/issues/customers'),
   list: (params) => api.get(`/issues${qs(params)}`),
   get: (id) => api.get(`/issues/${id}`),
   create: (data) => api.post('/issues', data),

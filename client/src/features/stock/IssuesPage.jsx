@@ -172,6 +172,25 @@ function IssueFormModal({ onClose, onCreated }) {
   const [lines, setLines] = useState([{ productId: '', quantity: 1 }]);
   const [submitError, setSubmitError] = useState(null);
 
+  // Regulars come from past documents: typing a known name fills phone and
+  // address, which is the whole point of remembering them.
+  const customersQuery = useQuery({
+    queryKey: ['issues', 'customers'],
+    queryFn: issuesApi.customers,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const pickCustomer = (name) => {
+    const known = (customersQuery.data?.items || []).find(
+      (c) => c.recipient.toLowerCase() === name.trim().toLowerCase()
+    );
+    setForm((f) => ({
+      ...f,
+      recipient: name,
+      ...(known ? { recipientPhone: known.phone || '', recipientAddress: known.address || '' } : {}),
+    }));
+  };
+
   const productsQuery = useQuery({
     queryKey: ['products', 'picker'],
     queryFn: () => productsApi.list({ limit: 200, sort: 'designation', order: 'asc' }),
@@ -221,10 +240,13 @@ function IssueFormModal({ onClose, onCreated }) {
                 recipientAddress: form.recipientAddress || null,
                 destWarehouseId: isTransfer ? form.destWarehouseId : null,
                 notes: form.notes || null,
+                // The line's own price, so an agreed rate reaches the invoice
+                // instead of the product's list price.
                 lines: validLines.map((l) => ({
                   productId: l.productId,
                   quantity: Number(l.quantity),
                   packaging: l.packaging ?? 'UNIT',
+                  unitPrice: Number(l.unitPrice ?? 0),
                 })),
               });
             }}
@@ -283,13 +305,20 @@ function IssueFormModal({ onClose, onCreated }) {
           // Enough to identify a customer on a document reprinted months later.
           // A name alone is not, in a town with many Kouassis.
           <div className="grid gap-4 sm:grid-cols-2">
+            <datalist id="sgs-customers">
+              {(customersQuery.data?.items || []).map((c) => (
+                <option key={c.recipient} value={c.recipient} />
+              ))}
+            </datalist>
             <div>
               <label htmlFor="recipient" className="label">{t('stock:issue.recipient')}</label>
               <input
                 id="recipient"
                 type="text"
                 value={form.recipient}
-                onChange={(e) => setForm({ ...form, recipient: e.target.value })}
+                list="sgs-customers"
+                autoComplete="off"
+                onChange={(e) => pickCustomer(e.target.value)}
                 className="input"
               />
             </div>
