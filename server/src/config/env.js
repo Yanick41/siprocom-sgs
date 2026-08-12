@@ -17,7 +17,21 @@ const required = (key) => {
 const optional = (key, fallback) => process.env[key] ?? fallback;
 
 const NODE_ENV = optional('NODE_ENV', 'development');
-const isProduction = NODE_ENV === 'production';
+
+/**
+ * NODE_ENV is not sufficient on its own.
+ *
+ * Vercel sets it to production for the build but not reliably for the function
+ * at runtime, and the difference is not cosmetic: with isProduction false the
+ * CORS allowlist keeps its development exception for loopback origins, and the
+ * auth cookie loses its Secure flag. A deployment that believes it is
+ * development is a deployment with its guards down.
+ *
+ * Running on a serverless platform is therefore treated as production on its
+ * own, whatever NODE_ENV says.
+ */
+const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+const isProduction = NODE_ENV === 'production' || isServerless;
 
 /**
  * Vercel publishes the stable production domain of the project at runtime, so
