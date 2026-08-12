@@ -45,6 +45,8 @@ export function buildInvoice(issue, { t, lng = 'fr' }) {
     number: issue.number,
     date: formatDate(issue.issueDate, lng),
     recipient: issue.recipient || '—',
+    recipientPhone: issue.recipientPhone || '',
+    recipientAddress: issue.recipientAddress || '',
     warehouse: issue.warehouse?.name ?? '',
     status: issue.status,
     rows,
@@ -91,34 +93,56 @@ export async function downloadInvoicePdf(invoice, { t }) {
   doc.setDrawColor(226, 232, 240);
   doc.line(14, 38, pageWidth - 14, 38);
 
+  // Phone and address only take a line each when they were filled in, so a
+  // walk-in sale does not print two empty labels.
   doc.setFontSize(9);
+  let y = 46;
+
   doc.setTextColor(100);
-  doc.text(`${t('stock:issue.recipient')} :`, 14, 46);
+  doc.text(`${t('stock:issue.recipient')} :`, 14, y);
   doc.setTextColor(30);
   doc.setFont(undefined, 'bold');
-  doc.text(invoice.recipient, 40, 46);
+  doc.text(invoice.recipient, 45, y);
   doc.setFont(undefined, 'normal');
 
+  if (invoice.recipientPhone) {
+    y += 5;
+    doc.setTextColor(100);
+    doc.text(`${t('stock:invoice.phone')} :`, 14, y);
+    doc.setTextColor(30);
+    doc.text(invoice.recipientPhone, 45, y);
+  }
+
+  if (invoice.recipientAddress) {
+    y += 5;
+    doc.setTextColor(100);
+    doc.text(`${t('stock:invoice.address')} :`, 14, y);
+    doc.setTextColor(30);
+    doc.text(invoice.recipientAddress, 45, y);
+  }
+
   autoTable(doc, {
-    startY: 54,
+    startY: y + 8,
     head: [[
+      t('common:fields.reference'),
       t('stock:invoice.designation'),
       t('stock:invoice.quantity'),
       t('stock:invoice.unitPrice'),
       t('stock:invoice.lineTotal'),
     ]],
-    body: invoice.rows.map((row) => [row.designation, row.quantity, row.unitPriceLabel, row.totalLabel]),
+    body: invoice.rows.map((row) => [row.reference, row.designation, row.quantity, row.unitPriceLabel, row.totalLabel]),
     // The grand total rides in the table's foot so it stays attached to the
     // last row even when the lines spill onto a second page.
-    foot: [['', '', t('stock:invoice.grandTotal'), invoice.grandTotalLabel]],
+    foot: [['', '', '', t('stock:invoice.grandTotal'), invoice.grandTotalLabel]],
     styles: { fontSize: 9, cellPadding: 3 },
     headStyles: { fillColor: [30, 58, 95], textColor: 255, fontStyle: 'bold' },
     footStyles: { fillColor: [241, 245, 249], textColor: [30, 58, 95], fontStyle: 'bold', fontSize: 10 },
     columnStyles: {
-      0: { cellWidth: 'auto' },
-      1: { halign: 'right', cellWidth: 32 },
-      2: { halign: 'right', cellWidth: 32 },
-      3: { halign: 'right', cellWidth: 34 },
+      0: { cellWidth: 24 },
+      1: { cellWidth: 'auto' },
+      2: { halign: 'right', cellWidth: 26 },
+      3: { halign: 'right', cellWidth: 28 },
+      4: { halign: 'right', cellWidth: 30 },
     },
     margin: { left: 14, right: 14 },
   });

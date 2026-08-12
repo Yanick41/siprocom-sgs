@@ -165,6 +165,8 @@ function IssueFormModal({ onClose, onCreated }) {
     destWarehouseId: '',
     reason: 'SALE',
     recipient: '',
+    recipientPhone: '',
+    recipientAddress: '',
     notes: '',
   });
   const [lines, setLines] = useState([{ productId: '', quantity: 1 }]);
@@ -215,6 +217,8 @@ function IssueFormModal({ onClose, onCreated }) {
                 warehouseId: form.warehouseId,
                 reason: form.reason,
                 recipient: form.recipient || null,
+                recipientPhone: form.recipientPhone || null,
+                recipientAddress: form.recipientAddress || null,
                 destWarehouseId: isTransfer ? form.destWarehouseId : null,
                 notes: form.notes || null,
                 lines: validLines.map((l) => ({
@@ -276,17 +280,39 @@ function IssueFormModal({ onClose, onCreated }) {
             required
           />
         ) : (
-          <div>
-            <label htmlFor="recipient" className="label">
-              {t('stock:issue.recipient')}
-            </label>
-            <input
-              id="recipient"
-              type="text"
-              value={form.recipient}
-              onChange={(e) => setForm({ ...form, recipient: e.target.value })}
-              className="input"
-            />
+          // Enough to identify a customer on a document reprinted months later.
+          // A name alone is not, in a town with many Kouassis.
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label htmlFor="recipient" className="label">{t('stock:issue.recipient')}</label>
+              <input
+                id="recipient"
+                type="text"
+                value={form.recipient}
+                onChange={(e) => setForm({ ...form, recipient: e.target.value })}
+                className="input"
+              />
+            </div>
+            <div>
+              <label htmlFor="recipientPhone" className="label">{t('stock:issue.recipientPhone')}</label>
+              <input
+                id="recipientPhone"
+                type="tel"
+                value={form.recipientPhone}
+                onChange={(e) => setForm({ ...form, recipientPhone: e.target.value })}
+                className="input"
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <label htmlFor="recipientAddress" className="label">{t('stock:issue.recipientAddress')}</label>
+              <input
+                id="recipientAddress"
+                type="text"
+                value={form.recipientAddress}
+                onChange={(e) => setForm({ ...form, recipientAddress: e.target.value })}
+                className="input"
+              />
+            </div>
           </div>
         )}
 

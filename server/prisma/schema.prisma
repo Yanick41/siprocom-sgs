@@ -340,20 +340,25 @@ model GoodsReceiptLine {
 
 /// Bon de sortie
 model GoodsIssue {
-  id              String      @id @default(uuid())
-  number          String      @unique // BS-2026-0001
-  warehouseId     String
-  reason          IssueReason @default(SALE)
-  recipient       String?
-  destWarehouseId String? // set when reason = TRANSFER (BR-7)
-  status          DocStatus   @default(DRAFT)
-  issueDate       DateTime    @default(now())
-  validatedAt     DateTime?
-  validatedById   String?
-  notes           String?
-  createdById     String
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  id               String      @id @default(uuid())
+  number           String      @unique // BS-2026-0001
+  warehouseId      String
+  reason           IssueReason @default(SALE)
+  /// Customer identification. Kept as plain columns on the document rather than
+  /// a Customer table: a shop sells to walk-ins as often as to regulars, and a
+  /// required relation would force a record for every one of them.
+  recipient        String?
+  recipientPhone   String?
+  recipientAddress String?
+  destWarehouseId  String? // set when reason = TRANSFER (BR-7)
+  status           DocStatus   @default(DRAFT)
+  issueDate        DateTime    @default(now())
+  validatedAt      DateTime?
+  validatedById    String?
+  notes            String?
+  createdById      String
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
 
   warehouse     Warehouse        @relation("IssueSourceWarehouse", fields: [warehouseId], references: [id])
   destWarehouse Warehouse?       @relation("IssueDestWarehouse", fields: [destWarehouseId], references: [id])

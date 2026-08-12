@@ -43,7 +43,8 @@
       "Bash(xargs -I{} echo \"  {} deploiement\\(s\\) enregistre\\(s\\)\")",
       "Bash(git -c core.safecrlf=false commit -q -m 'Fix mangled code spans in the runbook section *)",
       "Bash(git remote *)",
-      "Bash(echo \"  remote      : $\\(git remote get-url origin\\)\")"
+      "Bash(echo \"  remote      : $\\(git remote get-url origin\\)\")",
+      "Bash(curl -s -m 20 https://siprocom-sgs.vercel.app/api/health)"
     ]
   }
 }

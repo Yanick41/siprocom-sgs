@@ -15,7 +15,9 @@
     "toast": {
       "cancelled": "Bon annulé, mouvements compensatoires enregistrés"
     },
-    "packaging": "Emballage"
+    "packaging": "Emballage",
+    "productSearch": "Produit",
+    "productSearchPlaceholder": "Tapez la référence ou le nom…"
   },
   "receipt": {
     "title": "Bons d'entrée",
@@ -55,7 +57,9 @@
     "toast": {
       "created": "Bon de sortie créé",
       "validated": "Sortie validée, stock mis à jour"
-    }
+    },
+    "recipientPhone": "Téléphone du client",
+    "recipientAddress": "Adresse du client"
   },
   "issueReason": {
     "SALE": "Vente",
@@ -125,6 +129,8 @@
     "grandTotal": "TOTAL GÉNÉRAL",
     "print": "Imprimer",
     "issuedBy": "Établi par",
-    "receivedBy": "Reçu par"
+    "receivedBy": "Reçu par",
+    "phone": "Téléphone",
+    "address": "Adresse"
   }
 }

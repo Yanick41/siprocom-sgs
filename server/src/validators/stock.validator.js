@@ -43,6 +43,10 @@ const createIssueSchema = z
       .enum(['SALE', 'TRANSFER', 'DAMAGE', 'SAMPLE', 'INTERNAL', 'RETURN_SUPPLIER', 'OTHER'])
       .default('SALE'),
     recipient: z.string().trim().max(150).optional().nullable(),
+  recipientPhone: z.string().trim().max(40).optional().nullable(),
+  recipientAddress: z.string().trim().max(300).optional().nullable(),
+    recipientPhone: z.string().trim().max(40).optional().nullable(),
+    recipientAddress: z.string().trim().max(300).optional().nullable(),
     destWarehouseId: uuid.optional().nullable(),
     issueDate: z.coerce.date().optional(),
     notes: z.string().trim().max(500).optional().nullable(),
@@ -63,6 +67,8 @@ const updateIssueSchema = z.object({
     .enum(['SALE', 'TRANSFER', 'DAMAGE', 'SAMPLE', 'INTERNAL', 'RETURN_SUPPLIER', 'OTHER'])
     .optional(),
   recipient: z.string().trim().max(150).optional().nullable(),
+  recipientPhone: z.string().trim().max(40).optional().nullable(),
+  recipientAddress: z.string().trim().max(300).optional().nullable(),
   destWarehouseId: uuid.optional().nullable(),
   issueDate: z.coerce.date().optional(),
   notes: z.string().trim().max(500).optional().nullable(),
