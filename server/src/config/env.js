@@ -38,32 +38,53 @@ const vercelProductionOrigin = process.env.VERCEL_PROJECT_PRODUCTION_URL
   : null;
 
 /**
- * In production CLIENT_URL is required, unless Vercel already told us the
- * production domain — then that is a better answer than a value typed by hand.
- * Failing when neither exists is the point: an empty allowlist would otherwise
- * silently reject every browser.
+ * An empty allowlist is not a failure, so this must never throw.
+ *
+ * The earlier version required CLIENT_URL in production unless Vercel supplied
+ * the domain — which made boot depend on VERCEL_PROJECT_PRODUCTION_URL, a
+ * system variable the platform only exposes when that option is enabled. When
+ * it was not, the module threw while loading and every request returned
+ * FUNCTION_INVOCATION_FAILED: no route ran, so even /api/health could not
+ * report what was wrong.
+ *
+ * The reasoning behind it was wrong anyway. On Vercel the SPA and the API share
+ * an origin, so the browser sends no Origin header for the app's own requests
+ * and CORS never applies. An empty allowlist blocks cross-origin callers and
+ * leaves the deployed application working — the safe default, and the one that
+ * cannot take the whole service down.
  */
-const configuredClientUrl =
-  optional('CLIENT_URL', '') ||
-  vercelProductionOrigin ||
-  (isProduction ? required('CLIENT_URL') : 'http://localhost:5280');
+const configuredClientUrl = optional('CLIENT_URL', '') || vercelProductionOrigin || '';
 
 const clientUrls = [
   ...configuredClientUrl.split(',').map((url) => url.trim()).filter(Boolean),
   ...(vercelProductionOrigin ? [vercelProductionOrigin] : []),
+  ...(isProduction ? [] : ['http://localhost:5280']),
 ].filter((url, index, all) => all.indexOf(url) === index);
 
-// A localhost origin in a production allowlist is almost always a copied dev
-// value, and it hands the CORS allowlist to anything running on the operator's
-// machine. Refuse to boot rather than serve with it.
-if (isProduction && clientUrls.some((url) => /localhost|127\.0\.0\.1|\[::1\]/.test(url))) {
+/**
+ * These reject a bad value; they must not reject the absence of one.
+ *
+ * A localhost origin in production is almost always a copied dev value and
+ * hands the allowlist to anything running on the operator's machine. Plain http
+ * is equally useless: the auth cookie is Secure, so a browser would never send
+ * it. Both are worth refusing to boot over — but only when someone actually set
+ * them, which is why the guards run on `configuredClientUrl` rather than on the
+ * assembled list.
+ */
+const badOrigins = configuredClientUrl
+  .split(',')
+  .map((url) => url.trim())
+  .filter(Boolean);
+
+if (isProduction && badOrigins.some((url) => /localhost|127\.0\.0\.1|\[::1\]/.test(url))) {
   throw new Error(
-    `CLIENT_URL contains a localhost origin in production: ${clientUrls.join(', ')}. ` +
-      'Set it to the real front-end domain(s).'
+    `CLIENT_URL contains a localhost origin in production: ${badOrigins.join(', ')}. ` +
+      'Set it to the real front-end domain(s), or leave it unset — the app and ' +
+      'the API share an origin, so CORS is not needed for the app itself.'
   );
 }
 
-if (isProduction && clientUrls.some((url) => url.startsWith('http://'))) {
+if (isProduction && badOrigins.some((url) => url.startsWith('http://'))) {
   throw new Error(
     'CLIENT_URL must use https in production — the auth cookie is Secure and a ' +
       'browser will not send it over http.'
