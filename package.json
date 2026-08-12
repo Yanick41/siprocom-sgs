@@ -17,7 +17,7 @@
     "build": "npm --prefix client run build",
     "test": "npm run test:stock && npm run test:ui",
     "i18n:check": "npm --prefix client run i18n:check",
-    "check": "npm run i18n:check && npm run build && npm run test",
+    "check": "npm run i18n:check && npm run test && npm run build",
     "stop": "node scripts/stop.js",
     "doctor": "node scripts/doctor.js",
     "test:stock": "npm --prefix server run test:stock",
