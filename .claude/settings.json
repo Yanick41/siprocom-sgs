@@ -38,7 +38,9 @@
       "Bash(awk '{printf \" %-52s %s\\\\n\", $9, $5}')",
       "Bash(gh repo *)",
       "Bash(git -c core.safecrlf=false commit -q -m ' *)",
-      "Bash(node --check scripts/check-secrets.js)"
+      "Bash(node --check scripts/check-secrets.js)",
+      "Bash(gh api *)",
+      "Bash(xargs -I{} echo \"  {} deploiement\\(s\\) enregistre\\(s\\)\")"
     ]
   }
 }
