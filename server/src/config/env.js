@@ -19,10 +19,6 @@ const optional = (key, fallback) => process.env[key] ?? fallback;
 const NODE_ENV = optional('NODE_ENV', 'development');
 const isProduction = NODE_ENV === 'production';
 
-/** In production these are fatal; in development a sensible default is fine. */
-const requiredInProduction = (key, devFallback) =>
-  isProduction ? required(key) : optional(key, devFallback);
-
 /**
  * Vercel publishes the stable production domain of the project at runtime, so
  * the CORS allowlist can be correct on the very first deploy instead of needing

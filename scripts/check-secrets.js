@@ -85,16 +85,23 @@ function localSecrets() {
       // Short values produce false positives ("true", "8h", "fr").
       if (value.length < 12 || PLACEHOLDER.test(value) || NOT_A_SECRET.test(value)) continue;
 
-      values.add(value);
-
-      // A URL also leaks through its password and host alone.
+      // A URL carrying no credentials is a public address, not a secret: the
+      // front-end domain legitimately appears in code and comments. Only the
+      // credential parts of a connection string are worth tracking.
+      let isPublicUrl = false;
       try {
         const url = new URL(value);
-        if (url.password && url.password.length >= 8) values.add(decodeURIComponent(url.password));
-        if (url.hostname.length >= 12) values.add(url.hostname);
+        if (url.password) {
+          values.add(decodeURIComponent(url.password));
+          if (url.hostname.length >= 12) values.add(url.hostname);
+        } else {
+          isPublicUrl = true;
+        }
       } catch {
         /* not a URL */
       }
+
+      if (!isPublicUrl) values.add(value);
     }
   }
   return [...values];
