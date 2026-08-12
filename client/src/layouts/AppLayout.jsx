@@ -3,7 +3,7 @@ import { NavLink, Outlet, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import {
-  FiGrid, FiPackage, FiTag, FiTruck, FiHome, FiLogIn, FiLogOut, FiRepeat,
+  FiGrid, FiPackage, FiTag, FiTruck, FiLogIn, FiLogOut, FiRepeat,
   FiClipboard, FiBell, FiBarChart2, FiUsers, FiShield, FiMenu, FiX,
 } from 'react-icons/fi';
 
@@ -37,7 +37,6 @@ const NAV_SECTIONS = [
       { to: '/products', labelKey: 'nav.products', icon: FiPackage, permission: 'products.view' },
       { to: '/categories', labelKey: 'nav.categories', icon: FiTag, permission: 'categories.view' },
       { to: '/suppliers', labelKey: 'nav.suppliers', icon: FiTruck, permission: 'suppliers.view' },
-      { to: '/warehouses', labelKey: 'nav.warehouses', icon: FiHome, permission: 'warehouses.view' },
     ],
   },
   {

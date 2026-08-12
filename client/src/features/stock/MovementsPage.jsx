@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { FiDownload, FiFileText, FiArrowDown, FiArrowUp, FiSliders } from 'react-icons/fi';
 
-import { stockApi, warehousesApi } from '@/api/resources';
+import { stockApi } from '@/api/resources';
 import DataTable from '@/components/DataTable';
 import { useErrorMessage } from '@/hooks/useErrorMessage';
 import { formatDateTime, formatQuantity } from '@/lib/format';
@@ -20,7 +20,6 @@ export default function MovementsPage() {
 
   const [filters, setFilters] = useState({ type: '', warehouseId: '', from: '', to: '', page: 1 });
 
-  const warehousesQuery = useQuery({ queryKey: ['warehouses'], queryFn: () => warehousesApi.list() });
   const movementsQuery = useQuery({
     queryKey: ['stock', 'movements', filters],
     queryFn: () => stockApi.movements({ ...filters, limit: 25 }),
@@ -52,7 +51,6 @@ export default function MovementsPage() {
     },
     { key: 'reference', header: t('common:fields.reference'), value: (m) => m.product.reference },
     { key: 'designation', header: t('common:fields.designation'), value: label },
-    { key: 'warehouse', header: t('common:fields.warehouse'), value: (m) => m.warehouse.name },
     {
       key: 'quantity',
       header: t('common:fields.quantity'),
@@ -119,18 +117,6 @@ export default function MovementsPage() {
           <option value="">{t('stock:movements.allTypes')}</option>
           {['IN', 'OUT', 'ADJUSTMENT'].map((type) => (
             <option key={type} value={type}>{t(`stock:movementType.${type}`)}</option>
-          ))}
-        </select>
-
-        <select
-          value={filters.warehouseId}
-          onChange={(e) => setFilters((f) => ({ ...f, warehouseId: e.target.value, page: 1 }))}
-          aria-label={t('common:fields.warehouse')}
-          className="input w-auto min-w-44"
-        >
-          <option value="">{t('stock:levels.allWarehouses')}</option>
-          {(warehousesQuery.data?.items || []).map((w) => (
-            <option key={w.id} value={w.id}>{w.name}</option>
           ))}
         </select>
 

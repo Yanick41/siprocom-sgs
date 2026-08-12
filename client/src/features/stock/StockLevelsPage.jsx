@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { FiSearch, FiDownload, FiFileText } from 'react-icons/fi';
 
-import { stockApi, warehousesApi } from '@/api/resources';
+import { stockApi } from '@/api/resources';
 import DataTable from '@/components/DataTable';
 import StatusBadge from '@/components/StatusBadge';
 import { useErrorMessage } from '@/hooks/useErrorMessage';
@@ -19,7 +19,6 @@ export default function StockLevelsPage() {
 
   const [filters, setFilters] = useState({ search: '', warehouseId: '', state: '', page: 1 });
 
-  const warehousesQuery = useQuery({ queryKey: ['warehouses'], queryFn: () => warehousesApi.list() });
   const levelsQuery = useQuery({
     queryKey: ['stock', 'levels', filters],
     queryFn: () => stockApi.levels({ ...filters, limit: 25 }),
@@ -32,7 +31,6 @@ export default function StockLevelsPage() {
   const columns = [
     { key: 'reference', header: t('common:fields.reference'), value: (r) => r.product.reference },
     { key: 'designation', header: t('common:fields.designation'), value: label },
-    { key: 'warehouse', header: t('common:fields.warehouse'), value: (r) => r.warehouse.name },
     {
       key: 'quantity',
       header: t('stock:levels.quantity'),
@@ -100,18 +98,6 @@ export default function StockLevelsPage() {
             className="input pl-9"
           />
         </div>
-
-        <select
-          value={filters.warehouseId}
-          onChange={(e) => setFilters((f) => ({ ...f, warehouseId: e.target.value, page: 1 }))}
-          aria-label={t('common:fields.warehouse')}
-          className="input w-auto min-w-44"
-        >
-          <option value="">{t('stock:levels.allWarehouses')}</option>
-          {(warehousesQuery.data?.items || []).map((w) => (
-            <option key={w.id} value={w.id}>{w.name}</option>
-          ))}
-        </select>
 
         <select
           value={filters.state}

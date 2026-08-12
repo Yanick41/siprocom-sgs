@@ -27,7 +27,6 @@ const DashboardPage = lazyWithRetry(() => import('@/features/dashboard/Dashboard
 const ProductsPage = lazyWithRetry(() => import('@/features/products/ProductsPage'), 'products');
 const CategoriesPage = lazyWithRetry(() => import('@/features/categories/CategoriesPage'), 'categories');
 const SuppliersPage = lazyWithRetry(() => import('@/features/suppliers/SuppliersPage'), 'suppliers');
-const WarehousesPage = lazyWithRetry(() => import('@/features/warehouses/WarehousesPage'), 'warehouses');
 const ReceiptsPage = lazyWithRetry(() => import('@/features/stock/ReceiptsPage'), 'receipts');
 const IssuesPage = lazyWithRetry(() => import('@/features/stock/IssuesPage'), 'issues');
 const StockLevelsPage = lazyWithRetry(() => import('@/features/stock/StockLevelsPage'), 'stock');
@@ -104,7 +103,6 @@ export default function App() {
         <Route path="/products" element={guarded('products.view', ProductsPage)} />
         <Route path="/categories" element={guarded('categories.view', CategoriesPage)} />
         <Route path="/suppliers" element={guarded('suppliers.view', SuppliersPage)} />
-        <Route path="/warehouses" element={guarded('warehouses.view', WarehousesPage)} />
 
         <Route path="/alerts" element={guarded('alerts.view', AlertsPage)} />
         <Route path="/reports" element={guarded('reports.view', ReportsPage)} />

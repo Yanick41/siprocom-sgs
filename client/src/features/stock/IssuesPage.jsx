@@ -66,7 +66,6 @@ export default function IssuesPage() {
   const columns = [
     { key: 'number', header: t('stock:document.number'), render: (d) => <span className="font-mono text-xs font-medium">{d.number}</span> },
     { key: 'issueDate', header: t('common:fields.date'), sortable: true, render: (d) => formatDate(d.issueDate, lng) },
-    { key: 'warehouse', header: t('common:fields.warehouse'), render: (d) => d.warehouse?.name },
     {
       key: 'reason',
       header: t('common:fields.reason'),
@@ -283,7 +282,10 @@ function IssueFormModal({ onClose, onCreated }) {
               onChange={(e) => setForm({ ...form, reason: e.target.value })}
               className="input"
             >
-              {['SALE', 'TRANSFER', 'DAMAGE', 'SAMPLE', 'INTERNAL', 'RETURN_SUPPLIER', 'OTHER'].map((r) => (
+              {/* TRANSFER omitted: it moves goods between sites, and there is
+                  only one. The enum keeps it so historical documents still read
+                  correctly. */}
+              {['SALE', 'DAMAGE', 'SAMPLE', 'INTERNAL', 'RETURN_SUPPLIER', 'OTHER'].map((r) => (
                 <option key={r} value={r}>
                   {t(`stock:issueReason.${r}`)}
                 </option>

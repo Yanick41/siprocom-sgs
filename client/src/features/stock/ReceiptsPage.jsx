@@ -65,7 +65,6 @@ export default function ReceiptsPage() {
     { key: 'number', header: t('stock:document.number'), render: (d) => <span className="font-mono text-xs font-medium">{d.number}</span> },
     { key: 'receiptDate', header: t('common:fields.date'), sortable: true, render: (d) => formatDate(d.receiptDate, lng) },
     { key: 'supplier', header: t('stock:receipt.supplier'), render: (d) => d.supplier?.name || '—' },
-    { key: 'warehouse', header: t('common:fields.warehouse'), render: (d) => d.warehouse?.name },
     { key: 'reason', header: t('common:fields.reason'), render: (d) => t(`stock:receiptReason.${d.reason}`) },
     { key: 'lines', header: t('stock:document.lineCount'), align: 'right', render: (d) => d._count?.lines ?? 0 },
     {

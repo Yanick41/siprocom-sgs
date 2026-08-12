@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { FiDownload, FiFileText, FiCheck, FiTrendingDown, FiTrendingUp } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
-import { alertsApi, warehousesApi } from '@/api/resources';
+import { alertsApi } from '@/api/resources';
 import { useAuth } from '@/context/AuthContext';
 import DataTable from '@/components/DataTable';
 import StatusBadge from '@/components/StatusBadge';
@@ -23,7 +23,6 @@ export default function AlertsPage() {
 
   const [filters, setFilters] = useState({ status: 'OPEN', type: '', warehouseId: '', page: 1 });
 
-  const warehousesQuery = useQuery({ queryKey: ['warehouses'], queryFn: () => warehousesApi.list() });
   const alertsQuery = useQuery({
     queryKey: ['alerts', filters],
     queryFn: () => alertsApi.list({ ...filters, limit: 25 }),
@@ -63,7 +62,6 @@ export default function AlertsPage() {
     },
     { key: 'reference', header: t('common:fields.reference'), value: (a) => a.product.reference },
     { key: 'designation', header: t('common:fields.designation'), value: label },
-    { key: 'warehouse', header: t('common:fields.warehouse'), value: (a) => a.warehouse.name },
     {
       key: 'currentQuantity',
       header: t('alerts:currentQuantity'),
@@ -165,18 +163,6 @@ export default function AlertsPage() {
           <option value="">{t('alerts:allTypes')}</option>
           <option value="MIN_THRESHOLD">{t('alerts:type.MIN_THRESHOLD')}</option>
           <option value="MAX_THRESHOLD">{t('alerts:type.MAX_THRESHOLD')}</option>
-        </select>
-
-        <select
-          value={filters.warehouseId}
-          onChange={(e) => setFilters((f) => ({ ...f, warehouseId: e.target.value, page: 1 }))}
-          aria-label={t('common:fields.warehouse')}
-          className="input w-auto min-w-44"
-        >
-          <option value="">{t('stock:levels.allWarehouses')}</option>
-          {(warehousesQuery.data?.items || []).map((w) => (
-            <option key={w.id} value={w.id}>{w.name}</option>
-          ))}
         </select>
       </div>
 
