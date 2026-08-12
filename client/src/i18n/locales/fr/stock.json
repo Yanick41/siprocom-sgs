@@ -17,7 +17,9 @@
     },
     "packaging": "Emballage",
     "productSearch": "Produit",
-    "productSearchPlaceholder": "Tapez la référence ou le nom…"
+    "productSearchPlaceholder": "Tapez la référence ou le nom…",
+    "productNotFound": "Aucun produit ne correspond à « {{term}} ». Vérifiez la référence ou le nom.",
+    "noProductsYet": "Aucun produit n'existe encore. Créez-en un depuis le menu Produits."
   },
   "receipt": {
     "title": "Bons d'entrée",

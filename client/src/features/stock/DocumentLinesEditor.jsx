@@ -124,10 +124,17 @@ export default function DocumentLinesEditor({
         const available = availability?.get(line.productId);
         const insufficient = availability && line.productId && (available ?? 0) < baseQuantity;
 
+        // Text typed that matches nothing. Without this the line simply stays
+        // invalid and the save button stays greyed out, with nothing on screen
+        // explaining why — which is exactly how a typo becomes a lost minute.
+        const unmatched = !line.productId && (line.productLabel ?? '').trim().length > 0;
+
         return (
           <div
             key={index}
-            className={`rounded-lg border p-3 ${insufficient ? 'border-sgs-danger bg-red-50/50' : 'border-slate-200'}`}
+            className={`rounded-lg border p-3 ${
+              insufficient || unmatched ? 'border-sgs-danger bg-red-50/50' : 'border-slate-200'
+            }`}
           >
             <div className="flex flex-wrap items-end gap-2">
               <div className="min-w-56 flex-1">
@@ -210,6 +217,15 @@ export default function DocumentLinesEditor({
               </button>
             </div>
 
+            {unmatched && (
+              <p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-sgs-danger">
+                <FiAlertTriangle className="size-3.5" />
+                {products.length === 0
+                  ? t('stock:document.noProductsYet')
+                  : t('stock:document.productNotFound', { term: line.productLabel })}
+              </p>
+            )}
+
             {line.productId && (
               <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
                 <span className="font-mono text-slate-400">{product.reference}</span>
@@ -223,9 +239,11 @@ export default function DocumentLinesEditor({
                   </span>
                 )}
 
-                {!withPrice && unitPrice > 0 && (
+                {/* Shown even at zero: a price of 0 F is a missing price list,
+                    and hiding the field would hide the problem. */}
+                {!withPrice && (
                   <>
-                    <span className="text-slate-500">
+                    <span className={unitPrice > 0 ? 'text-slate-500' : 'font-medium text-amber-700'}>
                       {t('stock:invoice.unitPrice')} : {formatCurrency(unitPrice, lng)}
                     </span>
                     <span className="font-medium text-slate-800">
