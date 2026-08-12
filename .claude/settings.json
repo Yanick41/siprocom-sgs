@@ -40,7 +40,10 @@
       "Bash(git -c core.safecrlf=false commit -q -m ' *)",
       "Bash(node --check scripts/check-secrets.js)",
       "Bash(gh api *)",
-      "Bash(xargs -I{} echo \"  {} deploiement\\(s\\) enregistre\\(s\\)\")"
+      "Bash(xargs -I{} echo \"  {} deploiement\\(s\\) enregistre\\(s\\)\")",
+      "Bash(git -c core.safecrlf=false commit -q -m 'Fix mangled code spans in the runbook section *)",
+      "Bash(git remote *)",
+      "Bash(echo \"  remote      : $\\(git remote get-url origin\\)\")"
     ]
   }
 }

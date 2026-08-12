@@ -131,21 +131,23 @@ Ici `ENABLE_SCHEDULER=true` : une seule instance, le cron intégré suffit.
 
 ---
 
-### Contraintes de  — à ne pas modifier sans savoir
+### Contraintes de `vercel.json` — à ne pas modifier sans savoir
 
-**Aucun commentaire.** JSON n'en a pas, et Vercel valide le fichier contre un
-schéma strict : toute propriété inconnue — y compris une clé  utilisée
+**Aucun commentaire.** JSON n'en accepte pas, et Vercel valide le fichier contre
+un schéma strict : toute propriété inconnue — y compris une clé `"//"` utilisée
 comme commentaire — fait **rejeter le déploiement avant sa création**. L'onglet
-Deployments reste alors vide, sans même afficher un échec.
+Deployments reste alors vide, sans même afficher un échec. C'est l'erreur
+« should NOT have additional property ».
 
-**Root Directory doit rester VIDE** dans le dashboard. Le régler sur
- masque  et  : aucune fonction serverless n'est
-produite, le front se déploie parfaitement et chaque  renvoie 404.
+**Root Directory doit rester VIDE** dans le dashboard. Le régler sur `client`
+masque `api/` et `server/` : aucune fonction serverless n'est produite, le front
+se déploie parfaitement et chaque `/api/*` renvoie 404.
 
-** ne nomme que le moteur Prisma.** Vercel trace les statiques seul ;  pèse 476 Mo contre une limite de 250 Mo
-par fonction. Mais le moteur est chargé *dynamiquement* par Prisma : sans cette
-ligne, le build réussit et chaque requête meurt sur « Query engine library not
-found ».
+**`includeFiles` ne nomme que le moteur Prisma.** Vercel trace les `require`
+statiques seul, et `server/node_modules` pèse 476 Mo contre une limite de 250 Mo
+par fonction — un glob large échoue au packaging. Mais le moteur est chargé
+*dynamiquement* par Prisma : sans cette ligne, le build réussit et chaque
+requête meurt sur « Query engine library not found ».
 
 ---
 
