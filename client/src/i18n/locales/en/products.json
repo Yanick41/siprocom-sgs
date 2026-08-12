@@ -39,14 +39,16 @@
     "buyPrice": "Buy price",
     "sellPrice": "Sell price",
     "suppliers": "Suppliers",
-    "cartonSection": "Carton sales (optional)",
-    "unitsPerCarton": "Units per carton",
-    "unitsPerCartonHint": "e.g. 12 bottles. Leave empty if the product is not sold by the carton.",
-    "cartonSellPrice": "Carton sell price",
+    "cartonSection": "Bulk sales (optional)",
+    "unitsPerCarton": "Base units per group",
+    "unitsPerCartonHint": "e.g. 12 bottles per carton. Leave empty if sold by the unit only.",
+    "cartonSellPrice": "Group sell price",
     "cartonSellPriceHint": "For reference: {{reference}} F at the unit price",
     "cartonPriceWarning": "The carton price is below the price of a single unit. Please check.",
     "container": "Container format",
-    "containerHint": "Optional — independent of the category"
+    "containerHint": "Optional — independent of the category",
+    "groupingUnit": "Grouping unit",
+    "cartonBuyPrice": "Group buy price"
   },
   "toast": {
     "created": "Product created",

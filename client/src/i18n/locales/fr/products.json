@@ -39,14 +39,16 @@
     "buyPrice": "Prix d'achat",
     "sellPrice": "Prix de vente",
     "suppliers": "Fournisseurs",
-    "cartonSection": "Vente par carton (facultatif)",
-    "unitsPerCarton": "Unités par carton",
-    "unitsPerCartonHint": "Ex. 12 bouteilles. Laisser vide si le produit n'est pas vendu au carton.",
-    "cartonSellPrice": "Prix de vente du carton",
+    "cartonSection": "Vente en gros (facultatif)",
+    "unitsPerCarton": "Unités de base par regroupement",
+    "unitsPerCartonHint": "Ex. 12 bouteilles par carton. Laisser vide si vendu à l'unité seulement.",
+    "cartonSellPrice": "Prix de vente du regroupement",
     "cartonSellPriceHint": "À titre indicatif : {{reference}} F au prix unitaire",
     "cartonPriceWarning": "Le prix du carton est inférieur au prix d'une unité. Vérifiez la saisie.",
     "container": "Format / contenant",
-    "containerHint": "Facultatif — indépendant de la catégorie"
+    "containerHint": "Facultatif — indépendant de la catégorie",
+    "groupingUnit": "Unité de regroupement",
+    "cartonBuyPrice": "Prix d'achat du regroupement"
   },
   "toast": {
     "created": "Produit créé",

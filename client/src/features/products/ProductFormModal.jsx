@@ -7,7 +7,7 @@ import { productsApi, suppliersApi } from '@/api/resources';
 import { useErrorMessage } from '@/hooks/useErrorMessage';
 import Modal from '@/components/Modal';
 import FormField from '@/components/FormField';
-import { UNITS, canonicalUnit } from '@/lib/units';
+import { BASE_UNITS, GROUPING_UNITS, canonicalUnit } from '@/lib/units';
 import { CONTAINERS } from '@/lib/containers';
 
 
@@ -42,6 +42,8 @@ export default function ProductFormModal({ product, categories, onClose, onSaved
       maxThreshold: product?.maxThreshold ?? '',
       buyPrice: product?.buyPrice ?? 0,
       sellPrice: product?.sellPrice ?? 0,
+      groupingUnit: product?.groupingUnit ?? '',
+      cartonBuyPrice: product?.cartonBuyPrice ?? '',
       unitsPerCarton: product?.unitsPerCarton ?? '',
       cartonSellPrice: product?.cartonSellPrice ?? '',
       supplierIds: product?.suppliers?.map((s) => s.supplierId) ?? [],
@@ -76,6 +78,9 @@ export default function ProductFormModal({ product, categories, onClose, onSaved
       unitsPerCarton: values.unitsPerCarton === '' ? null : Number(values.unitsPerCarton),
       // Clearing the factor must clear the price too, or a product that is no
       // longer sold by the carton keeps a carton price nobody can reach.
+      groupingUnit: values.unitsPerCarton === '' ? null : values.groupingUnit || 'carton',
+      cartonBuyPrice:
+        values.unitsPerCarton === '' || values.cartonBuyPrice === '' ? null : Number(values.cartonBuyPrice),
       cartonSellPrice:
         values.unitsPerCarton === '' || values.cartonSellPrice === ''
           ? null
@@ -173,14 +178,26 @@ export default function ProductFormModal({ product, categories, onClose, onSaved
             )}
           </FormField>
 
+          {/* Only base units here. A carton is never what stock is counted in —
+              a carton opened is bottles — so grouping units live below, where a
+              conversion factor is required alongside them. */}
           <FormField label={t('common:fields.unit')} name="unit" error={errors.unit}>
             {(props) => (
               <select {...props} {...register('unit')}>
-                {UNITS.map((u) => (
-                  <option key={u} value={u}>
-                    {t(`common:units.${u}`, { defaultValue: u })}
-                  </option>
-                ))}
+                <optgroup label={t('common:unitGroups.counted')}>
+                  {BASE_UNITS.counted.map((u) => (
+                    <option key={u} value={u}>
+                      {t(`common:units.${u}`, { defaultValue: u })}
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label={t('common:unitGroups.bulk')}>
+                  {BASE_UNITS.bulk.map((u) => (
+                    <option key={u} value={u}>
+                      {t(`common:units.${u}`, { defaultValue: u })}
+                    </option>
+                  ))}
+                </optgroup>
               </select>
             )}
           </FormField>
@@ -222,6 +239,21 @@ export default function ProductFormModal({ product, categories, onClose, onSaved
           <p className="mb-3 text-sm font-medium text-slate-700">{t('products:form.cartonSection')}</p>
 
           <div className="grid gap-4 sm:grid-cols-2">
+            {/* Which group, and how many base units it holds — the two are
+                meaningless apart, so they sit together. */}
+            <FormField label={t('products:form.groupingUnit')} name="groupingUnit" error={errors.groupingUnit}>
+              {(props) => (
+                <select {...props} {...register('groupingUnit')}>
+                  <option value="">—</option>
+                  {GROUPING_UNITS.map((g) => (
+                    <option key={g} value={g}>
+                      {t(`common:units.${g}`)}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </FormField>
+
             <FormField
               label={t('products:form.unitsPerCarton')}
               name="unitsPerCarton"
@@ -234,18 +266,32 @@ export default function ProductFormModal({ product, categories, onClose, onSaved
             </FormField>
 
             {sellsByCarton && (
-              <FormField
-                label={t('products:form.cartonSellPrice')}
-                name="cartonSellPrice"
-                error={errors.cartonSellPrice}
-                hint={t('products:form.cartonSellPriceHint', {
-                  reference: (unitsPerCarton * sellPrice).toLocaleString('fr-FR'),
-                })}
-              >
-                {(props) => (
-                  <input {...props} type="number" min="0" step="1" {...register('cartonSellPrice')} />
-                )}
-              </FormField>
+              <>
+                {/* Buying by the carton usually costs less per unit than buying
+                    loose, so the group has its own purchase price. */}
+                <FormField
+                  label={t('products:form.cartonBuyPrice')}
+                  name="cartonBuyPrice"
+                  error={errors.cartonBuyPrice}
+                >
+                  {(props) => (
+                    <input {...props} type="number" min="0" step="1" {...register('cartonBuyPrice')} />
+                  )}
+                </FormField>
+
+                <FormField
+                  label={t('products:form.cartonSellPrice')}
+                  name="cartonSellPrice"
+                  error={errors.cartonSellPrice}
+                  hint={t('products:form.cartonSellPriceHint', {
+                    reference: (unitsPerCarton * sellPrice).toLocaleString('fr-FR'),
+                  })}
+                >
+                  {(props) => (
+                    <input {...props} type="number" min="0" step="1" {...register('cartonSellPrice')} />
+                  )}
+                </FormField>
+              </>
             )}
           </div>
 

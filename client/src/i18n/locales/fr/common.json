@@ -61,12 +61,12 @@
     "unit": "unité",
     "piece": "pièce",
     "bottle": "bouteille",
+    "can": "canette",
+    "kg": "kg",
+    "litre": "litre",
     "carton": "carton",
     "crate": "casier",
-    "pack": "paquet",
-    "bag": "sac",
-    "kg": "kg",
-    "litre": "L"
+    "pack": "paquet"
   },
   "fields": {
     "reference": "Référence",
@@ -105,5 +105,10 @@
     "plastic_bottle": "Bouteille plastique",
     "can": "Canette",
     "carton_pack": "Carton"
+  },
+  "unitGroups": {
+    "counted": "Unités de base (comptées à la pièce)",
+    "bulk": "Unités de base (vrac / pesé)",
+    "grouping": "Unités de regroupement"
   }
 }

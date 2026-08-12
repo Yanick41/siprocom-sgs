@@ -61,12 +61,12 @@
     "unit": "unit",
     "piece": "piece",
     "bottle": "bottle",
+    "can": "can",
+    "kg": "kg",
+    "litre": "litre",
     "carton": "carton",
     "crate": "crate",
-    "pack": "pack",
-    "bag": "bag",
-    "kg": "kg",
-    "litre": "L"
+    "pack": "pack"
   },
   "fields": {
     "reference": "Reference",
@@ -105,5 +105,10 @@
     "plastic_bottle": "Plastic bottle",
     "can": "Can",
     "carton_pack": "Carton"
+  },
+  "unitGroups": {
+    "counted": "Base units (counted per item)",
+    "bulk": "Base units (bulk / weighed)",
+    "grouping": "Grouping units"
   }
 }

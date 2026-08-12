@@ -173,6 +173,14 @@ model Product {
   /// what stock is counted in — this one only describes the packaging.
   container String?
 
+  /// Which grouping the factor below refers to: carton, crate, pack. Null when
+  /// the product is only sold by the unit.
+  groupingUnit String?
+
+  /// Purchase price for one full group. Buying by the carton is usually cheaper
+  /// per unit than buying loose, so it cannot be derived from buyPrice.
+  cartonBuyPrice Decimal? @db.Decimal(12, 2)
+
   /// Bottles per carton. Null means the product is never sold by the carton.
   /// Used only to convert what an operator types into base units; stock itself
   /// never holds cartons.
