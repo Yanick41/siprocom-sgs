@@ -26,7 +26,8 @@
     "prod": "node scripts/prod.js",
     "check:secrets": "node scripts/check-secrets.js",
     "hooks:install": "node scripts/install-hooks.js",
-    "postinstall": "node scripts/install-hooks.js"
+    "postinstall": "node scripts/install-hooks.js",
+    "start": "npm --prefix server run start"
   },
   "devDependencies": {
     "concurrently": "^9.1.2",

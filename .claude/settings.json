@@ -30,7 +30,11 @@
       "Bash(xargs echo \"  PATCH re-resout les lignes :\")",
       "Bash(node --check seed.js)",
       "Bash(git restore *)",
-      "Bash(rm -f placeholder-test.md /tmp/leak.js)"
+      "Bash(rm -f placeholder-test.md /tmp/leak.js)",
+      "Bash(grep -viE \"warn|pris.ly|^$\")",
+      "Bash(grep -vE \"injected env|Production —|^\\\\s*\\\\\\\\\\\\$\")",
+      "Bash(git grep *)",
+      "Bash(grep -viE \"^\\\\S+:\\\\s*//|\\\\* |comment\")"
     ]
   }
 }
