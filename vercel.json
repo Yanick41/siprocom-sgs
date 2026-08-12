@@ -1,6 +1,17 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
 
+  "//": [
+    "Root Directory in the Vercel dashboard must stay EMPTY (the repository",
+    "root). Setting it to `client` hides api/ and server/ from the build, so no",
+    "serverless function is produced: the front-end deploys perfectly and every",
+    "/api/* request 404s.",
+    "",
+    "The commands below therefore address the repo root, not the client folder.",
+    "Vercel shows them greyed out in the dashboard because this file owns them —",
+    "that is expected, and editing them there instead would drift from the repo."
+  ],
+
   "installCommand": "npm --prefix server install && npm --prefix client install",
   "buildCommand": "npm --prefix client run build",
   "outputDirectory": "client/dist",
@@ -12,14 +23,13 @@
 
       "//": [
         "Only the Linux query engine is force-included. Vercel traces static",
-        "requires on its own, so node_modules does not need listing — and must",
-        "not be: server/node_modules is 476 MB against a 250 MB limit per",
-        "function, so a broad glob fails at packaging, not at runtime.",
+        "requires on its own, so node_modules must not be listed: server/",
+        "node_modules is 476 MB against a 250 MB per-function limit, and a broad",
+        "glob fails at packaging rather than at runtime.",
         "",
-        "The engine itself is loaded dynamically by Prisma at first query, so",
-        "the tracer cannot see it. Miss it and the build succeeds while every",
-        "request dies on 'Query engine library not found' — a deploy that is",
-        "green and broken."
+        "Prisma loads this engine dynamically at the first query, so the tracer",
+        "cannot see it. Omit it and the build succeeds while every request dies",
+        "on 'Query engine library not found' — green and broken."
       ],
       "includeFiles": "server/node_modules/.prisma/client/libquery_engine-rhel-openssl-3.0.x.so.node"
     }
