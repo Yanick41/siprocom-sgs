@@ -111,6 +111,18 @@ const config = {
   // Comma-separated allowlist, e.g. "https://sgs.siprocom.com,https://www.sgs.siprocom.com"
   clientUrls,
 
+  /**
+   * Where the links we email point. The allowlist above may hold several origins
+   * (apex and www, say) but a confirmation link needs exactly one, so the first
+   * entry wins. Falls back to the dev server, which is where it has to work when
+   * no CLIENT_URL is set at all.
+   *
+   * Getting this wrong is silent and total: the mail still sends, and every
+   * recipient gets a link that goes nowhere. `npm run test:email` prints it for
+   * that reason.
+   */
+  appUrl: clientUrls[0] || 'http://localhost:5280',
+
   // Prisma would fail later anyway; failing here names the cause.
   databaseUrl: required('DATABASE_URL'),
 
