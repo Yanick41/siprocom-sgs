@@ -94,11 +94,19 @@ router.post(
 
     // A mail outage must not roll back the account — the address would be taken
     // with nothing to show for it. Resend exists for exactly this case.
+    //
+    // The reason is handed back rather than only logged. "The invitation was not
+    // sent" leaves an administrator with nowhere to go, while the provider's own
+    // words ("domain is not verified") name the fix. This route is ADMIN-only
+    // and the message describes our configuration, not the recipient, so there
+    // is nothing here to withhold.
     let delivered = false;
+    let deliveryError;
     try {
       ({ delivered } = await sendAccountEmail('INVITATION', user, req.user.name));
     } catch (error) {
       logger.error({ err: error, email: user.email }, 'Failed to send invitation');
+      deliveryError = error.message;
     }
 
     await recordAudit({
@@ -110,7 +118,7 @@ router.post(
       ipAddress: clientIp(req),
     });
 
-    res.status(201).json({ ...publicUser(user), invitationSent: delivered });
+    res.status(201).json({ ...publicUser(user), invitationSent: delivered, deliveryError });
   })
 );
 
@@ -127,10 +135,12 @@ router.post(
     if (user.password) throw new ConflictError('ACCOUNT_ALREADY_ACTIVATED');
 
     let delivered = false;
+    let deliveryError;
     try {
       ({ delivered } = await sendAccountEmail('INVITATION', user, req.user.name));
     } catch (error) {
       logger.error({ err: error, email: user.email }, 'Failed to resend invitation');
+      deliveryError = error.message;
     }
 
     await recordAudit({
@@ -141,7 +151,7 @@ router.post(
       ipAddress: clientIp(req),
     });
 
-    res.json({ invitationSent: delivered });
+    res.json({ invitationSent: delivered, deliveryError });
   })
 );
 

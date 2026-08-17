@@ -32,14 +32,26 @@ export default function UsersPage() {
     placeholderData: (previous) => previous,
   });
 
+  /**
+   * A failed send is reported with the provider's own words when there are any.
+   * "The invitation was not sent" leaves an administrator with nowhere to go,
+   * while "domain is not verified" names the fix. Held longer on screen than a
+   * success, because it has to be read rather than noticed.
+   */
+  const reportInvitation = (result) => {
+    if (result.invitationSent) return toast.success(t('admin:users.toast.invitationSent'));
+
+    return toast.error(
+      result.deliveryError
+        ? `${t('admin:users.toast.invitationNotDelivered')} — ${result.deliveryError}`
+        : t('admin:users.toast.invitationNotDelivered'),
+      { duration: 12000 }
+    );
+  };
+
   const resendMutation = useMutation({
     mutationFn: usersApi.resendInvitation,
-    onSuccess: (result) =>
-      toast.success(
-        result.invitationSent
-          ? t('admin:users.toast.invitationSent')
-          : t('admin:users.toast.invitationNotDelivered')
-      ),
+    onSuccess: reportInvitation,
     onError: (error) => toast.error(translateError(error)),
   });
 
@@ -141,10 +153,15 @@ export default function UsersPage() {
           user={editing.id ? editing : null}
           isSelf={editing.id === currentUser?.id}
           onClose={() => setEditing(null)}
-          onSaved={(wasCreate) => {
+          onSaved={(wasCreate, result) => {
             setEditing(null);
             queryClient.invalidateQueries({ queryKey: ['users'] });
-            toast.success(wasCreate ? t('admin:users.toast.created') : t('admin:users.toast.updated'));
+
+            // On creation the account is only half the story: it is unusable
+            // until the invitation arrives, so the mail result is what the
+            // administrator actually needs to know.
+            if (wasCreate) return reportInvitation(result);
+            toast.success(t('admin:users.toast.updated'));
           }}
         />
       )}
@@ -174,7 +191,7 @@ function UserFormModal({ user, isSelf, onClose, onSaved }) {
 
   const mutation = useMutation({
     mutationFn: (values) => (isEdit ? usersApi.update({ id: user.id, ...values }) : usersApi.create(values)),
-    onSuccess: () => onSaved(!isEdit),
+    onSuccess: (result) => onSaved(!isEdit, result),
     onError: setSubmitError,
   });
 
