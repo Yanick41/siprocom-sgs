@@ -20,7 +20,6 @@ const setupSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
   password: z.string().min(12, 'PASSWORD_TOO_SHORT').max(200),
   locale: z.enum(['fr', 'en']).default('fr'),
-  warehouseName: z.string().trim().min(1).max(150).optional(),
 });
 
 module.exports = { loginSchema, updateLocaleSchema, setupSchema };

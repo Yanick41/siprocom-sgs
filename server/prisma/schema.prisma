@@ -45,16 +45,16 @@ enum DocStatus {
   CANCELLED
 }
 
+/// TRANSFER_IN / TRANSFER are gone with the second site: a transfer moves goods
+/// between warehouses, and there is only one.
 enum EntryReason {
   PURCHASE
   RETURN_CUSTOMER
   ADJUSTMENT
-  TRANSFER_IN
 }
 
 enum IssueReason {
   SALE
-  TRANSFER
   DAMAGE
   SAMPLE
   INTERNAL
@@ -134,26 +134,10 @@ model Supplier {
   @@map("suppliers")
 }
 
-model Warehouse {
-  id          String   @id @default(uuid())
-  code        String   @unique
-  name        String
-  address     String?
-  managerName String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  stockLevels    StockLevel[]
-  movements      StockMovement[]
-  receipts       GoodsReceipt[]
-  issues         GoodsIssue[]    @relation("IssueSourceWarehouse")
-  incomingIssues GoodsIssue[]    @relation("IssueDestWarehouse")
-  alerts         Alert[]
-
-  @@index([isActive])
-  @@map("warehouses")
-}
+// SIPROCOM runs a single site, so there is no Warehouse model: stock is simply
+// "the stock". The company's own name and address live where they are actually
+// used — the printed document header — rather than in a table with one row that
+// every query would have to join.
 
 model Product {
   id            String  @id @default(uuid())
@@ -203,7 +187,7 @@ model Product {
 
   category     Category           @relation(fields: [categoryId], references: [id])
   suppliers    ProductSupplier[]
-  stockLevels  StockLevel[]
+  stockLevel   StockLevel?
   movements    StockMovement[]
   alerts       Alert[]
   receiptLines GoodsReceiptLine[]
@@ -234,20 +218,21 @@ model ProductSupplier {
 /// Materialised stock level — the "Stock (vue calculée)" of the cahier des charges §6.
 /// Kept as a real table so reads stay fast; updated atomically inside the same
 /// transaction as the movement that causes it (BR-2).
-/// Invariant: quantity == SUM(signed movements) for the same (product, warehouse).
+/// Invariant: quantity == SUM(signed movements) for the same product.
 /// `GET /api/stock/reconcile` proves the invariant against the ledger.
+///
+/// One row per product. Kept as its own table rather than folded into a
+/// `Product.quantity` column: this counter changes on every movement, and
+/// putting it on the catalogue row would make each sale lock the product being
+/// edited.
 model StockLevel {
-  id          String   @id @default(uuid())
-  productId   String
-  warehouseId String
-  quantity    Int      @default(0)
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(uuid())
+  productId String   @unique
+  quantity  Int      @default(0)
+  updatedAt DateTime @updatedAt
 
-  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
-  warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  @@unique([productId, warehouseId])
-  @@index([warehouseId])
   @@map("stock_levels")
 }
 
@@ -257,7 +242,6 @@ model StockMovement {
   id           String       @id @default(uuid())
   type         MovementType
   productId    String
-  warehouseId  String
   /// IN and OUT are always positive — `type` carries the sign.
   /// ADJUSTMENT is SIGNED: positive for a surplus found at inventory, negative
   /// for shrinkage. The ledger sum is therefore always:
@@ -272,12 +256,10 @@ model StockMovement {
   userId       String
   createdAt    DateTime     @default(now())
 
-  product   Product   @relation(fields: [productId], references: [id])
-  warehouse Warehouse @relation(fields: [warehouseId], references: [id])
-  user      User      @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
 
   @@index([productId, createdAt]) // drives trend / rotation queries
-  @@index([warehouseId, createdAt])
   @@index([createdAt])
   @@index([type, createdAt])
   @@index([refType, refId])
@@ -291,7 +273,6 @@ model GoodsReceipt {
   id               String      @id @default(uuid())
   number           String      @unique // BE-2026-0001
   supplierId       String?
-  warehouseId      String
   reason           EntryReason @default(PURCHASE)
   purchaseOrderRef String?
   status           DocStatus   @default(DRAFT)
@@ -304,14 +285,12 @@ model GoodsReceipt {
   updatedAt        DateTime    @updatedAt
 
   supplier    Supplier?          @relation(fields: [supplierId], references: [id])
-  warehouse   Warehouse          @relation(fields: [warehouseId], references: [id])
   createdBy   User               @relation("ReceiptCreatedBy", fields: [createdById], references: [id])
   validatedBy User?              @relation("ReceiptValidatedBy", fields: [validatedById], references: [id])
   lines       GoodsReceiptLine[]
 
   @@index([status, receiptDate])
   @@index([supplierId])
-  @@index([warehouseId])
   @@map("goods_receipts")
 }
 
@@ -342,7 +321,6 @@ model GoodsReceiptLine {
 model GoodsIssue {
   id               String      @id @default(uuid())
   number           String      @unique // BS-2026-0001
-  warehouseId      String
   reason           IssueReason @default(SALE)
   /// Customer identification. Kept as plain columns on the document rather than
   /// a Customer table: a shop sells to walk-ins as often as to regulars, and a
@@ -350,7 +328,6 @@ model GoodsIssue {
   recipient        String?
   recipientPhone   String?
   recipientAddress String?
-  destWarehouseId  String? // set when reason = TRANSFER (BR-7)
   status           DocStatus   @default(DRAFT)
   issueDate        DateTime    @default(now())
   validatedAt      DateTime?
@@ -360,14 +337,11 @@ model GoodsIssue {
   createdAt        DateTime    @default(now())
   updatedAt        DateTime    @updatedAt
 
-  warehouse     Warehouse        @relation("IssueSourceWarehouse", fields: [warehouseId], references: [id])
-  destWarehouse Warehouse?       @relation("IssueDestWarehouse", fields: [destWarehouseId], references: [id])
-  createdBy     User             @relation("IssueCreatedBy", fields: [createdById], references: [id])
-  validatedBy   User?            @relation("IssueValidatedBy", fields: [validatedById], references: [id])
-  lines         GoodsIssueLine[]
+  createdBy   User             @relation("IssueCreatedBy", fields: [createdById], references: [id])
+  validatedBy User?            @relation("IssueValidatedBy", fields: [validatedById], references: [id])
+  lines       GoodsIssueLine[]
 
   @@index([status, issueDate])
-  @@index([warehouseId])
   @@map("goods_issues")
 }
 
@@ -397,7 +371,6 @@ model GoodsIssueLine {
 model Alert {
   id                String      @id @default(uuid())
   productId         String
-  warehouseId       String?
   type              AlertType
   status            AlertStatus @default(OPEN)
   quantityAtTrigger Int
@@ -406,11 +379,10 @@ model Alert {
   acknowledgedAt    DateTime?
   resolvedAt        DateTime?
 
-  product   Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
-  warehouse Warehouse? @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([status, type])
-  @@index([productId, warehouseId, type, status]) // dedupe lookup (BR-8)
+  @@index([productId, type, status]) // dedupe lookup (BR-8)
   @@map("alerts")
 }
 

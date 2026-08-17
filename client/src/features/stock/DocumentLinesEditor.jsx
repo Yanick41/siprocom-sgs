@@ -18,7 +18,7 @@ import { formatQuantity, formatCurrency } from '@/lib/format';
  * typing rather than reaching for the mouse between every value.
  *
  * When `availability` is supplied (issues), each line is checked live against
- * the warehouse level: a magasinier should see the problem while entering the
+ * the stock level: a magasinier should see the problem while entering the
  * document, not discover it when validation is refused.
  */
 export default function DocumentLinesEditor({
@@ -256,7 +256,7 @@ export default function DocumentLinesEditor({
                 {availability && (
                   <span className={insufficient ? 'font-medium text-sgs-danger' : 'text-slate-500'}>
                     {insufficient && <FiAlertTriangle className="mr-1 inline size-3.5" />}
-                    {t('stock:issue.availableInWarehouse', {
+                    {t('stock:issue.availableInStock', {
                       quantity: formatQuantity(available ?? 0, lng),
                     })}
                   </span>

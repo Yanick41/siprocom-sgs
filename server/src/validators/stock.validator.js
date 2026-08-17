@@ -18,8 +18,7 @@ const receiptLineSchema = z.object({
 
 const createReceiptSchema = z.object({
   supplierId: uuid.optional().nullable(),
-  warehouseId: uuid,
-  reason: z.enum(['PURCHASE', 'RETURN_CUSTOMER', 'ADJUSTMENT', 'TRANSFER_IN']).default('PURCHASE'),
+  reason: z.enum(['PURCHASE', 'RETURN_CUSTOMER', 'ADJUSTMENT']).default('PURCHASE'),
   purchaseOrderRef: z.string().trim().max(60).optional().nullable(),
   receiptDate: z.coerce.date().optional(),
   notes: z.string().trim().max(500).optional().nullable(),
@@ -36,40 +35,32 @@ const issueLineSchema = z.object({
   unitPrice: z.coerce.number().min(0).optional(),
 });
 
-const createIssueSchema = z
-  .object({
-    warehouseId: uuid,
-    reason: z
-      .enum(['SALE', 'TRANSFER', 'DAMAGE', 'SAMPLE', 'INTERNAL', 'RETURN_SUPPLIER', 'OTHER'])
-      .default('SALE'),
-    recipient: z.string().trim().max(150).optional().nullable(),
-  recipientPhone: z.string().trim().max(40).optional().nullable(),
-  recipientAddress: z.string().trim().max(300).optional().nullable(),
-    recipientPhone: z.string().trim().max(40).optional().nullable(),
-    recipientAddress: z.string().trim().max(300).optional().nullable(),
-    destWarehouseId: uuid.optional().nullable(),
-    issueDate: z.coerce.date().optional(),
-    notes: z.string().trim().max(500).optional().nullable(),
-    lines: z.array(issueLineSchema).min(1, 'EMPTY_DOCUMENT'),
-  })
-  .refine((d) => d.reason !== 'TRANSFER' || Boolean(d.destWarehouseId), {
-    message: 'DEST_WAREHOUSE_REQUIRED',
-    path: ['destWarehouseId'],
-  })
-  .refine((d) => !d.destWarehouseId || d.destWarehouseId !== d.warehouseId, {
-    message: 'SAME_WAREHOUSE_TRANSFER',
-    path: ['destWarehouseId'],
-  });
+const issueReason = z.enum([
+  'SALE',
+  'DAMAGE',
+  'SAMPLE',
+  'INTERNAL',
+  'RETURN_SUPPLIER',
+  'OTHER',
+]);
 
-const updateIssueSchema = z.object({
-  warehouseId: uuid.optional(),
-  reason: z
-    .enum(['SALE', 'TRANSFER', 'DAMAGE', 'SAMPLE', 'INTERNAL', 'RETURN_SUPPLIER', 'OTHER'])
-    .optional(),
+// The two cross-field refinements that used to live here guarded transfers
+// between sites. With one site there is no destination to validate.
+const createIssueSchema = z.object({
+  reason: issueReason.default('SALE'),
   recipient: z.string().trim().max(150).optional().nullable(),
   recipientPhone: z.string().trim().max(40).optional().nullable(),
   recipientAddress: z.string().trim().max(300).optional().nullable(),
-  destWarehouseId: uuid.optional().nullable(),
+  issueDate: z.coerce.date().optional(),
+  notes: z.string().trim().max(500).optional().nullable(),
+  lines: z.array(issueLineSchema).min(1, 'EMPTY_DOCUMENT'),
+});
+
+const updateIssueSchema = z.object({
+  reason: issueReason.optional(),
+  recipient: z.string().trim().max(150).optional().nullable(),
+  recipientPhone: z.string().trim().max(40).optional().nullable(),
+  recipientAddress: z.string().trim().max(300).optional().nullable(),
   issueDate: z.coerce.date().optional(),
   notes: z.string().trim().max(500).optional().nullable(),
   lines: z.array(issueLineSchema).min(1, 'EMPTY_DOCUMENT').optional(),
@@ -78,7 +69,6 @@ const updateIssueSchema = z.object({
 /** BR-6: a stock adjustment without a stated reason is never accepted. */
 const adjustStockSchema = z.object({
   productId: uuid,
-  warehouseId: uuid,
   countedQuantity: z.coerce.number().int().min(0),
   reason: z.string().trim().min(3, 'REASON_REQUIRED').max(300),
   allowNegative: z.boolean().optional(),

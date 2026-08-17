@@ -47,12 +47,11 @@ router.get(
   '/',
   asyncHandler(async (req, res) => {
     const q = parseListQuery(req.query, { sortable: ['createdAt'], defaultSort: 'createdAt' });
-    const { status = 'OPEN', type, warehouseId } = req.query;
+    const { status = 'OPEN', type } = req.query;
 
     const where = {
       ...(status === 'all' ? {} : { status }),
       ...(type ? { type } : {}),
-      ...(warehouseId ? { warehouseId } : {}),
     };
 
     const [items, total] = await Promise.all([
@@ -68,7 +67,6 @@ router.get(
               unit: true, minThreshold: true, maxThreshold: true,
             },
           },
-          warehouse: { select: { id: true, code: true, name: true } },
         },
       }),
       prisma.alert.count({ where }),
@@ -76,16 +74,16 @@ router.get(
 
     // Report the live quantity, not the figure captured when the alert opened.
     const levels = await prisma.stockLevel.findMany({
-      where: { OR: items.map((a) => ({ productId: a.productId, warehouseId: a.warehouseId })) },
-      select: { productId: true, warehouseId: true, quantity: true },
+      where: { productId: { in: items.map((a) => a.productId) } },
+      select: { productId: true, quantity: true },
     });
-    const byPair = new Map(levels.map((l) => [`${l.productId}:${l.warehouseId}`, l.quantity]));
+    const byProduct = new Map(levels.map((l) => [l.productId, l.quantity]));
 
     res.json(
       paginated(
         items.map((a) => ({
           ...a,
-          currentQuantity: byPair.get(`${a.productId}:${a.warehouseId}`) ?? 0,
+          currentQuantity: byProduct.get(a.productId) ?? 0,
         })),
         total,
         q

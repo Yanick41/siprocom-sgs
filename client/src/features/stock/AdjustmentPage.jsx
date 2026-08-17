@@ -7,7 +7,6 @@ import toast from 'react-hot-toast';
 import { stockApi, productsApi } from '@/api/resources';
 import { useAuth } from '@/context/AuthContext';
 import { useErrorMessage } from '@/hooks/useErrorMessage';
-import WarehouseSelect from '@/components/WarehouseSelect';
 import { formatQuantity } from '@/lib/format';
 
 /**
@@ -23,7 +22,7 @@ export default function AdjustmentPage() {
   const translateError = useErrorMessage();
   const { user, can } = useAuth();
 
-  const [form, setForm] = useState({ productId: '', warehouseId: '', countedQuantity: '', reason: '' });
+  const [form, setForm] = useState({ productId: '', countedQuantity: '', reason: '' });
   const [allowNegative, setAllowNegative] = useState(false);
 
   const productsQuery = useQuery({
@@ -37,8 +36,7 @@ export default function AdjustmentPage() {
     enabled: Boolean(form.productId),
   });
 
-  const theoretical =
-    levelQuery.data?.product?.stockLevels?.find((l) => l.warehouseId === form.warehouseId)?.quantity ?? 0;
+  const theoretical = levelQuery.data?.product?.stockLevel?.quantity ?? 0;
 
   const counted = form.countedQuantity === '' ? null : Number(form.countedQuantity);
   const delta = counted === null ? null : counted - theoretical;
@@ -70,7 +68,7 @@ export default function AdjustmentPage() {
   });
 
   const canSubmit =
-    form.productId && form.warehouseId && counted !== null && form.reason.trim().length >= 3 && delta !== 0;
+    form.productId && counted !== null && form.reason.trim().length >= 3 && delta !== 0;
 
   return (
     <div className="space-y-6">
@@ -80,15 +78,7 @@ export default function AdjustmentPage() {
       </header>
 
       <div className="card max-w-2xl space-y-4 p-6">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <WarehouseSelect
-            id="warehouseId"
-            label={t('common:fields.warehouse')}
-            value={form.warehouseId}
-            onChange={(warehouseId) => setForm((f) => ({ ...f, warehouseId }))}
-            required
-          />
-
+        <div className="grid gap-4">
           <div>
             <label htmlFor="productId" className="label">{t('stock:adjustment.product')}</label>
             <select
@@ -107,7 +97,7 @@ export default function AdjustmentPage() {
           </div>
         </div>
 
-        {form.productId && form.warehouseId && (
+        {form.productId && (
           <div className="grid gap-4 rounded-lg bg-slate-50 p-4 sm:grid-cols-3">
             <div>
               <p className="text-xs text-slate-500">{t('stock:adjustment.theoretical')}</p>
@@ -178,7 +168,6 @@ export default function AdjustmentPage() {
           onClick={() =>
             mutation.mutate({
               productId: form.productId,
-              warehouseId: form.warehouseId,
               countedQuantity: counted,
               reason: form.reason.trim(),
               allowNegative,

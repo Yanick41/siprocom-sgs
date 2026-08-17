@@ -44,13 +44,6 @@ export const suppliersApi = {
   deactivate: (id) => api.patch(`/suppliers/${id}/deactivate`),
 };
 
-export const warehousesApi = {
-  list: (params) => api.get(`/warehouses${qs(params)}`),
-  get: (id) => api.get(`/warehouses/${id}`),
-  create: (data) => api.post('/warehouses', data),
-  update: ({ id, ...data }) => api.patch(`/warehouses/${id}`, data),
-};
-
 export const stockApi = {
   levels: (params) => api.get(`/stock${qs(params)}`),
   byProduct: (id) => api.get(`/stock/product/${id}`),

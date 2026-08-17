@@ -29,23 +29,6 @@ const createSupplierSchema = z.object({
 
 const updateSupplierSchema = createSupplierSchema.partial();
 
-// ---- Warehouse -----------------------------------------------------------
-
-const createWarehouseSchema = z.object({
-  code: z
-    .string()
-    .trim()
-    .min(1)
-    .max(30)
-    .regex(/^[A-Z0-9-]+$/, 'UPPERCASE_ALNUM_DASH_ONLY'),
-  name: z.string().trim().min(1).max(150),
-  address: z.string().trim().max(300).optional().nullable(),
-  managerName: optionalText,
-  isActive: z.boolean().optional(),
-});
-
-const updateWarehouseSchema = createWarehouseSchema.partial();
-
 // ---- Product -------------------------------------------------------------
 
 const createProductSchema = z
@@ -108,8 +91,6 @@ module.exports = {
   updateCategorySchema,
   createSupplierSchema,
   updateSupplierSchema,
-  createWarehouseSchema,
-  updateWarehouseSchema,
   createProductSchema,
   updateProductSchema,
   idParamSchema,

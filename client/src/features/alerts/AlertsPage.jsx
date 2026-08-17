@@ -21,7 +21,7 @@ export default function AlertsPage() {
   const translateError = useErrorMessage();
   const { can } = useAuth();
 
-  const [filters, setFilters] = useState({ status: 'OPEN', type: '', warehouseId: '', page: 1 });
+  const [filters, setFilters] = useState({ status: 'OPEN', type: '', page: 1 });
 
   const alertsQuery = useQuery({
     queryKey: ['alerts', filters],

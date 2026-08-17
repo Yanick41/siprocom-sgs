@@ -38,7 +38,7 @@ export default function SetupPage() {
     watch,
     formState: { errors },
   } = useForm({
-    defaultValues: { name: '', email: '', password: '', confirm: '', warehouseName: '' },
+    defaultValues: { name: '', email: '', password: '', confirm: '' },
   });
 
   const password = watch('password') ?? '';
@@ -84,7 +84,6 @@ export default function SetupPage() {
                 name: values.name,
                 email: values.email,
                 password: values.password,
-                warehouseName: values.warehouseName || undefined,
               });
             })}
             className="space-y-4"
@@ -147,15 +146,6 @@ export default function SetupPage() {
                   })}
                 />
               )}
-            </FormField>
-
-            <FormField
-              label={t('auth:setup.warehouseName')}
-              name="warehouseName"
-              error={errors.warehouseName}
-              hint={t('auth:setup.warehouseHint')}
-            >
-              {(props) => <input {...props} type="text" placeholder="Entrepôt principal" {...register('warehouseName')} />}
             </FormField>
 
             <button type="submit" disabled={mutation.isPending} className="btn-primary w-full">

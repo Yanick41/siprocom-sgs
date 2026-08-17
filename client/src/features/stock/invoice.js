@@ -47,7 +47,6 @@ export function buildInvoice(issue, { t, lng = 'fr' }) {
     recipient: issue.recipient || '—',
     recipientPhone: issue.recipientPhone || '',
     recipientAddress: issue.recipientAddress || '',
-    warehouse: issue.warehouse?.name ?? '',
     status: issue.status,
     rows,
     grandTotal,

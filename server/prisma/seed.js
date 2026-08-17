@@ -43,12 +43,6 @@ const USERS = [
   { name: 'Système', email: 'system@siprocom.com', role: 'ADMIN' }, // owns automated movements (BR-5)
 ];
 
-const WAREHOUSES = [
-  { code: 'ENT-PRINCIPAL', name: 'Entrepôt Principal', address: 'Zone Industrielle, Abidjan', managerName: 'Koffi Mensah' },
-  { code: 'ENT-NORD', name: 'Entrepôt Nord', address: 'Route de Bouaké', managerName: 'Salif Koné' },
-  { code: 'ENT-BOUTIQUE', name: 'Réserve Boutique', address: 'Plateau, Abidjan', managerName: 'Awa Diallo' },
-];
-
 const CATEGORIES = [
   { name: 'Boissons', nameEn: 'Beverages', children: ['Sodas', 'Eaux', 'Jus'] },
   { name: 'Alimentaire', nameEn: 'Food', children: ['Conserves', 'Céréales'] },
@@ -155,7 +149,6 @@ async function main() {
     prisma.product.deleteMany(),
     prisma.category.deleteMany(),
     prisma.supplier.deleteMany(),
-    prisma.warehouse.deleteMany(),
     prisma.user.deleteMany(),
     prisma.counter.deleteMany(),
   ]);
@@ -170,13 +163,6 @@ async function main() {
     users[u.role === 'ADMIN' && u.email.startsWith('system') ? 'SYSTEM' : u.role] = created;
   }
   console.log(`  ${USERS.length} users`);
-
-  // ---- warehouses --------------------------------------------------------
-  const warehouses = [];
-  for (const w of WAREHOUSES) {
-    warehouses.push(await prisma.warehouse.create({ data: w }));
-  }
-  console.log(`  ${warehouses.length} warehouses`);
 
   // ---- categories (parent + children) ------------------------------------
   const categoryByName = {};
@@ -230,30 +216,23 @@ async function main() {
   // ---- opening stock -----------------------------------------------------
   // Enters as ADJUSTMENT movements so the ledger is complete from day one —
   // the same approach the real go-live migration will use (§10 Phase 8).
-  const levels = new Map(); // `${productId}:${warehouseId}` -> quantity
+  const levels = new Map(); // productId -> quantity
   const movements = [];
-  const key = (p, w) => `${p}:${w}`;
 
   const openingDate = daysAgo(DAYS_OF_HISTORY + 1);
   for (const product of products) {
-    for (const warehouse of warehouses) {
-      // The boutique reserve only carries the fast movers.
-      if (warehouse.code === 'ENT-BOUTIQUE' && product.popularity < 0.5) continue;
-
-      const opening = randomInt(product.minThreshold * 2, product.minThreshold * 6);
-      levels.set(key(product.id, warehouse.id), opening);
-      movements.push({
-        type: 'ADJUSTMENT',
-        productId: product.id,
-        warehouseId: warehouse.id,
-        quantity: opening,
-        balanceAfter: opening,
-        reason: 'Stock initial',
-        refType: 'Adjustment',
-        userId: users.SYSTEM.id,
-        createdAt: openingDate,
-      });
-    }
+    const opening = randomInt(product.minThreshold * 2, product.minThreshold * 6);
+    levels.set(product.id, opening);
+    movements.push({
+      type: 'ADJUSTMENT',
+      productId: product.id,
+      quantity: opening,
+      balanceAfter: opening,
+      reason: 'Stock initial',
+      refType: 'Adjustment',
+      userId: users.SYSTEM.id,
+      createdAt: openingDate,
+    });
   }
 
   // ---- 90 days of movements ---------------------------------------------
@@ -265,51 +244,44 @@ async function main() {
     if (isSunday) continue;
 
     for (const product of products) {
-      for (const warehouse of warehouses) {
-        const stockKey = key(product.id, warehouse.id);
-        if (!levels.has(stockKey)) continue;
-
-        // OUT — frequency scales with popularity.
-        if (random() < product.popularity * 0.55) {
-          const current = levels.get(stockKey);
-          const requested = randomInt(1, Math.max(2, Math.round(product.minThreshold * 0.35)));
-          const quantity = Math.min(requested, current);
-          if (quantity > 0) {
-            const balanceAfter = current - quantity;
-            levels.set(stockKey, balanceAfter);
-            movements.push({
-              type: 'OUT',
-              productId: product.id,
-              warehouseId: warehouse.id,
-              quantity,
-              balanceAfter,
-              reason: pick(['Vente', 'Vente', 'Vente', 'Besoin interne', 'Casse']),
-              refType: 'GoodsIssue',
-              userId: users.MAGASINIER.id,
-              createdAt: date,
-            });
-          }
-        }
-
-        // IN — replenishment when the level approaches the threshold.
-        const current = levels.get(stockKey);
-        if (current < product.minThreshold * 1.4 && random() < 0.3) {
-          const quantity = randomInt(product.minThreshold, product.minThreshold * 3);
-          const balanceAfter = current + quantity;
-          levels.set(stockKey, balanceAfter);
+      // OUT — frequency scales with popularity.
+      if (random() < product.popularity * 0.55) {
+        const current = levels.get(product.id);
+        const requested = randomInt(1, Math.max(2, Math.round(product.minThreshold * 0.35)));
+        const quantity = Math.min(requested, current);
+        if (quantity > 0) {
+          const balanceAfter = current - quantity;
+          levels.set(product.id, balanceAfter);
           movements.push({
-            type: 'IN',
+            type: 'OUT',
             productId: product.id,
-            warehouseId: warehouse.id,
             quantity,
             balanceAfter,
-            unitCost: product.buyPrice,
-            reason: 'Réception fournisseur',
-            refType: 'GoodsReceipt',
+            reason: pick(['Vente', 'Vente', 'Vente', 'Besoin interne', 'Casse']),
+            refType: 'GoodsIssue',
             userId: users.MAGASINIER.id,
             createdAt: date,
           });
         }
+      }
+
+      // IN — replenishment when the level approaches the threshold.
+      const current = levels.get(product.id);
+      if (current < product.minThreshold * 1.4 && random() < 0.3) {
+        const quantity = randomInt(product.minThreshold, product.minThreshold * 3);
+        const balanceAfter = current + quantity;
+        levels.set(product.id, balanceAfter);
+        movements.push({
+          type: 'IN',
+          productId: product.id,
+          quantity,
+          balanceAfter,
+          unitCost: product.buyPrice,
+          reason: 'Réception fournisseur',
+          refType: 'GoodsReceipt',
+          userId: users.MAGASINIER.id,
+          createdAt: date,
+        });
       }
     }
   }
@@ -319,11 +291,10 @@ async function main() {
   console.log(`  ${movements.length} stock movements over ${DAYS_OF_HISTORY} days`);
 
   // ---- materialised stock levels ----------------------------------------
-  const stockLevelRows = [];
-  for (const [stockKey, quantity] of levels.entries()) {
-    const [productId, warehouseId] = stockKey.split(':');
-    stockLevelRows.push({ productId, warehouseId, quantity });
-  }
+  const stockLevelRows = [...levels.entries()].map(([productId, quantity]) => ({
+    productId,
+    quantity,
+  }));
   await prisma.stockLevel.createMany({ data: stockLevelRows });
   console.log(`  ${stockLevelRows.length} stock levels`);
 
@@ -334,7 +305,6 @@ async function main() {
     if (row.quantity < product.minThreshold) {
       alerts.push({
         productId: row.productId,
-        warehouseId: row.warehouseId,
         type: 'MIN_THRESHOLD',
         status: 'OPEN',
         quantityAtTrigger: row.quantity,
@@ -343,7 +313,6 @@ async function main() {
     } else if (product.maxThreshold && row.quantity > product.maxThreshold) {
       alerts.push({
         productId: row.productId,
-        warehouseId: row.warehouseId,
         type: 'MAX_THRESHOLD',
         status: 'OPEN',
         quantityAtTrigger: row.quantity,

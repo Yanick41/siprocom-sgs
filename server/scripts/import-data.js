@@ -17,10 +17,10 @@
  *   reference,designation,designationEn,category,unit,minThreshold,maxThreshold,buyPrice,sellPrice,barcode,supplier
  *
  * stock.csv columns:
- *   reference,warehouseCode,quantity
+ *   reference,quantity
  *
  * The importer is idempotent on products (upsert by reference) and refuses to
- * apply an opening balance twice to the same product/warehouse.
+ * apply an opening balance twice to the same product.
  */
 
 const fs = require('node:fs');
@@ -185,13 +185,6 @@ async function importStock(file, { dryRun, userEmail }) {
         continue;
       }
 
-      const warehouse = await prisma.warehouse.findUnique({ where: { code: row.warehouseCode } });
-      if (!warehouse) {
-        report.errors.push(`line ${line}: unknown warehouse code "${row.warehouseCode}"`);
-        report.skipped += 1;
-        continue;
-      }
-
       const quantity = Number.parseInt(row.quantity, 10);
       if (!Number.isInteger(quantity) || quantity < 0) {
         report.errors.push(`line ${line}: invalid quantity "${row.quantity}"`);
@@ -205,11 +198,7 @@ async function importStock(file, { dryRun, userEmail }) {
 
       // Re-running the import must not double the opening balance.
       const alreadyOpened = await prisma.stockMovement.findFirst({
-        where: {
-          productId: product.id,
-          warehouseId: warehouse.id,
-          refType: 'OpeningBalance',
-        },
+        where: { productId: product.id, refType: 'OpeningBalance' },
       });
       if (alreadyOpened) {
         report.errors.push(`line ${line}: opening balance already applied for ${row.reference}`);
@@ -226,7 +215,6 @@ async function importStock(file, { dryRun, userEmail }) {
         applyMovement(tx, {
           type: 'ADJUSTMENT',
           productId: product.id,
-          warehouseId: warehouse.id,
           quantity,
           reason: 'Stock initial (reprise de données)',
           refType: 'OpeningBalance',

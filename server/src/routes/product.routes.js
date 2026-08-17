@@ -18,11 +18,11 @@ router.use(authenticate);
 
 const SORTABLE = ['reference', 'designation', 'createdAt', 'minThreshold', 'buyPrice', 'sellPrice'];
 
-/** Collapses per-warehouse levels into a single total for list views. */
-const withTotalStock = (product) => {
-  const totalStock = (product.stockLevels || []).reduce((sum, l) => sum + l.quantity, 0);
-  return { ...product, totalStock };
-};
+/** Surfaces the stock level as a plain number for list views. */
+const withTotalStock = (product) => ({
+  ...product,
+  totalStock: product.stockLevel?.quantity ?? 0,
+});
 
 // GET /api/products
 // Filters: search, categoryId, supplierId, status (active|inactive|all), stockState (low|out|over)
@@ -56,7 +56,7 @@ router.get(
         orderBy: q.orderBy,
         include: {
           category: { select: { id: true, name: true, nameEn: true } },
-          stockLevels: { select: { warehouseId: true, quantity: true } },
+          stockLevel: { select: { quantity: true } },
         },
       }),
       prisma.product.count({ where }),
@@ -91,7 +91,7 @@ router.get(
       include: {
         category: true,
         suppliers: { include: { supplier: true } },
-        stockLevels: { include: { warehouse: { select: { id: true, code: true, name: true } } } },
+        stockLevel: true,
       },
     });
     if (!product) throw new NotFoundError('Product', id);

@@ -19,11 +19,11 @@ const parsePeriod = (query) => {
 router.get(
   '/dashboard',
   asyncHandler(async (req, res) => {
-    res.json(await analytics.getDashboard({ warehouseId: req.query.warehouseId || null }));
+    res.json(await analytics.getDashboard());
   })
 );
 
-// GET /api/reports/trending?from&to&limit&warehouseId&categoryId
+// GET /api/reports/trending?from&to&limit&categoryId
 router.get(
   '/trending',
   asyncHandler(async (req, res) => {
@@ -33,7 +33,6 @@ router.get(
         from,
         to,
         limit: Math.min(Number(req.query.limit) || 20, 100),
-        warehouseId: req.query.warehouseId || null,
         categoryId: req.query.categoryId || null,
       })
     );
@@ -50,13 +49,12 @@ router.get(
         from,
         to,
         limit: Math.min(Number(req.query.limit) || 50, 200),
-        warehouseId: req.query.warehouseId || null,
       })
     );
   })
 );
 
-// GET /api/reports/movements-summary?groupBy=day|category|warehouse
+// GET /api/reports/movements-summary?groupBy=day|category
 router.get(
   '/movements-summary',
   asyncHandler(async (req, res) => {
@@ -69,7 +67,6 @@ router.get(
         from,
         to,
         groupBy: req.query.groupBy || 'day',
-        warehouseId: req.query.warehouseId || null,
       }),
     });
   })
@@ -80,7 +77,7 @@ router.get(
   '/valuation',
   authorize('ADMIN', 'DIRECTION'),
   asyncHandler(async (req, res) => {
-    res.json(await analytics.getValuation({ warehouseId: req.query.warehouseId || null }));
+    res.json(await analytics.getValuation());
   })
 );
 

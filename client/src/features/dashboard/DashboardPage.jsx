@@ -165,10 +165,10 @@ export default function DashboardPage() {
           ) : (
             <ul className="divide-y divide-slate-100">
               {lowStock.map((item) => (
-                <li key={`${item.id}-${item.warehouseName}`} className="flex items-center justify-between gap-3 px-4 py-2.5">
+                <li key={item.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium text-slate-800">{label(item)}</p>
-                    <p className="text-xs text-slate-500">{item.warehouseName}</p>
+                    <p className="text-xs text-slate-500">{item.reference}</p>
                   </div>
                   <StatusBadge tone={item.quantity <= 0 ? 'danger' : 'warning'}>
                     {formatQuantity(item.quantity, lng)} / {item.minThreshold}

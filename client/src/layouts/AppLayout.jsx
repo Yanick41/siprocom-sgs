@@ -23,8 +23,6 @@ const NAV_SECTIONS = [
     titleKey: 'nav.stock',
     items: [
       { to: '/receipts', labelKey: 'nav.receipts', icon: FiLogIn, permission: 'stock.view' },
-      // Transfers are a goods issue with reason=TRANSFER, so they live under /issues
-      // rather than getting a route of their own.
       { to: '/issues', labelKey: 'nav.issues', icon: FiLogOut, permission: 'stock.view' },
       { to: '/stock', labelKey: 'nav.stockLevels', icon: FiBarChart2, permission: 'stock.view' },
       { to: '/movements', labelKey: 'nav.movements', icon: FiRepeat, permission: 'stock.view' },
@@ -52,7 +50,7 @@ const NAV_SECTIONS = [
       { to: '/users', labelKey: 'nav.users', icon: FiUsers, permission: 'users.manage' },
       { to: '/audit', labelKey: 'nav.auditLog', icon: FiShield, permission: 'audit.view' },
       // No /settings entry: every parameter the cahier des charges lists —
-      // thresholds, categories, warehouses — is edited on its own screen, so a
+      // thresholds, categories, suppliers — is edited on its own screen, so a
       // settings page would have nothing left to hold.
     ],
   },

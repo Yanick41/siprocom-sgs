@@ -17,7 +17,7 @@ export default function StockLevelsPage() {
   const lng = i18n.resolvedLanguage;
   const translateError = useErrorMessage();
 
-  const [filters, setFilters] = useState({ search: '', warehouseId: '', state: '', page: 1 });
+  const [filters, setFilters] = useState({ search: '', state: '', page: 1 });
 
   const levelsQuery = useQuery({
     queryKey: ['stock', 'levels', filters],

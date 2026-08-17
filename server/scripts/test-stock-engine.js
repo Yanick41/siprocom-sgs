@@ -16,7 +16,19 @@ const { applyMovement, reconcile } = require('../src/services/stock.service');
 const { allocateNumber } = require('../src/services/counter.service');
 const { InsufficientStockError } = require('../src/lib/errors');
 
-const prisma = new PrismaClient();
+/**
+ * The concurrency tests fire 20 transactions at once against a hosted database.
+ * Prisma's 2 s default for acquiring a connection is a local-latency figure:
+ * over the network, the queue behind a burst that size exceeds it and the
+ * transactions fail to *start* — which this script would score as "the stock
+ * guard rejected them" when nothing of the sort happened.
+ *
+ * Waiting longer makes the test measure the invariant it is named after rather
+ * than the round-trip time to the database.
+ */
+const prisma = new PrismaClient({
+  transactionOptions: { maxWait: 30_000, timeout: 30_000 },
+});
 
 let passed = 0;
 let failed = 0;
@@ -35,7 +47,6 @@ const TEST_REF = '__TEST_CONCURRENCY__';
 
 async function setup() {
   const category = await prisma.category.findFirst({ where: { parentId: { not: null } } });
-  const warehouse = await prisma.warehouse.findFirst({ where: { isActive: true } });
   const user = await prisma.user.findFirst({ where: { role: 'ADMIN' } });
 
   await cleanup();
@@ -51,7 +62,7 @@ async function setup() {
     },
   });
 
-  return { product, warehouse, user };
+  return { product, user };
 }
 
 async function cleanup() {
@@ -67,13 +78,13 @@ async function cleanup() {
 
 async function main() {
   console.log('\nStock engine verification\n');
-  const { product, warehouse, user } = await setup();
-  const ctx = { productId: product.id, warehouseId: warehouse.id, userId: user.id };
+  const { product, user } = await setup();
+  const ctx = { productId: product.id, userId: user.id };
 
   // ---- 1. Basic IN ------------------------------------------------------
   await prisma.$transaction((tx) => applyMovement(tx, { ...ctx, type: 'IN', quantity: 10 }));
   let level = await prisma.stockLevel.findUnique({
-    where: { productId_warehouseId: { productId: product.id, warehouseId: warehouse.id } },
+    where: { productId: product.id },
   });
   check('IN creates the level row and adds stock', level.quantity === 10, `got ${level?.quantity}`);
 
@@ -93,7 +104,7 @@ async function main() {
   ).length;
 
   level = await prisma.stockLevel.findUnique({
-    where: { productId_warehouseId: { productId: product.id, warehouseId: warehouse.id } },
+    where: { productId: product.id },
   });
 
   check('exactly 10 of 20 concurrent issues succeed', succeeded === 10, `got ${succeeded}`);
@@ -128,7 +139,7 @@ async function main() {
     applyMovement(tx, { ...ctx, type: 'ADJUSTMENT', quantity: -3, reason: 'Inventaire: casse' })
   );
   level = await prisma.stockLevel.findUnique({
-    where: { productId_warehouseId: { productId: product.id, warehouseId: warehouse.id } },
+    where: { productId: product.id },
   });
   check('signed adjustments net correctly (0 +7 -3 = 4)', level.quantity === 4, `got ${level.quantity}`);
 
@@ -148,7 +159,7 @@ async function main() {
     applyMovement(tx, { ...ctx, type: 'OUT', quantity: 10, reason: 'override', allowNegative: true })
   );
   level = await prisma.stockLevel.findUnique({
-    where: { productId_warehouseId: { productId: product.id, warehouseId: warehouse.id } },
+    where: { productId: product.id },
   });
   check('allowNegative override goes through (4 - 10 = -6)', level.quantity === -6, `got ${level.quantity}`);
 
@@ -162,7 +173,7 @@ async function main() {
   // half-posted document would leave the ledger describing goods never received.
   const before = (
     await prisma.stockLevel.findUnique({
-      where: { productId_warehouseId: { productId: product.id, warehouseId: warehouse.id } },
+      where: { productId: product.id },
     })
   ).quantity;
 
@@ -177,7 +188,7 @@ async function main() {
 
   const after = (
     await prisma.stockLevel.findUnique({
-      where: { productId_warehouseId: { productId: product.id, warehouseId: warehouse.id } },
+      where: { productId: product.id },
     })
   ).quantity;
   check('a failed line rolls back the whole transaction', after === before, `${before} -> ${after}`);

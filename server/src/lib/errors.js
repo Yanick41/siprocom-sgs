@@ -49,8 +49,8 @@ class ConflictError extends AppError {
 
 /** Raised by stock.service when an OUT movement would drive stock negative (BR-2). */
 class InsufficientStockError extends ConflictError {
-  constructor({ productId, warehouseId, requested, available }) {
-    super('INSUFFICIENT_STOCK', { productId, warehouseId, requested, available });
+  constructor({ productId, requested, available }) {
+    super('INSUFFICIENT_STOCK', { productId, requested, available });
   }
 }
 

@@ -23,7 +23,6 @@ router.use(authenticate);
 
 const DOC_INCLUDE = {
   supplier: { select: { id: true, name: true } },
-  warehouse: { select: { id: true, code: true, name: true } },
   createdBy: { select: { id: true, name: true } },
   validatedBy: { select: { id: true, name: true } },
   lines: {
@@ -46,11 +45,10 @@ router.get(
       sortable: ['receiptDate', 'number', 'createdAt'],
       defaultSort: 'receiptDate',
     });
-    const { status, warehouseId, supplierId, from, to } = req.query;
+    const { status, supplierId, from, to } = req.query;
 
     const where = {
       ...(status ? { status } : {}),
-      ...(warehouseId ? { warehouseId } : {}),
       ...(supplierId ? { supplierId } : {}),
       ...(from || to
         ? { receiptDate: { ...(from ? { gte: new Date(from) } : {}), ...(to ? { lte: new Date(to) } : {}) } }
@@ -66,7 +64,6 @@ router.get(
         orderBy: q.orderBy,
         include: {
           supplier: { select: { id: true, name: true } },
-          warehouse: { select: { id: true, code: true, name: true } },
           createdBy: { select: { id: true, name: true } },
           _count: { select: { lines: true } },
         },
@@ -196,7 +193,6 @@ router.post(
         doc.lines.map((line) => ({
           type: 'IN',
           productId: line.productId,
-          warehouseId: doc.warehouseId,
           quantity: line.baseQuantity,
           unitCost: line.unitPrice,
           lotNumber: line.lotNumber,
@@ -216,7 +212,7 @@ router.post(
 
     // BR-8: post-commit, so alerting never extends the movement's locks.
     checkThresholdsAsync(
-      receipt.lines.map((l) => ({ productId: l.productId, warehouseId: receipt.warehouseId }))
+      receipt.lines.map((line) => line.productId)
     );
 
     await recordAudit({
@@ -254,8 +250,7 @@ router.post(
           doc.lines.map((line) => ({
             type: 'OUT',
             productId: line.productId,
-            warehouseId: doc.warehouseId,
-            quantity: line.baseQuantity,
+              quantity: line.baseQuantity,
             reason: `Annulation ${doc.number}: ${reason}`,
             refType: 'GoodsReceipt',
             refId: doc.id,
@@ -272,7 +267,7 @@ router.post(
     });
 
     checkThresholdsAsync(
-      receipt.lines.map((l) => ({ productId: l.productId, warehouseId: receipt.warehouseId }))
+      receipt.lines.map((line) => line.productId)
     );
 
     await recordAudit({

@@ -18,7 +18,7 @@ export default function MovementsPage() {
   const lng = i18n.resolvedLanguage;
   const translateError = useErrorMessage();
 
-  const [filters, setFilters] = useState({ type: '', warehouseId: '', from: '', to: '', page: 1 });
+  const [filters, setFilters] = useState({ type: '', from: '', to: '', page: 1 });
 
   const movementsQuery = useQuery({
     queryKey: ['stock', 'movements', filters],

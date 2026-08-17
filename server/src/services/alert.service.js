@@ -12,22 +12,22 @@ const logger = require('../lib/logger');
  * can lag a movement by milliseconds — acceptable, and the daily sweep is the
  * backstop.
  *
- * Alerts are idempotent: one OPEN alert per (product, warehouse, type). Crossing
+ * Alerts are idempotent: one OPEN alert per (product, type). Crossing
  * the threshold repeatedly does not pile up duplicates, and returning to a
  * healthy level resolves the open alert automatically.
  */
 
 /**
- * @param {Array<{productId: string, warehouseId: string}>} pairs
+ * @param {string[]} productIds
  */
-async function checkThresholds(pairs) {
-  if (!pairs?.length) return { opened: 0, resolved: 0 };
+async function checkThresholds(productIds) {
+  if (!productIds?.length) return { opened: 0, resolved: 0 };
 
-  // De-duplicate: a multi-line document often touches the same pair twice.
-  const unique = [...new Map(pairs.map((p) => [`${p.productId}:${p.warehouseId}`, p])).values()];
+  // De-duplicate: a multi-line document often names the same product twice.
+  const unique = [...new Set(productIds)];
 
   const levels = await prisma.stockLevel.findMany({
-    where: { OR: unique.map(({ productId, warehouseId }) => ({ productId, warehouseId })) },
+    where: { productId: { in: unique } },
     include: { product: { select: { minThreshold: true, maxThreshold: true, isActive: true } } },
   });
 
@@ -50,7 +50,6 @@ async function checkThresholds(pairs) {
       const existing = await prisma.alert.findFirst({
         where: {
           productId: level.productId,
-          warehouseId: level.warehouseId,
           type,
           status: { in: ['OPEN', 'ACKNOWLEDGED'] },
         },
@@ -60,7 +59,6 @@ async function checkThresholds(pairs) {
         await prisma.alert.create({
           data: {
             productId: level.productId,
-            warehouseId: level.warehouseId,
             type,
             status: 'OPEN',
             quantityAtTrigger: level.quantity,
@@ -86,8 +84,8 @@ async function checkThresholds(pairs) {
  * A failure here must never turn a successful stock movement into an error
  * response — the movement is already committed and correct.
  */
-function checkThresholdsAsync(pairs) {
-  checkThresholds(pairs).catch((error) => {
+function checkThresholdsAsync(productIds) {
+  checkThresholds(productIds).catch((error) => {
     logger.error({ err: error }, 'Threshold check failed after movement');
   });
 }
@@ -98,8 +96,8 @@ function checkThresholdsAsync(pairs) {
  * edited on the product rather than crossed by a movement.
  */
 async function sweepAll() {
-  const levels = await prisma.stockLevel.findMany({ select: { productId: true, warehouseId: true } });
-  return checkThresholds(levels);
+  const levels = await prisma.stockLevel.findMany({ select: { productId: true } });
+  return checkThresholds(levels.map((level) => level.productId));
 }
 
 module.exports = { checkThresholds, checkThresholdsAsync, sweepAll };

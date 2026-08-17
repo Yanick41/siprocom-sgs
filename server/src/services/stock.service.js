@@ -25,11 +25,11 @@ const { InsufficientStockError, ConflictError } = require('../lib/errors');
  * Adds stock atomically, creating the level row on first movement.
  * @returns {Promise<number>} the balance after the movement
  */
-async function increment(tx, productId, warehouseId, quantity) {
+async function increment(tx, productId, quantity) {
   const rows = await tx.$queryRaw`
-    INSERT INTO stock_levels (id, "productId", "warehouseId", quantity, "updatedAt")
-    VALUES (gen_random_uuid()::text, ${productId}, ${warehouseId}, ${quantity}, NOW())
-    ON CONFLICT ("productId", "warehouseId")
+    INSERT INTO stock_levels (id, "productId", quantity, "updatedAt")
+    VALUES (gen_random_uuid()::text, ${productId}, ${quantity}, NOW())
+    ON CONFLICT ("productId")
     DO UPDATE SET quantity = stock_levels.quantity + ${quantity}, "updatedAt" = NOW()
     RETURNING quantity
   `;
@@ -46,13 +46,13 @@ async function increment(tx, productId, warehouseId, quantity) {
  * @returns {Promise<number>} the balance after the movement
  * @throws {InsufficientStockError} when the guard rejects the update
  */
-async function decrement(tx, productId, warehouseId, quantity, { allowNegative = false } = {}) {
+async function decrement(tx, productId, quantity, { allowNegative = false } = {}) {
   if (allowNegative) {
     // BR-3: privileged override. Still atomic, just without the floor.
     const rows = await tx.$queryRaw`
-      INSERT INTO stock_levels (id, "productId", "warehouseId", quantity, "updatedAt")
-      VALUES (gen_random_uuid()::text, ${productId}, ${warehouseId}, ${-quantity}, NOW())
-      ON CONFLICT ("productId", "warehouseId")
+      INSERT INTO stock_levels (id, "productId", quantity, "updatedAt")
+      VALUES (gen_random_uuid()::text, ${productId}, ${-quantity}, NOW())
+      ON CONFLICT ("productId")
       DO UPDATE SET quantity = stock_levels.quantity - ${quantity}, "updatedAt" = NOW()
       RETURNING quantity
     `;
@@ -63,7 +63,6 @@ async function decrement(tx, productId, warehouseId, quantity, { allowNegative =
     UPDATE stock_levels
     SET quantity = quantity - ${quantity}, "updatedAt" = NOW()
     WHERE "productId" = ${productId}
-      AND "warehouseId" = ${warehouseId}
       AND quantity >= ${quantity}
     RETURNING quantity
   `;
@@ -72,12 +71,11 @@ async function decrement(tx, productId, warehouseId, quantity, { allowNegative =
     // Either the level row is missing or it held too little. Read the actual
     // figure so the client can show "3 available" rather than a bare refusal.
     const existing = await tx.stockLevel.findUnique({
-      where: { productId_warehouseId: { productId, warehouseId } },
+      where: { productId },
       select: { quantity: true },
     });
     throw new InsufficientStockError({
       productId,
-      warehouseId,
       requested: quantity,
       available: existing?.quantity ?? 0,
     });
@@ -101,7 +99,6 @@ async function applyMovement(
   {
     type,
     productId,
-    warehouseId,
     quantity,
     unitCost = null,
     lotNumber = null,
@@ -120,16 +117,16 @@ async function applyMovement(
 
   if (type === 'IN') {
     if (quantity <= 0) throw new ConflictError('QUANTITY_MUST_BE_POSITIVE');
-    balanceAfter = await increment(tx, productId, warehouseId, quantity);
+    balanceAfter = await increment(tx, productId, quantity);
   } else if (type === 'OUT') {
     if (quantity <= 0) throw new ConflictError('QUANTITY_MUST_BE_POSITIVE');
-    balanceAfter = await decrement(tx, productId, warehouseId, quantity, { allowNegative });
+    balanceAfter = await decrement(tx, productId, quantity, { allowNegative });
   } else if (type === 'ADJUSTMENT') {
     if (quantity === 0) throw new ConflictError('QUANTITY_MUST_NOT_BE_ZERO');
     balanceAfter =
       quantity > 0
-        ? await increment(tx, productId, warehouseId, quantity)
-        : await decrement(tx, productId, warehouseId, -quantity, { allowNegative });
+        ? await increment(tx, productId, quantity)
+        : await decrement(tx, productId, -quantity, { allowNegative });
   } else {
     throw new Error(`Unknown movement type: ${type}`);
   }
@@ -138,7 +135,6 @@ async function applyMovement(
     data: {
       type,
       productId,
-      warehouseId,
       quantity,
       balanceAfter,
       unitCost,
@@ -175,22 +171,19 @@ async function applyMovements(tx, movements) {
 async function reconcile(prisma) {
   const rows = await prisma.$queryRaw`
     WITH ledger AS (
-      SELECT "productId", "warehouseId",
+      SELECT "productId",
              SUM(CASE WHEN type = 'OUT' THEN -quantity ELSE quantity END)::int AS computed
       FROM stock_movements
-      GROUP BY "productId", "warehouseId"
+      GROUP BY "productId"
     )
     SELECT
-      COALESCE(sl."productId", l."productId")     AS "productId",
-      COALESCE(sl."warehouseId", l."warehouseId") AS "warehouseId",
-      COALESCE(sl.quantity, 0)                    AS stored,
-      COALESCE(l.computed, 0)                     AS computed,
-      p.reference, p.designation, w.code AS "warehouseCode"
+      COALESCE(sl."productId", l."productId") AS "productId",
+      COALESCE(sl.quantity, 0)               AS stored,
+      COALESCE(l.computed, 0)                AS computed,
+      p.reference, p.designation
     FROM stock_levels sl
-    FULL OUTER JOIN ledger l
-      ON l."productId" = sl."productId" AND l."warehouseId" = sl."warehouseId"
-    LEFT JOIN products p   ON p.id = COALESCE(sl."productId", l."productId")
-    LEFT JOIN warehouses w ON w.id = COALESCE(sl."warehouseId", l."warehouseId")
+    FULL OUTER JOIN ledger l ON l."productId" = sl."productId"
+    LEFT JOIN products p ON p.id = COALESCE(sl."productId", l."productId")
     WHERE COALESCE(sl.quantity, 0) <> COALESCE(l.computed, 0)
   `;
 

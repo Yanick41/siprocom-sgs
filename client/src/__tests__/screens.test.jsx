@@ -8,8 +8,8 @@
  * mounting the component catches this class of fault.
  *
  * The payload shapes below mirror the API's `select` clauses exactly. That
- * fidelity is the whole point: a stubbed `warehouse: 'Entrepôt'` string would
- * have passed while the real object crashed.
+ * fidelity is the whole point: a stubbed string where the API returns an
+ * object would have passed while the real screen crashed.
  */
 
 import { Component } from 'react';
@@ -27,12 +27,11 @@ import { AuthContext } from '@/context/AuthContext';
 
 const ADMIN = { id: 'u1', name: 'Admin SIPROCOM', email: 'admin@siprocom.com', role: 'ADMIN', locale: 'fr' };
 
-const WAREHOUSE = { id: 'w1', code: 'ENT-PRINCIPAL', name: 'Entrepôt Principal' };
 const PRODUCT = {
   id: 'p1', reference: 'BOI-010', designation: 'Eau minérale 1.5L', designationEn: 'Mineral water 1.5L',
   unit: 'carton', minThreshold: 40, maxThreshold: 400, buyPrice: 1800, sellPrice: 2500,
   isActive: true, categoryId: 'c1', category: { id: 'c1', name: 'Eaux', nameEn: 'Water' },
-  stockLevels: [{ warehouseId: 'w1', quantity: 120 }], totalStock: 120,
+  stockLevel: { quantity: 120 }, totalStock: 120,
 };
 const paged = (items) => ({ items, pagination: { page: 1, limit: 25, total: items.length, totalPages: 1 } });
 
@@ -41,21 +40,20 @@ const ROUTES = [
   [/^\/products/, paged([PRODUCT])],
   [/^\/categories/, { items: [{ id: 'c0', name: 'Boissons', nameEn: 'Beverages', parentId: null, _count: { products: 0 }, children: [{ id: 'c1', name: 'Eaux', nameEn: 'Water', parentId: 'c0', _count: { products: 2 }, children: [] }] }] }],
   [/^\/suppliers/, paged([{ id: 's1', name: 'Distribution Ivoire SA', contact: 'M. Bamba', phone: '+225 07', email: 'a@b.ci', isActive: true, _count: { products: 3 } }])],
-  [/^\/warehouses/, { items: [{ ...WAREHOUSE, address: 'Zone Industrielle', managerName: 'Koffi', isActive: true, _count: { stockLevels: 24 } }] }],
-  [/^\/stock\/movements/, paged([{ id: 'm1', type: 'OUT', quantity: 12, balanceAfter: 108, reason: 'Vente', createdAt: '2026-08-10T09:00:00Z', product: PRODUCT, warehouse: WAREHOUSE, user: { id: 'u1', name: 'Koffi Mensah' } }])],
+  [/^\/stock\/movements/, paged([{ id: 'm1', type: 'OUT', quantity: 12, balanceAfter: 108, reason: 'Vente', createdAt: '2026-08-10T09:00:00Z', product: PRODUCT, user: { id: 'u1', name: 'Koffi Mensah' } }])],
   [/^\/stock\/product/, { product: PRODUCT, totalStock: 120, movements: [] }],
-  [/^\/stock/, paged([{ id: 'sl1', productId: 'p1', warehouseId: 'w1', quantity: 120, state: 'OK', product: PRODUCT, warehouse: WAREHOUSE }])],
-  [/^\/receipts/, paged([{ id: 'r1', number: 'BE-2026-0001', status: 'DRAFT', reason: 'PURCHASE', receiptDate: '2026-08-10T09:00:00Z', supplier: { id: 's1', name: 'Distribution Ivoire SA' }, warehouse: WAREHOUSE, createdBy: { id: 'u1', name: 'Koffi' }, _count: { lines: 2 } }])],
-  [/^\/issues/, paged([{ id: 'i1', number: 'BS-2026-0001', status: 'VALIDATED', reason: 'SALE', recipient: 'Client X', issueDate: '2026-08-10T09:00:00Z', warehouse: WAREHOUSE, destWarehouse: null, createdBy: { id: 'u1', name: 'Koffi' }, _count: { lines: 1 } }])],
+  [/^\/stock/, paged([{ id: 'sl1', productId: 'p1', quantity: 120, state: 'OK', product: PRODUCT }])],
+  [/^\/receipts/, paged([{ id: 'r1', number: 'BE-2026-0001', status: 'DRAFT', reason: 'PURCHASE', receiptDate: '2026-08-10T09:00:00Z', supplier: { id: 's1', name: 'Distribution Ivoire SA' }, createdBy: { id: 'u1', name: 'Koffi' }, _count: { lines: 2 } }])],
+  [/^\/issues/, paged([{ id: 'i1', number: 'BS-2026-0001', status: 'VALIDATED', reason: 'SALE', recipient: 'Client X', issueDate: '2026-08-10T09:00:00Z', createdBy: { id: 'u1', name: 'Koffi' }, _count: { lines: 1 } }])],
   [/^\/alerts\/count/, { total: 2, minThreshold: 2, maxThreshold: 0 }],
-  [/^\/alerts/, paged([{ id: 'a1', type: 'MIN_THRESHOLD', status: 'OPEN', quantityAtTrigger: 12, thresholdValue: 40, currentQuantity: 12, createdAt: '2026-08-10T09:00:00Z', product: PRODUCT, warehouse: WAREHOUSE }])],
+  [/^\/alerts/, paged([{ id: 'a1', type: 'MIN_THRESHOLD', status: 'OPEN', quantityAtTrigger: 12, thresholdValue: 40, currentQuantity: 12, createdAt: '2026-08-10T09:00:00Z', product: PRODUCT }])],
   [/^\/reports\/dashboard/, {
     period: { from: '2026-07-10', to: '2026-08-10' },
-    kpis: { productCount: 24, warehouseCount: 3, openAlerts: 2, movementsToday: 20, stockValue: 6876250, totalQuantity: 3910 },
+    kpis: { productCount: 24, openAlerts: 2, movementsToday: 20, stockValue: 6876250, totalQuantity: 3910 },
     trending: [{ id: 'p1', reference: 'BOI-010', designation: 'Eau minérale 1.5L', designationEn: 'Mineral water', totalOut: 318, movementCount: 40, avgDailyOut: 10.6 }],
     curve: [{ label: '2026-08-09', totalIn: 50, totalOut: 30 }, { label: '2026-08-10', totalIn: 20, totalOut: 45 }],
-    lowStock: [{ id: 'p2', reference: 'ALI-001', designation: 'Tomate 400g', designationEn: 'Tomato 400g', unit: 'unit', minThreshold: 50, warehouseName: 'Entrepôt Principal', quantity: 12 }],
-    recentMovements: [{ id: 'm1', type: 'OUT', quantity: 12, createdAt: '2026-08-10T09:00:00Z', product: PRODUCT, warehouse: WAREHOUSE, user: { name: 'Koffi Mensah' } }],
+    lowStock: [{ id: 'p2', reference: 'ALI-001', designation: 'Tomate 400g', designationEn: 'Tomato 400g', unit: 'unit', minThreshold: 50, quantity: 12 }],
+    recentMovements: [{ id: 'm1', type: 'OUT', quantity: 12, createdAt: '2026-08-10T09:00:00Z', product: PRODUCT, user: { name: 'Koffi Mensah' } }],
   }],
   [/^\/reports\/trending/, { from: '2026-07-10', to: '2026-08-10', days: 30, items: [{ id: 'p1', reference: 'BOI-010', designation: 'Eau minérale', designationEn: 'Water', categoryName: 'Eaux', totalOut: 318, movementCount: 40, avgDailyOut: 10.6 }] }],
   [/^\/reports\/dormant/, { items: [{ id: 'p3', reference: 'EMB-004', designation: 'Film étirable', designationEn: 'Stretch film', categoryName: 'Emballage', currentStock: 100, totalOut: 0, lastMovement: null, tiedUpValue: 350000 }] }],
@@ -131,12 +129,11 @@ const SCREENS = [
   ['Products', () => import('@/features/products/ProductsPage'), /BOI-010/],
   ['Categories', () => import('@/features/categories/CategoriesPage'), /Eaux|Water/],
   ['Suppliers', () => import('@/features/suppliers/SuppliersPage'), /Distribution Ivoire SA/],
-  ['Warehouses', () => import('@/features/warehouses/WarehousesPage'), /ENT-PRINCIPAL/],
   ['Receipts', () => import('@/features/stock/ReceiptsPage'), /BE-2026-0001/],
   ['Issues', () => import('@/features/stock/IssuesPage'), /BS-2026-0001/],
   ['StockLevels', () => import('@/features/stock/StockLevelsPage'), /BOI-010/],
   ['Movements', () => import('@/features/stock/MovementsPage'), /BOI-010/],
-  ['Adjustment', () => import('@/features/stock/AdjustmentPage'), /Entrepôt Principal/],
+  ['Adjustment', () => import('@/features/stock/AdjustmentPage'), /BOI-010/],
   ['Alerts', () => import('@/features/alerts/AlertsPage'), /BOI-010/],
   ['Reports', () => import('@/features/reports/ReportsPage'), /BOI-010/],
   ['Users', () => import('@/features/admin/UsersPage'), /admin@siprocom\.com/],

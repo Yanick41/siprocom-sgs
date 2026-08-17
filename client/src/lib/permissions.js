@@ -24,8 +24,6 @@ export const PERMISSIONS = {
   'categories.write': [ROLES.ADMIN],
   'suppliers.view': ALL,
   'suppliers.write': [ROLES.ADMIN, ROLES.ACHATS],
-  'warehouses.view': ALL,
-  'warehouses.write': [ROLES.ADMIN],
 
   // Stock operations (Phase 3–4)
   'stock.view': ALL,

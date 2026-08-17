@@ -8,7 +8,6 @@ import { issuesApi, productsApi, stockApi } from '@/api/resources';
 import { useAuth } from '@/context/AuthContext';
 import { PermissionGate } from '@/components/ProtectedRoute';
 import DataTable from '@/components/DataTable';
-import WarehouseSelect from '@/components/WarehouseSelect';
 import Modal from '@/components/Modal';
 import StatusBadge from '@/components/StatusBadge';
 import { useErrorMessage } from '@/hooks/useErrorMessage';
@@ -69,14 +68,7 @@ export default function IssuesPage() {
     {
       key: 'reason',
       header: t('common:fields.reason'),
-      render: (d) => (
-        <span>
-          {t(`stock:issueReason.${d.reason}`)}
-          {d.reason === 'TRANSFER' && d.destWarehouse && (
-            <span className="text-slate-400"> → {d.destWarehouse.name}</span>
-          )}
-        </span>
-      ),
+      render: (d) => t(`stock:issueReason.${d.reason}`),
     },
     { key: 'recipient', header: t('stock:issue.recipient'), render: (d) => d.recipient || '—' },
     { key: 'lines', header: t('stock:document.lineCount'), align: 'right', render: (d) => d._count?.lines ?? 0 },
@@ -160,8 +152,6 @@ function IssueFormModal({ onClose, onCreated }) {
   const translateError = useErrorMessage();
 
   const [form, setForm] = useState({
-    warehouseId: '',
-    destWarehouseId: '',
     reason: 'SALE',
     recipient: '',
     recipientPhone: '',
@@ -195,11 +185,11 @@ function IssueFormModal({ onClose, onCreated }) {
     queryFn: () => productsApi.list({ limit: 200, sort: 'designation', order: 'asc' }),
   });
 
-  // Live availability for the selected source warehouse.
+  // Live availability, so a line that cannot be served shows red while it is
+  // being typed rather than at validation.
   const levelsQuery = useQuery({
-    queryKey: ['stock', 'levels', form.warehouseId],
-    queryFn: () => stockApi.levels({ warehouseId: form.warehouseId, limit: 200 }),
-    enabled: Boolean(form.warehouseId),
+    queryKey: ['stock', 'levels'],
+    queryFn: () => stockApi.levels({ limit: 200 }),
   });
 
   const availability = new Map(
@@ -212,9 +202,8 @@ function IssueFormModal({ onClose, onCreated }) {
     onError: setSubmitError,
   });
 
-  const isTransfer = form.reason === 'TRANSFER';
   const validLines = lines.filter((l) => l.productId && Number(l.quantity) > 0);
-  const canSubmit = form.warehouseId && validLines.length > 0 && (!isTransfer || form.destWarehouseId);
+  const canSubmit = validLines.length > 0;
 
   return (
     <Modal
@@ -232,12 +221,10 @@ function IssueFormModal({ onClose, onCreated }) {
             onClick={() => {
               setSubmitError(null);
               mutation.mutate({
-                warehouseId: form.warehouseId,
                 reason: form.reason,
                 recipient: form.recipient || null,
                 recipientPhone: form.recipientPhone || null,
                 recipientAddress: form.recipientAddress || null,
-                destWarehouseId: isTransfer ? form.destWarehouseId : null,
                 notes: form.notes || null,
                 // The line's own price, so an agreed rate reaches the invoice
                 // instead of the product's list price.
@@ -263,47 +250,25 @@ function IssueFormModal({ onClose, onCreated }) {
       )}
 
       <div className="space-y-4">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <WarehouseSelect
-            id="warehouseId"
-            label={t('stock:issue.sourceWarehouse')}
-            value={form.warehouseId}
-            onChange={(warehouseId) => setForm((f) => ({ ...f, warehouseId }))}
-            required
-          />
-
-          <div>
-            <label htmlFor="reason" className="label">
-              {t('common:fields.reason')}
-            </label>
-            <select
-              id="reason"
-              value={form.reason}
-              onChange={(e) => setForm({ ...form, reason: e.target.value })}
-              className="input"
-            >
-              {/* TRANSFER omitted: it moves goods between sites, and there is
-                  only one. The enum keeps it so historical documents still read
-                  correctly. */}
-              {['SALE', 'DAMAGE', 'SAMPLE', 'INTERNAL', 'RETURN_SUPPLIER', 'OTHER'].map((r) => (
-                <option key={r} value={r}>
-                  {t(`stock:issueReason.${r}`)}
-                </option>
-              ))}
-            </select>
-          </div>
+        <div>
+          <label htmlFor="reason" className="label">
+            {t('common:fields.reason')}
+          </label>
+          <select
+            id="reason"
+            value={form.reason}
+            onChange={(e) => setForm({ ...form, reason: e.target.value })}
+            className="input"
+          >
+            {['SALE', 'DAMAGE', 'SAMPLE', 'INTERNAL', 'RETURN_SUPPLIER', 'OTHER'].map((r) => (
+              <option key={r} value={r}>
+                {t(`stock:issueReason.${r}`)}
+              </option>
+            ))}
+          </select>
         </div>
 
-        {isTransfer ? (
-          <WarehouseSelect
-            id="destWarehouseId"
-            label={t('stock:issue.destWarehouse')}
-            value={form.destWarehouseId}
-            onChange={(destWarehouseId) => setForm((f) => ({ ...f, destWarehouseId }))}
-            exclude={form.warehouseId}
-            required
-          />
-        ) : (
+        {
           // Enough to identify a customer on a document reprinted months later.
           // A name alone is not, in a town with many Kouassis.
           <div className="grid gap-4 sm:grid-cols-2">
@@ -345,7 +310,7 @@ function IssueFormModal({ onClose, onCreated }) {
               />
             </div>
           </div>
-        )}
+        }
 
         <div>
           <p className="label">{t('stock:document.lines')}</p>
@@ -353,7 +318,7 @@ function IssueFormModal({ onClose, onCreated }) {
             lines={lines}
             onChange={setLines}
             products={productsQuery.data?.items || []}
-            availability={form.warehouseId ? availability : null}
+            availability={availability}
           />
         </div>
       </div>
@@ -450,15 +415,8 @@ function IssueDetailModal({ id, onClose, canValidate, canCancel, isAdmin, onVali
               <dd className="text-slate-800">{formatDate(doc.issueDate, lng)}</dd>
             </div>
             <div>
-              <dt className="text-slate-500">{t('common:fields.warehouse')}</dt>
-              <dd className="text-slate-800">{doc.warehouse?.name}</dd>
-            </div>
-            <div>
               <dt className="text-slate-500">{t('common:fields.reason')}</dt>
-              <dd className="text-slate-800">
-                {t(`stock:issueReason.${doc.reason}`)}
-                {doc.destWarehouse && ` → ${doc.destWarehouse.name}`}
-              </dd>
+              <dd className="text-slate-800">{t(`stock:issueReason.${doc.reason}`)}</dd>
             </div>
           </dl>
 

@@ -12,14 +12,8 @@ const { allocateNumber } = require('../services/counter.service');
 const { checkThresholdsAsync } = require('../services/alert.service');
 const { resolveIssueLine } = require('../services/packaging.service');
 
-/** Both warehouses are affected on a transfer, so both must be re-checked. */
-const affectedPairs = (doc) =>
-  doc.lines.flatMap((line) => [
-    { productId: line.productId, warehouseId: doc.warehouseId },
-    ...(doc.destWarehouseId
-      ? [{ productId: line.productId, warehouseId: doc.destWarehouseId }]
-      : []),
-  ]);
+/** Products whose level moved, and therefore whose thresholds must be re-checked. */
+const affectedProducts = (doc) => doc.lines.map((line) => line.productId);
 const {
   createIssueSchema,
   updateIssueSchema,
@@ -32,8 +26,6 @@ const router = express.Router();
 router.use(authenticate);
 
 const DOC_INCLUDE = {
-  warehouse: { select: { id: true, code: true, name: true } },
-  destWarehouse: { select: { id: true, code: true, name: true } },
   createdBy: { select: { id: true, name: true } },
   validatedBy: { select: { id: true, name: true } },
   lines: {
@@ -56,11 +48,10 @@ router.get(
       sortable: ['issueDate', 'number', 'createdAt'],
       defaultSort: 'issueDate',
     });
-    const { status, warehouseId, reason, from, to } = req.query;
+    const { status, reason, from, to } = req.query;
 
     const where = {
       ...(status ? { status } : {}),
-      ...(warehouseId ? { warehouseId } : {}),
       ...(reason ? { reason } : {}),
       ...(from || to
         ? { issueDate: { ...(from ? { gte: new Date(from) } : {}), ...(to ? { lte: new Date(to) } : {}) } }
@@ -75,8 +66,6 @@ router.get(
         take: q.take,
         orderBy: q.orderBy,
         include: {
-          warehouse: { select: { id: true, code: true, name: true } },
-          destWarehouse: { select: { id: true, code: true, name: true } },
           createdBy: { select: { id: true, name: true } },
           _count: { select: { lines: true } },
         },
@@ -126,10 +115,7 @@ router.get(
 
     if (issue.status === 'DRAFT') {
       const levels = await prisma.stockLevel.findMany({
-        where: {
-          warehouseId: issue.warehouseId,
-          productId: { in: issue.lines.map((l) => l.productId) },
-        },
+        where: { productId: { in: issue.lines.map((l) => l.productId) } },
         select: { productId: true, quantity: true },
       });
       const available = new Map(levels.map((l) => [l.productId, l.quantity]));
@@ -152,11 +138,6 @@ router.post(
   authorize('ADMIN', 'MAGASINIER'),
   asyncHandler(async (req, res) => {
     const { lines, ...data } = createIssueSchema.parse(req.body);
-
-    if (data.destWarehouseId) {
-      const dest = await prisma.warehouse.findUnique({ where: { id: data.destWarehouseId } });
-      if (!dest) throw new NotFoundError('Warehouse', data.destWarehouseId);
-    }
 
     // Conversion happens once, here, against the product's current factor and
     // price — both are then frozen on the line, so a later change to either
@@ -261,17 +242,13 @@ router.post(
       if (doc.status === 'VALIDATED') throw new ConflictError('DOCUMENT_ALREADY_VALIDATED');
       if (doc.status === 'CANCELLED') throw new ConflictError('DOCUMENT_CANCELLED');
       if (doc.lines.length === 0) throw new ConflictError('EMPTY_DOCUMENT');
-      if (doc.reason === 'TRANSFER' && !doc.destWarehouseId) {
-        throw new ConflictError('DEST_WAREHOUSE_REQUIRED');
-      }
 
-      // Leaving the source warehouse. Throws InsufficientStockError on any line.
+      // Leaving stock. Throws InsufficientStockError on any line.
       await applyMovements(
         tx,
         doc.lines.map((line) => ({
           type: 'OUT',
           productId: line.productId,
-          warehouseId: doc.warehouseId,
           quantity: line.baseQuantity,
           reason: doc.reason,
           refType: 'GoodsIssue',
@@ -281,24 +258,6 @@ router.post(
         }))
       );
 
-      // BR-7: the matching entry happens in the same transaction, so a transfer
-      // can never lose goods in flight between the two sites.
-      if (doc.reason === 'TRANSFER') {
-        await applyMovements(
-          tx,
-          doc.lines.map((line) => ({
-            type: 'IN',
-            productId: line.productId,
-            warehouseId: doc.destWarehouseId,
-            quantity: line.baseQuantity,
-            reason: `Transfert ${doc.number}`,
-            refType: 'GoodsIssue',
-            refId: doc.id,
-            userId: req.user.id,
-          }))
-        );
-      }
-
       return tx.goodsIssue.update({
         where: { id },
         data: { status: 'VALIDATED', validatedAt: new Date(), validatedById: req.user.id },
@@ -306,7 +265,7 @@ router.post(
       });
     });
 
-    checkThresholdsAsync(affectedPairs(issue));
+    checkThresholdsAsync(affectedProducts(issue));
 
     await recordAudit({
       userId: req.user.id,
@@ -340,7 +299,6 @@ router.post(
           doc.lines.map((line) => ({
             type: 'IN',
             productId: line.productId,
-            warehouseId: doc.warehouseId,
             quantity: line.baseQuantity,
             reason: `Annulation ${doc.number}: ${reason}`,
             refType: 'GoodsIssue',
@@ -348,23 +306,6 @@ router.post(
             userId: req.user.id,
           }))
         );
-
-        // Undo the paired entry at the destination too.
-        if (doc.reason === 'TRANSFER' && doc.destWarehouseId) {
-          await applyMovements(
-            tx,
-            doc.lines.map((line) => ({
-              type: 'OUT',
-              productId: line.productId,
-              warehouseId: doc.destWarehouseId,
-              quantity: line.baseQuantity,
-              reason: `Annulation transfert ${doc.number}`,
-              refType: 'GoodsIssue',
-              refId: doc.id,
-              userId: req.user.id,
-            }))
-          );
-        }
       }
 
       return tx.goodsIssue.update({
@@ -374,7 +315,7 @@ router.post(
       });
     });
 
-    checkThresholdsAsync(affectedPairs(issue));
+    checkThresholdsAsync(affectedProducts(issue));
 
     await recordAudit({
       userId: req.user.id,

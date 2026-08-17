@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { FiDownload, FiFileText } from 'react-icons/fi';
 
-import { reportsApi, warehousesApi } from '@/api/resources';
+import { reportsApi } from '@/api/resources';
 import { useAuth } from '@/context/AuthContext';
 import DataTable from '@/components/DataTable';
 import { useErrorMessage } from '@/hooks/useErrorMessage';
@@ -25,11 +25,7 @@ export default function ReportsPage() {
 
   const [tab, setTab] = useState('trending');
   const [period, setPeriod] = useState({ from: isoDaysAgo(30), to: new Date().toISOString().slice(0, 10) });
-  const [warehouseId, setWarehouseId] = useState('');
-
-  const warehousesQuery = useQuery({ queryKey: ['warehouses'], queryFn: () => warehousesApi.list() });
-
-  const params = { ...period, warehouseId };
+  const params = { ...period };
   const trendingQuery = useQuery({
     queryKey: ['reports', 'trending', params],
     queryFn: () => reportsApi.trending({ ...params, limit: 50 }),
@@ -46,8 +42,8 @@ export default function ReportsPage() {
     enabled: tab === 'summary',
   });
   const valuationQuery = useQuery({
-    queryKey: ['reports', 'valuation', warehouseId],
-    queryFn: () => reportsApi.valuation({ warehouseId }),
+    queryKey: ['reports', 'valuation'],
+    queryFn: () => reportsApi.valuation(),
     enabled: tab === 'valuation' && can('reports.valuation'),
   });
 
@@ -213,17 +209,6 @@ export default function ReportsPage() {
           </>
         )}
 
-        <select
-          value={warehouseId}
-          onChange={(e) => setWarehouseId(e.target.value)}
-          aria-label={t('common:fields.warehouse')}
-          className="input w-auto min-w-44"
-        >
-          <option value="">{t('stock:levels.allWarehouses')}</option>
-          {(warehousesQuery.data?.items || []).map((w) => (
-            <option key={w.id} value={w.id}>{w.name}</option>
-          ))}
-        </select>
       </div>
 
       {tab === 'summary' && rows.length > 0 && (

@@ -68,7 +68,7 @@ router.post(
   '/setup',
   loginLimiter,
   asyncHandler(async (req, res) => {
-    const { name, email, password, locale, warehouseName } = setupSchema.parse(req.body);
+    const { name, email, password, locale } = setupSchema.parse(req.body);
 
     const passwordHash = await bcrypt.hash(password, config.bcryptRounds);
     const id = randomUUID();
@@ -84,19 +84,6 @@ router.post(
 
     if (created.length === 0) throw new ConflictError('SETUP_ALREADY_DONE');
     const user = created[0];
-
-    // A stock system with no warehouse cannot record a single movement, so the
-    // first one is created here rather than left as a step to discover later.
-    const warehouseCount = await prisma.warehouse.count();
-    if (warehouseCount === 0) {
-      await prisma.warehouse.create({
-        data: {
-          code: 'PRINCIPAL',
-          name: warehouseName?.trim() || 'Entrepôt principal',
-          managerName: name,
-        },
-      });
-    }
 
     await recordAudit({
       userId: user.id,

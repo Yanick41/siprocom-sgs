@@ -14,15 +14,14 @@ const { adjustStockSchema, idParamSchema } = require('../validators/stock.valida
 const router = express.Router();
 router.use(authenticate);
 
-// GET /api/stock — levels per product/warehouse, with threshold state.
+// GET /api/stock — one level per product, with threshold state.
 router.get(
   '/',
   asyncHandler(async (req, res) => {
     const q = parseListQuery(req.query, { sortable: ['quantity'], defaultSort: 'quantity' });
-    const { warehouseId, categoryId, state } = req.query;
+    const { categoryId, state } = req.query;
 
     const where = {
-      ...(warehouseId ? { warehouseId } : {}),
       product: {
         isActive: true,
         ...(categoryId ? { categoryId } : {}),
@@ -50,7 +49,6 @@ router.get(
               unit: true, minThreshold: true, maxThreshold: true,
             },
           },
-          warehouse: { select: { id: true, code: true, name: true } },
         },
       }),
       prisma.stockLevel.count({ where }),
@@ -87,11 +85,10 @@ router.get(
   '/movements',
   asyncHandler(async (req, res) => {
     const q = parseListQuery(req.query, { sortable: ['createdAt'], defaultSort: 'createdAt' });
-    const { productId, warehouseId, type, from, to, userId } = req.query;
+    const { productId, type, from, to, userId } = req.query;
 
     const where = {
       ...(productId ? { productId } : {}),
-      ...(warehouseId ? { warehouseId } : {}),
       ...(type ? { type } : {}),
       ...(userId ? { userId } : {}),
       ...(from || to
@@ -107,7 +104,6 @@ router.get(
         orderBy: q.orderBy,
         include: {
           product: { select: { id: true, reference: true, designation: true, designationEn: true, unit: true } },
-          warehouse: { select: { id: true, code: true, name: true } },
           user: { select: { id: true, name: true } },
         },
       }),
@@ -118,7 +114,7 @@ router.get(
   })
 );
 
-// GET /api/stock/product/:id — per-warehouse breakdown plus recent history.
+// GET /api/stock/product/:id — current level plus recent history.
 router.get(
   '/product/:id',
   asyncHandler(async (req, res) => {
@@ -128,7 +124,7 @@ router.get(
       where: { id },
       include: {
         category: { select: { id: true, name: true, nameEn: true } },
-        stockLevels: { include: { warehouse: { select: { id: true, code: true, name: true } } } },
+        stockLevel: true,
       },
     });
     if (!product) throw new NotFoundError('Product', id);
@@ -138,7 +134,6 @@ router.get(
       orderBy: { createdAt: 'desc' },
       take: 50,
       include: {
-        warehouse: { select: { id: true, code: true, name: true } },
         user: { select: { id: true, name: true } },
       },
     });
@@ -154,8 +149,9 @@ router.post(
   '/adjust',
   authorize('ADMIN', 'MAGASINIER'),
   asyncHandler(async (req, res) => {
-    const { productId, warehouseId, countedQuantity, reason, allowNegative = false } =
-      adjustStockSchema.parse(req.body);
+    const { productId, countedQuantity, reason, allowNegative = false } = adjustStockSchema.parse(
+      req.body
+    );
 
     if (allowNegative && req.user.role !== 'ADMIN') {
       throw new ForbiddenError('NEGATIVE_OVERRIDE_REQUIRES_ADMIN');
@@ -163,7 +159,7 @@ router.post(
 
     const result = await prisma.$transaction(async (tx) => {
       const level = await tx.stockLevel.findUnique({
-        where: { productId_warehouseId: { productId, warehouseId } },
+        where: { productId },
         select: { quantity: true },
       });
       const theoretical = level?.quantity ?? 0;
@@ -175,7 +171,6 @@ router.post(
       const { movement, balanceAfter } = await applyMovement(tx, {
         type: 'ADJUSTMENT',
         productId,
-        warehouseId,
         quantity: delta,
         reason,
         refType: 'Adjustment',
@@ -186,7 +181,7 @@ router.post(
       return { theoretical, counted: countedQuantity, delta, balanceAfter, movement };
     });
 
-    checkThresholdsAsync([{ productId, warehouseId }]);
+    checkThresholdsAsync([productId]);
 
     await recordAudit({
       userId: req.user.id,
@@ -194,7 +189,7 @@ router.post(
       entity: 'Product',
       entityId: productId,
       before: { quantity: result.theoretical },
-      after: { quantity: result.counted, delta: result.delta, reason, warehouseId },
+      after: { quantity: result.counted, delta: result.delta, reason },
       ipAddress: clientIp(req),
     });
 

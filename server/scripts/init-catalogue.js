@@ -82,15 +82,6 @@ async function main() {
     }
   }
 
-  const warehouses = await prisma.warehouse.count();
-  if (warehouses === 0) {
-    await prisma.warehouse.create({
-      data: { code: 'PRINCIPAL', name: 'Entrepôt principal' },
-    });
-    created += 1;
-    console.log('  + Entrepôt principal');
-  }
-
   console.log(`\n  ${created} created, ${existing} already present.\n`);
 }
 
