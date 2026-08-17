@@ -13,11 +13,17 @@ Requirement source: `Cahier_des_charges_SIPROCOM_SGS.pdf` v1.0.
 - `client/` — React 19 + Vite 8 + Tailwind 4 SPA
 - `server/` — Express 5 + Prisma 6 + PostgreSQL REST API
 
+## Scope, in one line
+
+A dedicated application for **SIPROCOM alone, on one site**. There is no tenant, no
+warehouse and no transfer — stock is "this product". Do not reintroduce any of the three
+without an explicit decision recorded in the plan.
+
 ## Hard rules
 
-1. **No hardcoded user-facing strings.** Every label goes through `t()`. A change is not
-   done until both `client/src/i18n/locales/fr/*` and `.../en/*` are updated. Default
-   language is French.
+1. **No hardcoded user-facing strings.** Every label goes through `t()`. The UI is French
+   only — `client/src/i18n/locales/fr/*`, and `SUPPORTED_LANGUAGES` holds one entry.
+   Server-side email templates are the one exception and carry fr/en.
 2. **Stock mutations live only in `server/src/services/stock.service.js`.** No route,
    controller, or other service writes to `stock_levels` or `stock_movements` directly.
 3. **Never read-then-write stock.** Use the conditional atomic decrement inside
@@ -32,6 +38,10 @@ Requirement source: `Cahier_des_charges_SIPROCOM_SGS.pdf` v1.0.
 9. **Money uses `Decimal`**, never `Float`. Formatting via `Intl.NumberFormat`.
 10. **Dates and numbers are formatted with `Intl.*`** using the active locale — never
     manual string building.
+11. **Nobody sets another person's password.** An ADMIN invites; the invited person
+    chooses their own via a single-use emailed link (BR-11). `user.password` is nullable
+    and null means "not yet activated" — an account in that state must stay
+    indistinguishable from a missing one at `/login`.
 
 ## Layering
 
@@ -47,18 +57,25 @@ per-endpoint matrix.
 ```bash
 # server
 npm run dev              # nodemon
-npx prisma migrate dev   # local migration
-npx prisma db seed
+npm run test:stock       # 16 engine checks — BR-2, BR-10, ledger/level agreement
+npm run create-admin -- --email … --name "…" --password "…"
+npx prisma migrate deploy   # apply migrations (migrate dev needs a TTY)
 npx prisma studio
 
 # client
 npm run dev
 npm run build
+npm test                        # screen-render suite
+node scripts/check-translations.js
 ```
+
+> `prisma migrate dev` and `migrate reset` need an interactive terminal and are refused
+> when run by an agent. Write the migration SQL by hand and apply it with
+> `migrate deploy`. The seed additionally refuses any non-local database.
 
 ## Before calling a feature done
 
-- Both locales updated
+- French locale updated (`check-translations.js` green)
 - zod validation on any new endpoint
 - Business rules in §6 respected; tests from §11 added where applicable
 - Loading / empty / error states present in the UI

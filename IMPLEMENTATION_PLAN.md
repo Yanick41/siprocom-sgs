@@ -29,9 +29,15 @@
 
 ## 1. Executive Summary
 
-**What we are building:** a web-based stock management system for SIPROCOM's warehouse(s),
-covering stock entries (entrées), stock exits (sorties), real-time stock levels per
-warehouse, threshold alerts, and trend analytics ("produits tendance" / high-rotation
+> **Scope note (2026-08-17).** SIPROCOM operates a single site, and this application
+> serves SIPROCOM alone. The warehouse dimension has been removed entirely — stock is
+> "this product", not "this product in that warehouse" — and with it transfers (BR-7).
+> Sections below that still read `warehouseId` describe the original design and are
+> superseded by Phase 9 at the end of this document.
+
+**What we are building:** a web-based stock management system for SIPROCOM's warehouse,
+covering stock entries (entrées), stock exits (sorties), real-time stock levels,
+threshold alerts, and trend analytics ("produits tendance" / high-rotation
 products), with role-based access and full audit traceability.
 
 **Approach:** a single monorepo containing a React SPA (`client/`) and an Express REST API
@@ -46,12 +52,12 @@ internal server.
 
 | Requirement | Design consequence |
 |---|---|
-| Stock per product **AND per warehouse** | Dedicated `StockLevel` table keyed `(productId, warehouseId)` — not a single integer on `Product` |
+| Stock is a fast-changing counter | Dedicated `StockLevel` table, one row per product — not an integer on `Product`, whose row would then lock on every sale |
 | "Aucune sortie ne peut rendre le stock négatif" | Atomic conditional decrement inside a DB transaction — never read-then-write |
 | Full traceability (qui, quoi, quand, combien) | Append-only `StockMovement` ledger + `AuditLog`; movements are never edited or deleted |
 | Documents have a validation step | `DRAFT → VALIDATED → CANCELLED` state machine; stock only moves on `VALIDATED` |
 | Trend analysis over periods | Movement ledger is queried by date range; no separate analytics DB needed at this scale |
-| Bilingual EN/FR | i18n from day one — no hardcoded strings, ever |
+| French UI, no hardcoded strings | Every label goes through `t()`. The bilingual ambition of §7 was narrowed to French only — `SUPPORTED_LANGUAGES` holds one entry — but the i18n layer stays, so a second language is a file plus one line |
 
 ---
 
@@ -93,7 +99,7 @@ learning curve and patterns can be reused directly.
 | Auth | **JWT in httpOnly cookie** + **bcryptjs** | Meets "chiffrement des mots de passe"; httpOnly beats localStorage for XSS safety |
 | Validation | **zod** | Shared schemas with the client |
 | Logging | **pino** | Structured logs, cheap |
-| Email alerts | **Resend** (free 3 000 mails/mo) or Nodemailer + SMTP | §4.5 "email selon configuration" |
+| Transactional email | **Resend** (free 3 000 mails/mo) | Account invitations and password resets (BR-11). Alert digests are *not* built — see Phase 5 |
 | Rate limiting | **express-rate-limit** on `/auth/*` | Brute-force protection |
 | Scheduled alert sweep | **Vercel Cron** (free) or `node-cron` if self-hosted | §7.3 "surveille en continu" |
 
@@ -158,10 +164,8 @@ Siprocom/
 │   │   │   ├── products/
 │   │   │   ├── categories/
 │   │   │   ├── suppliers/
-│   │   │   ├── warehouses/
 │   │   │   ├── receipts/       bons d'entrée
 │   │   │   ├── issues/         bons de sortie
-│   │   │   ├── transfers/
 │   │   │   ├── adjustments/    inventaire
 │   │   │   ├── alerts/
 │   │   │   ├── reports/
@@ -205,241 +209,28 @@ transactions → Prisma touches the DB. **No Prisma calls that mutate stock outs
 Prisma schema, PostgreSQL. Maps directly onto §6 of the cahier des charges, extended where
 the spec is under-specified.
 
-```prisma
-enum Role         { ADMIN MAGASINIER ACHATS DIRECTION }
-enum MovementType { IN OUT ADJUSTMENT }
-enum DocStatus    { DRAFT VALIDATED CANCELLED }
-enum IssueReason  { SALE TRANSFER DAMAGE SAMPLE INTERNAL RETURN_SUPPLIER OTHER }
-enum EntryReason  { PURCHASE RETURN_CUSTOMER ADJUSTMENT TRANSFER_IN }
-enum AlertType    { MIN_THRESHOLD MAX_THRESHOLD }
-enum AlertStatus  { OPEN ACKNOWLEDGED RESOLVED }
+> **The schema itself lives in `server/prisma/schema.prisma`, and that file is
+> authoritative.** A second copy here drifted out of date twice; what follows is the
+> shape and the reasoning, not a transcription to keep in sync.
 
-model User {
-  id           String    @id @default(uuid())
-  name         String
-  email        String    @unique
-  password     String                            // bcrypt hash
-  role         Role      @default(MAGASINIER)
-  isActive     Boolean   @default(true)
-  locale       String    @default("fr")          // "fr" | "en"  ← per-user language
-  lastLoginAt  DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  movements    StockMovement[]
-  auditLogs    AuditLog[]
-  @@map("users")
-}
+**Enums** — `Role`, `Packaging`, `MovementType`, `DocStatus`, `EntryReason`,
+`IssueReason`, `AlertType`, `AlertStatus`, `AccountTokenType`.
 
-model Category {
-  id          String     @id @default(uuid())
-  name        String
-  nameEn      String?                            // optional EN label
-  description String?
-  parentId    String?
-  parent      Category?  @relation("CategoryTree", fields: [parentId], references: [id])
-  children    Category[] @relation("CategoryTree")
-  products    Product[]
-  @@unique([name, parentId])
-  @@map("categories")
-}
-
-model Supplier {
-  id        String            @id @default(uuid())
-  name      String
-  contact   String?
-  phone     String?
-  email     String?
-  address   String?
-  isActive  Boolean           @default(true)
-  products  ProductSupplier[]
-  receipts  GoodsReceipt[]
-  @@map("suppliers")
-}
-
-model Warehouse {
-  id          String       @id @default(uuid())
-  code        String       @unique
-  name        String
-  address     String?
-  managerName String?
-  isActive    Boolean      @default(true)
-  stockLevels StockLevel[]
-  movements   StockMovement[]
-  @@map("warehouses")
-}
-
-model Product {
-  id            String            @id @default(uuid())
-  reference     String            @unique          // référence
-  designation   String
-  designationEn String?
-  barcode       String?           @unique
-  categoryId    String
-  category      Category          @relation(fields: [categoryId], references: [id])
-  unit          String            @default("unit") // pcs, kg, L…
-  minThreshold  Int               @default(0)      // seuil_min
-  maxThreshold  Int?                               // seuil_max
-  buyPrice      Decimal           @db.Decimal(12,2)
-  sellPrice     Decimal           @db.Decimal(12,2)
-  isActive      Boolean           @default(true)
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
-  suppliers     ProductSupplier[]
-  stockLevels   StockLevel[]
-  movements     StockMovement[]
-  alerts        Alert[]
-  @@index([categoryId])
-  @@index([isActive])
-  @@map("products")
-}
-
-model ProductSupplier {
-  productId       String
-  supplierId      String
-  supplierRef     String?
-  lastPurchasePrice Decimal? @db.Decimal(12,2)
-  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  supplier        Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
-  @@id([productId, supplierId])
-  @@map("product_suppliers")
-}
-
-/// Materialised stock level — the "Stock (vue calculée)" entity of §6.
-/// Kept as a real table (not a view) so it can be updated atomically and read fast.
-/// Invariant: quantity == SUM(signed movements) for the same (product, warehouse).
-model StockLevel {
-  id          String    @id @default(uuid())
-  productId   String
-  warehouseId String
-  quantity    Int       @default(0)
-  updatedAt   DateTime  @updatedAt
-  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
-  warehouse   Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
-  @@unique([productId, warehouseId])
-  @@index([warehouseId])
-  @@map("stock_levels")
-}
-
-/// Append-only ledger. Never UPDATE, never DELETE. Corrections = new movement.
-model StockMovement {
-  id          String       @id @default(uuid())
-  type        MovementType
-  productId   String
-  warehouseId String
-  quantity    Int                                  // always positive; `type` carries the sign
-  balanceAfter Int                                 // stock snapshot → makes audits trivial
-  unitCost    Decimal?     @db.Decimal(12,2)
-  lotNumber   String?
-  reason      String?
-  refType     String?                              // "GoodsReceipt" | "GoodsIssue" | "Adjustment"
-  refId       String?
-  userId      String
-  createdAt   DateTime     @default(now())
-  product     Product      @relation(fields: [productId], references: [id])
-  warehouse   Warehouse    @relation(fields: [warehouseId], references: [id])
-  user        User         @relation(fields: [userId], references: [id])
-  @@index([productId, createdAt])                  // drives trend queries
-  @@index([warehouseId, createdAt])
-  @@index([createdAt])
-  @@map("stock_movements")
-}
-
-model GoodsReceipt {                               // Bon d'entrée
-  id           String             @id @default(uuid())
-  number       String             @unique          // BE-2026-0001
-  supplierId   String?
-  warehouseId  String
-  reason       EntryReason        @default(PURCHASE)
-  purchaseOrderRef String?
-  status       DocStatus          @default(DRAFT)
-  receiptDate  DateTime           @default(now())
-  validatedAt  DateTime?
-  validatedById String?
-  notes        String?
-  createdById  String
-  createdAt    DateTime           @default(now())
-  supplier     Supplier?          @relation(fields: [supplierId], references: [id])
-  lines        GoodsReceiptLine[]
-  @@index([status, receiptDate])
-  @@map("goods_receipts")
-}
-
-model GoodsReceiptLine {
-  id         String       @id @default(uuid())
-  receiptId  String
-  productId  String
-  quantity   Int
-  unitPrice  Decimal      @db.Decimal(12,2)
-  lotNumber  String?
-  receipt    GoodsReceipt @relation(fields: [receiptId], references: [id], onDelete: Cascade)
-  @@map("goods_receipt_lines")
-}
-
-model GoodsIssue {                                  // Bon de sortie
-  id            String           @id @default(uuid())
-  number        String           @unique            // BS-2026-0001
-  warehouseId   String
-  reason        IssueReason      @default(SALE)
-  recipient     String?                             // destinataire
-  destWarehouseId String?                           // set when reason = TRANSFER
-  status        DocStatus        @default(DRAFT)
-  issueDate     DateTime         @default(now())
-  validatedAt   DateTime?
-  validatedById String?
-  notes         String?
-  createdById   String
-  createdAt     DateTime         @default(now())
-  lines         GoodsIssueLine[]
-  @@index([status, issueDate])
-  @@map("goods_issues")
-}
-
-model GoodsIssueLine {
-  id        String     @id @default(uuid())
-  issueId   String
-  productId String
-  quantity  Int
-  issue     GoodsIssue @relation(fields: [issueId], references: [id], onDelete: Cascade)
-  @@map("goods_issue_lines")
-}
-
-model Alert {
-  id          String      @id @default(uuid())
-  productId   String
-  warehouseId String?
-  type        AlertType
-  status      AlertStatus @default(OPEN)
-  quantityAtTrigger Int
-  thresholdValue    Int
-  createdAt   DateTime    @default(now())
-  resolvedAt  DateTime?
-  product     Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
-  @@index([status, type])
-  @@map("alerts")
-}
-
-model AuditLog {
-  id        String   @id @default(uuid())
-  userId    String?
-  action    String            // LOGIN, VALIDATE_ISSUE, ADJUST_STOCK, DELETE_PRODUCT…
-  entity    String?
-  entityId  String?
-  before    Json?
-  after     Json?
-  ipAddress String?
-  createdAt DateTime @default(now())
-  user      User?    @relation(fields: [userId], references: [id])
-  @@index([createdAt])
-  @@index([userId, createdAt])
-  @@map("audit_logs")
-}
-
-model Counter {                                     // document numbering, race-safe
-  key   String @id                                  // "BE-2026" | "BS-2026"
-  value Int    @default(0)
-  @@map("counters")
-}
-```
+| Model | Purpose | The decision worth knowing |
+|---|---|---|
+| `User` | Internal accounts | `password` is **nullable** — null means "invited, not yet activated" (BR-11) |
+| `AccountToken` | Invitation + password reset | One table, two types. Stores the SHA-256 of the token only; single-use; reissuing supersedes the last |
+| `Category` | Two-level tree | `@@unique([name, parentId])`. Deeper nesting would break the reporting group-bys |
+| `Supplier` | | Soft-deleted via `isActive` — receipts reference it forever |
+| `Product` | Catalogue | Carries the carton factor (`unitsPerCarton`) and both price lists; stock is always held in the base unit |
+| `ProductSupplier` | Join | Last purchase price per pair |
+| `StockLevel` | Materialised stock | **One row per product**, `productId @unique`. That index is what the BR-2 decrement targets |
+| `StockMovement` | Append-only ledger | Never updated, never deleted (BR-4). The `balanceAfter` snapshot makes audits trivial |
+| `GoodsReceipt` + `Line` | Bon d'entrée | `baseQuantity` is stored, not recomputed: changing a carton factor must not rewrite posted history |
+| `GoodsIssue` + `Line` | Bon de sortie | Customer kept as plain columns — a shop sells to walk-ins as often as to regulars |
+| `Alert` | Threshold breaches | One OPEN alert per (product, type) — BR-8 |
+| `AuditLog` | Traceability | §4.7: who, what, when |
+| `Counter` | Gapless numbering | `UPDATE … RETURNING` inside the document transaction (BR-10) |
 
 ### Why `StockLevel` is a table, not a SQL view
 
@@ -467,8 +258,7 @@ Implement as a conditional update, never read-then-write:
 // inside prisma.$transaction
 const updated = await tx.$executeRaw`
   UPDATE stock_levels SET quantity = quantity - ${qty}, "updatedAt" = NOW()
-  WHERE "productId" = ${productId} AND "warehouseId" = ${warehouseId}
-    AND quantity >= ${qty}`;
+  WHERE "productId" = ${productId} AND quantity >= ${qty}`;
 if (updated === 0) throw new InsufficientStockError(productId);
 ```
 Two concurrent magasiniers issuing the last unit: one succeeds, one gets a clean 409.
@@ -489,14 +279,22 @@ jobs use a dedicated `system@siprocom` user.
 `POST /api/stock/adjust` rejects an empty `reason` with 422. Reason is free text plus a
 category (inventory count, breakage, correction).
 
-**BR-7 — Transfers are atomic pairs.**
-A `TRANSFER` issue posts an `OUT` on the source warehouse and an `IN` on the destination in
-one transaction. Partial transfer is impossible by construction.
+**BR-7 — Withdrawn (Phase 9).**
+Transfers moved goods between two sites. SIPROCOM has one, so `IssueReason.TRANSFER`,
+`EntryReason.TRANSFER_IN` and the paired OUT/IN posting are gone. The number is left
+unused rather than reassigned, so references to BR-7 elsewhere still resolve.
 
 **BR-8 — Alerts are automatic.**
 After every committed movement, `alert.service.checkThresholds()` runs. It opens an alert
 when `quantity < minThreshold` (or `> maxThreshold`) and auto-resolves the open alert when
-stock returns to normal. No duplicate OPEN alert for the same (product, warehouse, type).
+stock returns to normal. No duplicate OPEN alert for the same (product, type).
+
+**BR-11 — Nobody sets another person's password.**
+An administrator invites a colleague; the account is created with `password = null` and
+an emailed single-use link lets that person choose their own. Password reset is the same
+mechanism. Tokens are 256-bit, single-use, time-limited, and stored only as a SHA-256
+hash. An account with a null password cannot be signed into and is reported by `/login`
+exactly like a missing one.
 
 **BR-9 — Cancelling a validated document reverses it.**
 `VALIDATED → CANCELLED` posts exact compensating movements. If reversal would make stock
@@ -580,15 +378,19 @@ Base: `/api`. All routes except `/auth/login` require a valid JWT cookie.
 | POST | `/auth/logout` | any | |
 | GET | `/auth/me` | any | Current user + role + locale |
 | PATCH | `/auth/me/locale` | any | Persist language choice |
+| GET | `/auth/setup-status` | public | Is the database still empty? |
+| POST | `/auth/setup` | public once | First administrator on an empty database |
+| GET | `/auth/token?token=` | public | Is this emailed link still good? Does not spend it |
+| POST | `/auth/set-password` | public | Consumes an invitation or reset token (BR-11), signs in |
+| POST | `/auth/forgot-password` | public | Always answers `{ ok: true }` — never confirms an address |
 | GET/POST | `/categories` | R: all · W: ADMIN | Tree-aware |
 | PATCH/DELETE | `/categories/:id` | ADMIN | Delete blocked if products attached |
 | GET/POST | `/products` | R: all · W: ADMIN, MAGASINIER | Filters: category, supplier, status, stock level |
 | PATCH | `/products/:id` | ADMIN, MAGASINIER | |
 | PATCH | `/products/:id/deactivate` | ADMIN | Soft delete only |
 | GET/POST | `/suppliers` | R: all · W: ADMIN, ACHATS | |
-| GET/POST | `/warehouses` | R: all · W: ADMIN | |
-| GET | `/stock` | all | Levels; `?warehouseId=&categoryId=&lowOnly=` |
-| GET | `/stock/product/:id` | all | Per-warehouse breakdown + totals |
+| GET | `/stock` | all | Levels; `?categoryId=&state=` |
+| GET | `/stock/product/:id` | all | Current level + movement history |
 | GET | `/stock/movements` | all | Paginated ledger; the "journal de stock" |
 | POST | `/stock/adjust` | ADMIN, MAGASINIER | Inventory correction, reason required (BR-6) |
 | GET | `/stock/reconcile` | ADMIN | Ledger vs. levels drift report |
@@ -598,16 +400,18 @@ Base: `/api`. All routes except `/auth/login` require a valid JWT cookie.
 | GET/POST | `/issues` | R: all · W: ADMIN, MAGASINIER | Bons de sortie |
 | POST | `/issues/:id/validate` | ADMIN, MAGASINIER | Stock check (BR-2) |
 | POST | `/issues/:id/cancel` | ADMIN | |
-| POST | `/transfers` | ADMIN, MAGASINIER | Paired OUT/IN (BR-7) |
 | GET | `/alerts` | all | `?status=OPEN&type=MIN_THRESHOLD` |
 | POST | `/alerts/:id/acknowledge` | ADMIN, ACHATS | |
+| GET/POST | `/alerts/sweep` | cron secret | Daily backstop, no user session |
 | GET | `/reports/trending` | all | High-rotation products, `?from=&to=&limit=` |
 | GET | `/reports/dormant` | all | No movement over period |
-| GET | `/reports/movements-summary` | all | Grouped by period/category/warehouse/supplier |
+| GET | `/reports/movements-summary` | all | Grouped by day or category |
 | GET | `/reports/valuation` | ADMIN, DIRECTION | Stock value at buy price |
-| GET | `/dashboard` | all | Role-shaped KPI payload, single round trip |
-| GET/POST | `/users` | ADMIN | |
-| PATCH | `/users/:id` | ADMIN | Role, status, password reset |
+| GET | `/reports/dashboard` | all | KPI payload, single round trip |
+| GET | `/users` | ADMIN | Reports `pending` for accounts not yet activated |
+| POST | `/users` | ADMIN | **Invites** — creates without a password, emails a link (BR-11) |
+| POST | `/users/:id/resend-invitation` | ADMIN | For the mail that never arrived |
+| PATCH | `/users/:id` | ADMIN | Name, email, role, status, locale. **Not** the password |
 | GET | `/audit-logs` | ADMIN | Paginated, filterable |
 
 **Error envelope (uniform, locale-agnostic):**
@@ -637,31 +441,34 @@ Grouped by role. Tablet-first layouts for everything a magasinier touches (§5 E
 
 | # | Screen | Primary role | Notes |
 |---|---|---|---|
-| 1 | Login | all | Language switcher visible before auth |
+| 1 | Login | all | Link to "mot de passe oublié" |
+| 1b | Set password | public | Lands from an emailed link — invitation *and* reset (BR-11) |
+| 1c | Forgot password | public | Non-committal confirmation, never reveals an address |
+| 1d | First-run setup | public once | Creates the very first administrator on an empty database |
 | 2 | Dashboard | all (role-shaped) | KPI cards, low-stock list, trend chart, recent movements |
 | 3 | Products list | all | Search, filters, stock badge, quick-view |
 | 4 | Product form | ADMIN/MAGASINIER | Thresholds, suppliers, barcode |
-| 5 | Product detail | all | Per-warehouse stock + movement journal + mini trend chart |
+| 5 | Product detail | all | Stock + movement journal + mini trend chart |
 | 6 | Categories (tree) | ADMIN | Drag-free nested list, parent/child |
 | 7 | Suppliers | ADMIN/ACHATS | |
-| 8 | Warehouses | ADMIN | |
+| ~~8~~ | ~~Warehouses~~ | — | Withdrawn (Phase 9) — one site |
 | 9 | Goods receipts list | MAGASINIER | Status filter chips |
 | 10 | Goods receipt form | MAGASINIER | Multi-line, running total, save draft → validate |
 | 11 | Goods issues list | MAGASINIER | |
 | 12 | Goods issue form | MAGASINIER | **Live availability check per line before validate** |
-| 13 | Transfer form | MAGASINIER | Source + destination warehouse |
+| ~~13~~ | ~~Transfer form~~ | — | Withdrawn (Phase 9) — BR-7 has no object |
 | 14 | Stock adjustment / inventory | ADMIN/MAGASINIER | Counted vs. theoretical, delta, mandatory reason |
-| 15 | Stock overview | all | Matrix product × warehouse, exportable |
+| 15 | Stock overview | all | One row per product, exportable |
 | 16 | Movement journal | all | Full ledger, filters, export |
 | 17 | Alerts | ACHATS/ADMIN | Consolidated, sortable, exportable (§4.5) |
 | 18 | Reports & trends | ACHATS/DIRECTION | Period selector, trending/dormant tabs, charts, Excel+PDF export |
-| 19 | Users | ADMIN | |
+| 19 | Users | ADMIN | Invite, resend invitation, `pending` state |
 | 20 | Audit log | ADMIN | |
-| 21 | Settings | ADMIN | Company info, currency, alert email recipients, default thresholds |
+| ~~21~~ | ~~Settings~~ | — | Not built: every parameter it would hold is edited on its own screen |
 
 **Shared components to build once:** `DataTable` (sort/paginate/export), `Modal`,
 `ConfirmDialog`, `StatCard`, `StatusBadge`, `ProductPicker` (searchable async select),
-`WarehouseSelect`, `DateRangePicker`, `LanguageSwitcher`, `EmptyState`, `PermissionGate`.
+`DateRangePicker`, `EmptyState`, `PermissionGate`.
 
 ---
 
@@ -771,13 +578,24 @@ a tablet, in either language.
 - [ ] `services/alert.service.js`: `checkThresholds()` after every committed movement (BR-8)
 - [ ] Open/auto-resolve logic, no duplicate OPEN alerts
 - [ ] `GET /alerts`, acknowledge endpoint
-- [ ] Daily sweep endpoint `POST /internal/alerts/sweep` (secret-protected) + Vercel Cron
-- [ ] Email digest via Resend, localised per recipient `locale`
-- [ ] Screen 17 + alert bell badge in topbar
-- [ ] Settings: alert recipients, email on/off
+- [x] Daily sweep endpoint `GET/POST /api/alerts/sweep` (secret-protected) + Vercel Cron
+- [x] Screen 17 + alert bell badge in topbar
+- [ ] **NOT BUILT — Email digest via Resend, localised per recipient `locale`**
+- [ ] **NOT BUILT — Settings: alert recipients, email on/off**
 
-**Exit:** dropping a product below `minThreshold` opens an alert within the same request,
-shows in the UI, and appears in the next daily digest — no manual action (§10 criterion 3).
+> **Correction (2026-08-17).** This phase was recorded as complete, but the two items
+> above were never implemented: `alert.service.js` sends no email, and there is no
+> settings screen. Alerting works entirely in-app — the dashboard list, the Alerts
+> screen and the topbar badge, refreshed by the daily sweep. The mailer added in
+> Phase 9 serves account invitations only.
+>
+> Whether SIPROCOM wants an email digest at all is an open decision (Q8), not an
+> oversight to rush: an alert that is already visible on the screen the magasinier
+> works in may not need a mail as well.
+
+**Exit (as actually achieved):** dropping a product below `minThreshold` opens an alert
+within the same request and shows in the UI without manual action (§10 criterion 3).
+The email half of criterion 3 is not met.
 
 ---
 
@@ -848,13 +666,19 @@ Keep it proportionate — deep on the stock engine, light elsewhere.
 1. Issue exceeding stock → 409, stock unchanged
 2. 20 parallel issues for 10 units → exactly 10 succeed
 3. Cancelling a validated receipt reverses stock exactly
-4. Transfer conserves total quantity across warehouses
+4. ~~Transfer conserves total quantity across warehouses~~ — withdrawn with BR-7
 5. Adjustment without reason → 422
 6. Crossing `minThreshold` opens exactly one alert; returning above resolves it
 7. Trending ranking matches a control SQL aggregation
 8. MAGASINIER token → 403 on `/users` and `/reports/valuation`
 9. Movement always records `userId` + timestamp
-10. Every UI string resolves in both locales (automated key-diff check)
+10. Every UI string resolves (automated key check, `client/scripts/check-translations.js`)
+11. An invitation link works once, then reports `INVALID_TOKEN`; an account with no
+    password cannot log in and is indistinguishable from a missing one (BR-11)
+
+Tests 1–3, 5, 9 and the concurrency and numbering cases run as one script against the
+dev database: `npm run test:stock` (16 checks). The UI-render suite is
+`npm test` in `client/`.
 
 ---
 
@@ -914,7 +738,7 @@ Direct mapping of §10 of the cahier des charges to implementation and proof.
 | # | Question | Blocks | Default if unanswered |
 |---|---|---|---|
 | Q1 | Cloud hosting or internal server? (§8) | Phase 8 | **Dev runs on local PostgreSQL 17** (already installed on the dev machine); Neon/Docker decision still open for production |
-| Q2 | How many warehouses at go-live? | Phase 1 seed, UI density | Model supports N; seed with 3 |
+| ~~Q2~~ | ~~How many warehouses at go-live?~~ | — | **Resolved 2026-08-17: one.** The dimension is removed entirely (Phase 9) |
 | Q3 | Currency and decimal precision? | Phase 2 formatting | XOF, 0 decimals — **confirm** |
 | Q4 | Lot/batch tracking needed, or informational only? | Phase 3 scope | Field captured, not enforced FEFO in v1 |
 | Q5 | Expiry-date management (perishables)? | Possible Phase 3 extension | Out of v1 scope |
@@ -949,8 +773,6 @@ Use these exact English terms in code; use the French in the FR UI.
 | Désignation | Designation | `product.designation` |
 | Catégorie | Category | `Category` |
 | Fournisseur | Supplier | `Supplier` |
-| Entrepôt | Warehouse | `Warehouse` |
-| Emplacement | Location | (v2) |
 | Bon d'entrée | Goods Receipt | `GoodsReceipt` |
 | Bon de sortie | Goods Issue | `GoodsIssue` |
 | Mouvement de stock | Stock Movement | `StockMovement` |
@@ -962,7 +784,8 @@ Use these exact English terms in code; use the French in the FR UI.
 | Réapprovisionnement | Replenishment | — |
 | Inventaire | Stock count / Inventory | adjustment flow |
 | Ajustement | Adjustment | `MovementType.ADJUSTMENT` |
-| Transfert | Transfer | `IssueReason.TRANSFER` |
+| Invitation | Invitation | `AccountToken` type `INVITATION` |
+| Réinitialisation de mot de passe | Password reset | `AccountToken` type `PASSWORD_RESET` |
 | Destinataire | Recipient | `goodsIssue.recipient` |
 | Motif | Reason | `movement.reason` |
 | Produit tendance | Trending product | `/reports/trending` |
@@ -988,12 +811,46 @@ Use these exact English terms in code; use the French in the FR UI.
 | 2 — Reference data + shell | ✅ Complete | 2026-08-08 | 2026-08-08 |
 | 3 — Stock engine | ✅ Complete — 16/16 engine tests pass, `npm run test:stock` | 2026-08-08 | 2026-08-08 |
 | 4 — Stock UI | ✅ Complete | 2026-08-09 | 2026-08-09 |
-| 5 — Alerts | ✅ Complete | 2026-08-09 | 2026-08-09 |
+| 5 — Alerts | ⚠️ Partial — in-app alerting works; email digest and settings screen were never built (see the correction in §10 Phase 5) | 2026-08-09 | 2026-08-09 |
 | 6 — Analytics & exports | ✅ Complete | 2026-08-09 | 2026-08-09 |
 | 7 — Hardening & recette | ✅ Complete — permission matrix verified across all 4 roles | 2026-08-09 | 2026-08-09 |
 | 8 — Deployment & training | ✅ Complete — Docker, CSV import (tested), README + bilingual user guide | 2026-08-09 | 2026-08-09 |
+| 9 — Single-site simplification | ✅ Complete — 16/16 engine tests, 13/13 UI render tests | 2026-08-17 | 2026-08-17 |
 
 ---
 
-*Plan version 1.0 — derived from Cahier des charges SIPROCOM SGS v1.0 (07/08/2026).*
+## Phase 9 — Single-site simplification (2026-08-17)
+
+Scope decision by SIPROCOM: this application serves SIPROCOM alone, on one site.
+A multi-tenant SaaS layer had been prepared and was discarded before it was ever
+committed; the database was reset, so no data was migrated or lost.
+
+**Warehouses removed entirely.** `1717a85` had already taken them out of the interface
+while keeping `warehouseId` in the database, on the reasoning that it keyed the stock
+engine and the append-only ledger. That reasoning depended on there being history to
+protect; the reset left none, so the column went too.
+
+- `stock_levels` holds one row per product, keyed by a unique `productId` — which is
+  what the BR-2 conditional decrement relies on, exactly as the composite key did. The
+  guard is unchanged in nature: one predicate fewer in the same `WHERE`.
+- `StockLevel` stays its own table rather than folding into `Product.quantity`: that
+  counter moves on every sale and would otherwise lock the catalogue row being edited.
+- Transfers, BR-7, `IssueReason.TRANSFER` and `EntryReason.TRANSFER_IN` are gone.
+- The `Warehouse` table is dropped outright, not kept as a hidden single row — nothing
+  read its name or address any more.
+
+**Accounts are invited, not provisioned with a password** (BR-11). See the commit
+`2c218bc` and §8 for the endpoints. `RESEND_API_KEY` is now **required in production**:
+without it an invitation goes to the server log, which is useless to a real colleague.
+
+**Known gaps, deliberate:**
+- No alert email digest (Q8 still open — see the Phase 5 correction).
+- No settings screen.
+- No self-service account creation: an ADMIN invites, which is correct for an internal
+  team on one site.
+
+---
+
+*Plan version 1.1 — derived from Cahier des charges SIPROCOM SGS v1.0 (07/08/2026),
+amended 2026-08-17 for the single-site scope.*
 *Update this document whenever a decision in §14 is resolved or scope changes.*
