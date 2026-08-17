@@ -129,7 +129,16 @@ const config = {
   cronSecret: optional('CRON_SECRET', ''),
 
   mail: {
-    apiKey: optional('RESEND_API_KEY', ''),
+    /**
+     * Required in production, unlike every other optional here.
+     *
+     * Accounts are activated by an emailed link and forgotten passwords are
+     * recovered the same way. Without a key the link goes to the server log,
+     * which is a workable development fallback and useless to a real user — an
+     * administrator would create a colleague's account and have no way to hand
+     * it over. Failing at boot beats discovering it at the first invitation.
+     */
+    apiKey: isProduction ? required('RESEND_API_KEY') : optional('RESEND_API_KEY', ''),
     from: optional('MAIL_FROM', 'SIPROCOM SGS <noreply@siprocom.local>'),
     enabled: Boolean(optional('RESEND_API_KEY', '')),
   },
@@ -149,9 +158,8 @@ if (isProduction) {
   if (!config.cronSecret) {
     warnings.push('CRON_SECRET is empty — POST /api/alerts/sweep will reject every call.');
   }
-  if (!config.mail.enabled) {
-    warnings.push('RESEND_API_KEY is empty — email alerts are disabled (dashboard alerts still work).');
-  }
+  // RESEND_API_KEY is not warned about here — it is required above and boot
+  // has already failed without it.
   if (config.jwt.secret.length < 32) {
     warnings.push('JWT_SECRET is shorter than 32 characters — generate a longer one.');
   }

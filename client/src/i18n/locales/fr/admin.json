@@ -48,10 +48,6 @@
     "email": "Email",
     "role": "Rôle",
     "locale": "Langue",
-    "password": "Mot de passe",
-    "newPassword": "Nouveau mot de passe",
-    "passwordHint": "Laisser vide pour conserver le mot de passe actuel",
-    "passwordMin": "8 caractères minimum",
     "lastLogin": "Dernière connexion",
     "active": "Actif",
     "inactive": "Inactif",
@@ -61,8 +57,13 @@
     "searchPlaceholder": "Nom ou email…",
     "toast": {
       "created": "Utilisateur créé",
-      "updated": "Utilisateur mis à jour"
-    }
+      "updated": "Utilisateur mis à jour",
+      "invitationSent": "Invitation envoyée",
+      "invitationNotDelivered": "Compte créé, mais l'email n'a pas pu être envoyé. Vérifiez la configuration."
+    },
+    "pending": "En attente",
+    "resendInvitation": "Renvoyer l'invitation",
+    "invitationNotice": "Un lien d'invitation sera envoyé à cette adresse. La personne y choisira elle-même son mot de passe — vous n'avez pas à en définir un."
   },
   "audit": {
     "title": "Journal d'audit",

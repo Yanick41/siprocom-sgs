@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { useQuery } from '@tanstack/react-query';
@@ -122,6 +122,12 @@ export default function LoginPage() {
               {isLoggingIn ? t('auth:login.submitting') : t('auth:login.submit')}
             </button>
           </form>
+
+          <p className="mt-6 text-center">
+            <Link to="/forgot-password" className="text-sm font-medium text-sgs-navy hover:underline">
+              {t('auth:login.forgotPassword')}
+            </Link>
+          </p>
         </div>
       </div>
     </main>

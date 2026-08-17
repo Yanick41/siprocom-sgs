@@ -12,7 +12,20 @@ const { UnauthorizedError, ForbiddenError, ConflictError } = require('../lib/err
 const { recordAudit, clientIp } = require('../lib/audit');
 const { asyncHandler } = require('../middleware/errorHandler');
 const { authenticate } = require('../middleware/authenticate');
-const { loginSchema, updateLocaleSchema, setupSchema } = require('../validators/auth.validator');
+const logger = require('../lib/logger');
+const {
+  sendAccountEmail,
+  setPasswordWithToken,
+  inspectToken,
+} = require('../services/account.service');
+const {
+  loginSchema,
+  updateLocaleSchema,
+  setupSchema,
+  forgotPasswordSchema,
+  setPasswordSchema,
+  tokenQuerySchema,
+} = require('../validators/auth.validator');
 
 const router = express.Router();
 
@@ -23,6 +36,21 @@ const loginLimiter = rateLimit({
   standardHeaders: 'draft-7',
   legacyHeaders: false,
   skipSuccessfulRequests: true,
+  message: { error: { code: 'TOO_MANY_REQUESTS' } },
+});
+
+/**
+ * Guards the unauthenticated account endpoints.
+ *
+ * Successful requests count too, unlike the login limiter: the abuse here is
+ * mailbombing an address or grinding through token guesses, and skipping
+ * successes would leave exactly that uncapped.
+ */
+const accountLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 10,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
   message: { error: { code: 'TOO_MANY_REQUESTS' } },
 });
 
@@ -102,6 +130,82 @@ router.post(
     res.status(201).json({ user });
   })
 );
+
+/**
+ * Account activation and password recovery.
+ *
+ * One mechanism serves both: an invitation lets a new colleague choose their
+ * first password, a reset lets an existing one replace a forgotten password.
+ * The screen and the endpoint are the same; only the email differs.
+ */
+
+// GET /api/auth/token?token=… — is this link still good?
+// Lets the screen say "expired" instead of showing a form that fails on submit.
+router.get(
+  '/token',
+  accountLimiter,
+  asyncHandler(async (req, res) => {
+    const { token } = tokenQuerySchema.parse(req.query);
+    res.json(await inspectToken(token));
+  })
+);
+
+// POST /api/auth/set-password
+router.post(
+  '/set-password',
+  accountLimiter,
+  asyncHandler(async (req, res) => {
+    const { token, password } = setPasswordSchema.parse(req.body);
+    const { user, type } = await setPasswordWithToken(token, password);
+
+    await recordAudit({
+      userId: user.id,
+      action: type === 'INVITATION' ? 'ACTIVATE_ACCOUNT' : 'RESET_PASSWORD',
+      entity: 'User',
+      entityId: user.id,
+      ipAddress: clientIp(req),
+    });
+
+    // A disabled account can hold a valid link — an administrator may have
+    // deactivated it after inviting. Setting the password is allowed; signing
+    // in is not, and login gives the same answer.
+    if (!user.isActive) throw new ForbiddenError('ACCOUNT_DISABLED');
+
+    // Signing them in here saves re-typing a password chosen ten seconds ago;
+    // the click on a link only they received is the proof.
+    const jwtToken = jwt.sign({ sub: user.id, role: user.role }, config.jwt.secret, {
+      expiresIn: config.jwt.expiresIn,
+    });
+    res.cookie(config.jwt.cookieName, jwtToken, cookieOptions());
+
+    res.json({ user: publicUser(user) });
+  })
+);
+
+// POST /api/auth/forgot-password
+router.post(
+  '/forgot-password',
+  accountLimiter,
+  asyncHandler(async (req, res) => {
+    const { email } = forgotPasswordSchema.parse(req.body);
+
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    // Always the same answer. Reporting "no such account" would turn this into
+    // the address enumerator that /login is careful not to be. A deactivated
+    // account is skipped for the same reason it cannot log in.
+    if (user?.isActive) {
+      try {
+        await sendAccountEmail('PASSWORD_RESET', user);
+      } catch (error) {
+        logger.error({ err: error, email }, 'Failed to send password reset email');
+      }
+    }
+
+    res.json({ ok: true });
+  })
+);
+
 // POST /api/auth/login
 router.post(
   '/login',
@@ -111,15 +215,20 @@ router.post(
 
     const user = await prisma.user.findUnique({ where: { email } });
 
-    // Same error and comparable timing whether the user exists or not,
-    // so the endpoint can't be used to enumerate valid addresses.
-    if (!user) {
+    // Same error and comparable timing whether the user exists or not, so the
+    // endpoint can't be used to enumerate valid addresses. An invited account
+    // that has not set a password yet is indistinguishable from a missing one,
+    // for the same reason.
+    if (!user || !user.password) {
       await bcrypt.compare(password, '$2b$10$invalidinvalidinvalidinvalidinvalidinvalidinvalidinva');
       throw new UnauthorizedError('INVALID_CREDENTIALS');
     }
 
     const passwordMatches = await bcrypt.compare(password, user.password);
     if (!passwordMatches) throw new UnauthorizedError('INVALID_CREDENTIALS');
+
+    // Checked after the password, so the state of an account is never disclosed
+    // to someone who cannot open it.
     if (!user.isActive) throw new ForbiddenError('ACCOUNT_DISABLED');
 
     const token = jwt.sign({ sub: user.id, role: user.role }, config.jwt.secret, {

@@ -76,10 +76,18 @@ enum AlertStatus {
 // ---------------------------------------------------------------- identity
 
 model User {
-  id          String    @id @default(uuid())
-  name        String
-  email       String    @unique
-  password    String // bcrypt hash — never returned by the API
+  id    String @id @default(uuid())
+  name  String
+  email String @unique
+
+  /// bcrypt hash — never returned by the API.
+  ///
+  /// Null between an administrator creating the account and the invited person
+  /// following their emailed link. Nobody types a colleague's password on their
+  /// behalf, so there is nothing to store until they choose one, and an account
+  /// in that state cannot be signed into.
+  password String?
+
   role        Role      @default(MAGASINIER)
   isActive    Boolean   @default(true)
   locale      String    @default("fr") // "fr" | "en" — follows the user across devices
@@ -87,6 +95,7 @@ model User {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
+  tokens            AccountToken[]
   movements         StockMovement[]
   auditLogs         AuditLog[]
   createdReceipts   GoodsReceipt[]  @relation("ReceiptCreatedBy")
@@ -96,6 +105,38 @@ model User {
 
   @@index([role])
   @@map("users")
+}
+
+enum AccountTokenType {
+  INVITATION
+  PASSWORD_RESET
+}
+
+/// Single-use, time-limited link emailed to a user.
+///
+/// One mechanism, two uses: an invitation lets a new colleague choose their
+/// first password, a reset lets an existing one replace a forgotten password.
+/// Both end on the same screen doing the same thing, so they are the same row
+/// with a different `type` — the alternative was two tables that would have
+/// drifted apart.
+///
+/// Only the SHA-256 of the emailed token is stored: a leaked database backup
+/// would otherwise hand over a working password-change link for every pending
+/// account. Same reasoning as hashing the password itself.
+model AccountToken {
+  id        String           @id @default(uuid())
+  userId    String
+  type      AccountTokenType
+  tokenHash String           @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("account_tokens")
 }
 
 // ---------------------------------------------------------------- reference data

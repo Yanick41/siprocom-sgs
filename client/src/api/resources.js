@@ -13,6 +13,9 @@ const qs = (params = {}) => {
 export const authApi = {
   setupStatus: () => api.get('/auth/setup-status'),
   setup: (data) => api.post('/auth/setup', data),
+  inspectToken: (token) => api.get(`/auth/token${qs({ token })}`),
+  setPassword: (data) => api.post('/auth/set-password', data),
+  forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
   login: (credentials) => api.post('/auth/login', credentials),
   logout: () => api.post('/auth/logout'),
   me: () => api.get('/auth/me'),
@@ -90,6 +93,7 @@ export const usersApi = {
   list: (params) => api.get(`/users${qs(params)}`),
   create: (data) => api.post('/users', data),
   update: ({ id, ...data }) => api.patch(`/users/${id}`, data),
+  resendInvitation: (id) => api.post(`/users/${id}/resend-invitation`),
 };
 
 export const auditApi = {

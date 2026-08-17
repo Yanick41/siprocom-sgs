@@ -32,6 +32,17 @@ export default function UsersPage() {
     placeholderData: (previous) => previous,
   });
 
+  const resendMutation = useMutation({
+    mutationFn: usersApi.resendInvitation,
+    onSuccess: (result) =>
+      toast.success(
+        result.invitationSent
+          ? t('admin:users.toast.invitationSent')
+          : t('admin:users.toast.invitationNotDelivered')
+      ),
+    onError: (error) => toast.error(translateError(error)),
+  });
+
   const columns = [
     {
       key: 'name',
@@ -55,11 +66,35 @@ export default function UsersPage() {
     {
       key: 'isActive',
       header: t('common:fields.status'),
-      render: (u) => (
-        <StatusBadge tone={u.isActive ? 'success' : 'neutral'}>
-          {u.isActive ? t('admin:users.active') : t('admin:users.inactive')}
-        </StatusBadge>
-      ),
+      // An invited account that has not been activated is neither active nor
+      // disabled — it is waiting on someone, and that is what the admin needs
+      // to see before wondering why a colleague cannot log in.
+      render: (u) =>
+        u.pending ? (
+          <StatusBadge tone="warning">{t('admin:users.pending')}</StatusBadge>
+        ) : (
+          <StatusBadge tone={u.isActive ? 'success' : 'neutral'}>
+            {u.isActive ? t('admin:users.active') : t('admin:users.inactive')}
+          </StatusBadge>
+        ),
+    },
+    {
+      key: 'invite',
+      header: '',
+      render: (u) =>
+        u.pending ? (
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation(); // the row itself opens the edit form
+              resendMutation.mutate(u.id);
+            }}
+            disabled={resendMutation.isPending}
+            className="text-sm font-medium text-sgs-navy hover:underline"
+          >
+            {t('admin:users.resendInvitation')}
+          </button>
+        ) : null,
     },
   ];
 
@@ -134,7 +169,6 @@ function UserFormModal({ user, isSelf, onClose, onSaved }) {
       role: user?.role ?? 'MAGASINIER',
       locale: user?.locale ?? 'fr',
       isActive: user?.isActive ?? true,
-      password: '',
     },
   });
 
@@ -171,10 +205,7 @@ function UserFormModal({ user, isSelf, onClose, onSaved }) {
         id="user-form"
         onSubmit={handleSubmit((values) => {
           setSubmitError(null);
-          const payload = { ...values };
-          // An empty password field on edit means "leave it unchanged", not "set it to empty".
-          if (isEdit && !payload.password) delete payload.password;
-          mutation.mutate(payload);
+          mutation.mutate(values);
         })}
         className="space-y-4"
         noValidate
@@ -187,22 +218,11 @@ function UserFormModal({ user, isSelf, onClose, onSaved }) {
           {(props) => <input {...props} type="email" {...register('email', { required: 'VALIDATION_FAILED' })} />}
         </FormField>
 
-        <FormField
-          label={isEdit ? t('admin:users.newPassword') : t('admin:users.password')}
-          name="password"
-          error={errors.password}
-          required={!isEdit}
-          hint={isEdit ? t('admin:users.passwordHint') : t('admin:users.passwordMin')}
-        >
-          {(props) => (
-            <input
-              {...props}
-              type="password"
-              autoComplete="new-password"
-              {...register('password', isEdit ? {} : { required: 'VALIDATION_FAILED', minLength: { value: 8, message: 'PASSWORD_TOO_SHORT' } })}
-            />
-          )}
-        </FormField>
+        {!isEdit && (
+          <p className="rounded-lg bg-slate-50 p-3 text-xs text-slate-500">
+            {t('admin:users.invitationNotice')}
+          </p>
+        )}
 
         <div className="grid gap-4 sm:grid-cols-2">
           <FormField label={t('admin:users.role')} name="role" error={errors.role} required>

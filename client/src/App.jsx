@@ -22,6 +22,8 @@ import lazyWithRetry from '@/lib/lazyWithRetry';
  * Vite re-optimisation, and the screen should recover instead of failing.
  */
 const SetupPage = lazyWithRetry(() => import('@/features/auth/SetupPage'), 'setup');
+const SetPasswordPage = lazyWithRetry(() => import('@/features/auth/SetPasswordPage'), 'set-password');
+const ForgotPasswordPage = lazyWithRetry(() => import('@/features/auth/ForgotPasswordPage'), 'forgot-password');
 const SystemStatusPage = lazyWithRetry(() => import('@/features/system/SystemStatusPage'), 'status');
 const DashboardPage = lazyWithRetry(() => import('@/features/dashboard/DashboardPage'), 'dashboard');
 const ProductsPage = lazyWithRetry(() => import('@/features/products/ProductsPage'), 'products');
@@ -66,6 +68,23 @@ export default function App() {
         element={
           <Suspense fallback={<ScreenFallback />}>
             <SetupPage />
+          </Suspense>
+        }
+      />
+      {/* Both are reached from an emailed link, so they must work signed out. */}
+      <Route
+        path="/set-password"
+        element={
+          <Suspense fallback={<ScreenFallback />}>
+            <SetPasswordPage />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/forgot-password"
+        element={
+          <Suspense fallback={<ScreenFallback />}>
+            <ForgotPasswordPage />
           </Suspense>
         }
       />

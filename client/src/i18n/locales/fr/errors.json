@@ -31,5 +31,9 @@
   "PASSWORDS_DO_NOT_MATCH": "Les deux mots de passe ne correspondent pas.",
   "PRODUCT_NOT_SOLD_BY_CARTON": "Ce produit n'est pas vendu au carton. Renseignez « unités par carton » sur la fiche produit.",
   "CARTON_PRICE_MISSING": "Aucun prix de carton défini pour ce produit.",
-  "UNKNOWN_PACKAGING": "Emballage inconnu."
+  "UNKNOWN_PACKAGING": "Emballage inconnu.",
+  "INVALID_TOKEN": "Ce lien est invalide ou a déjà été utilisé.",
+  "TOKEN_EXPIRED": "Ce lien a expiré. Demandez-en un nouveau.",
+  "EMAIL_ALREADY_REGISTERED": "Cette adresse email est déjà utilisée par un autre compte.",
+  "ACCOUNT_ALREADY_ACTIVATED": "Ce compte est déjà activé."
 }
