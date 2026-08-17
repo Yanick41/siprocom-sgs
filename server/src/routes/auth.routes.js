@@ -3,7 +3,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const rateLimit = require('express-rate-limit');
+const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
 const { randomUUID } = require('node:crypto');
 
 const config = require('../config/env');
@@ -29,29 +29,110 @@ const {
 
 const router = express.Router();
 
-// Brute-force protection on the only unauthenticated write endpoint.
+/**
+ * Tells the caller how long the wait is, instead of "a few minutes".
+ *
+ * Without a figure the screen cannot say anything useful, and a user who does
+ * not know whether to wait 30 seconds or 15 minutes simply keeps retrying —
+ * which extends the very window they are waiting on.
+ */
+const tooManyRequests = (req, res) => {
+  const resetTime = req.rateLimit?.resetTime;
+  const seconds = resetTime
+    ? Math.max(1, Math.ceil((resetTime.getTime() - Date.now()) / 1000))
+    : 60;
+
+  res.status(429).json({
+    error: {
+      code: 'TOO_MANY_REQUESTS',
+      details: { retryAfterSeconds: seconds, retryAfterMinutes: Math.ceil(seconds / 60) },
+    },
+  });
+};
+
+/**
+ * Brute-force protection on login, keyed by address AND account.
+ *
+ * Keying on the IP alone was a real defect for this deployment, not a
+ * theoretical one: SIPROCOM's team works behind a single office connection, so
+ * one shared public IP. A per-IP budget of five attempts meant one magasinier
+ * mistyping their password five times locked out the administrator, the
+ * purchasing manager and everyone else for a quarter of an hour.
+ *
+ * Per (IP, account) the mistakes stay with the person who made them.
+ *
+ * The window is short on purpose. Once the budget is spent even the correct
+ * password is refused until it resets — that is how any rate limiter works, and
+ * it is the part users actually feel. Ten tries buys enough room for someone
+ * who cannot remember which password they chose, and five minutes is a bounded,
+ * stated wait rather than a quarter of an hour of guessing why.
+ *
+ * It costs nothing against an attacker: bcrypt at cost 10 already makes each
+ * guess expensive, and 2 880 guesses a day against a 12-character password is
+ * not an attack.
+ */
 const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  limit: 5,
+  windowMs: 5 * 60 * 1000,
+  limit: 10,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
   skipSuccessfulRequests: true,
-  message: { error: { code: 'TOO_MANY_REQUESTS' } },
+  keyGenerator: (req) => {
+    const email = String(req.body?.email ?? '').trim().toLowerCase();
+    return `${ipKeyGenerator(req.ip)}:${email}`;
+  },
+  handler: tooManyRequests,
 });
 
 /**
- * Guards the unauthenticated account endpoints.
- *
- * Successful requests count too, unlike the login limiter: the abuse here is
- * mailbombing an address or grinding through token guesses, and skipping
- * successes would leave exactly that uncapped.
+ * Backstop for the hole the key above opens: an attacker can rotate the email
+ * and get a fresh budget each time. Deliberately generous — a whole office
+ * failing fifty logins in fifteen minutes is a support problem, not traffic to
+ * block, while anyone enumerating accounts passes it in seconds.
  */
-const accountLimiter = rateLimit({
+const loginIpLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 50,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  skipSuccessfulRequests: true,
+  handler: tooManyRequests,
+});
+
+/**
+ * Password-reset requests. Successful ones count too, unlike login: the abuse
+ * here is mailbombing an address, and skipping successes would leave exactly
+ * that uncapped. Keyed per address as well as per IP, so one person requesting
+ * a reset does not stop a colleague doing the same from the next desk.
+ */
+const forgotPasswordLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   limit: 10,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
-  message: { error: { code: 'TOO_MANY_REQUESTS' } },
+  keyGenerator: (req) => {
+    const email = String(req.body?.email ?? '').trim().toLowerCase();
+    return `${ipKeyGenerator(req.ip)}:${email}`;
+  },
+  handler: tooManyRequests,
+});
+
+/**
+ * The two endpoints that carry a token rather than an address.
+ *
+ * There is no account to key on — the body holds a token, not an email — so
+ * this one is per IP and therefore shared by the whole office. It is set
+ * generously for that reason: onboarding several colleagues in one afternoon
+ * means a handful of requests each, and the screen re-checks the link on every
+ * page load. Guessing is not the threat these guard against anyway; a 256-bit
+ * single-use token is not reachable by brute force.
+ */
+const tokenLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 60,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  handler: tooManyRequests,
 });
 
 const cookieOptions = () => ({
@@ -94,6 +175,7 @@ router.get(
 // POST /api/auth/setup
 router.post(
   '/setup',
+  loginIpLimiter,
   loginLimiter,
   asyncHandler(async (req, res) => {
     const { name, email, password, locale } = setupSchema.parse(req.body);
@@ -143,7 +225,7 @@ router.post(
 // Lets the screen say "expired" instead of showing a form that fails on submit.
 router.get(
   '/token',
-  accountLimiter,
+  tokenLimiter,
   asyncHandler(async (req, res) => {
     const { token } = tokenQuerySchema.parse(req.query);
     res.json(await inspectToken(token));
@@ -153,7 +235,7 @@ router.get(
 // POST /api/auth/set-password
 router.post(
   '/set-password',
-  accountLimiter,
+  tokenLimiter,
   asyncHandler(async (req, res) => {
     const { token, password } = setPasswordSchema.parse(req.body);
     const { user, type } = await setPasswordWithToken(token, password);
@@ -185,7 +267,7 @@ router.post(
 // POST /api/auth/forgot-password
 router.post(
   '/forgot-password',
-  accountLimiter,
+  forgotPasswordLimiter,
   asyncHandler(async (req, res) => {
     const { email } = forgotPasswordSchema.parse(req.body);
 
@@ -209,6 +291,7 @@ router.post(
 // POST /api/auth/login
 router.post(
   '/login',
+  loginIpLimiter,
   loginLimiter,
   asyncHandler(async (req, res) => {
     const { email, password } = loginSchema.parse(req.body);

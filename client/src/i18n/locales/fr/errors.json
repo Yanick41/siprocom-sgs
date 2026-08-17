@@ -23,7 +23,7 @@
   "MAX_BELOW_MIN": "Le seuil maximum doit être supérieur ou égal au seuil minimum.",
   "INTERNAL_ERROR": "Erreur interne du serveur. Réessayez dans un instant.",
   "NETWORK_ERROR": "Connexion au serveur impossible. Vérifiez votre réseau.",
-  "TOO_MANY_REQUESTS": "Trop de tentatives. Réessayez dans quelques minutes.",
+  "TOO_MANY_REQUESTS": "Trop de tentatives. Réessayez dans {{retryAfterMinutes}} minute(s).",
   "UNKNOWN": "Une erreur inattendue est survenue.",
   "CORS_ORIGIN_NOT_ALLOWED": "Origine non autorisée. Vérifiez l'adresse utilisée pour accéder à l'application.",
   "SETUP_ALREADY_DONE": "Un compte administrateur existe déjà. Utilisez la page de connexion.",
