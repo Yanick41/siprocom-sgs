@@ -142,16 +142,22 @@ const config = {
 
   mail: {
     /**
-     * Required in production, unlike every other optional here.
+     * Deliberately NOT required at boot, even in production.
      *
-     * Accounts are activated by an emailed link and forgotten passwords are
-     * recovered the same way. Without a key the link goes to the server log,
-     * which is a workable development fallback and useless to a real user — an
-     * administrator would create a colleague's account and have no way to hand
-     * it over. Failing at boot beats discovering it at the first invitation.
+     * It was, briefly. The reasoning was that an invitation written to a log
+     * file is useless to a real colleague, so the operator should find out at
+     * deploy time rather than at the first invitation. That much is true — but
+     * the punishment was wrong: refusing to boot takes down stock entry,
+     * validation, the dashboard and every report because *email* is
+     * unconfigured. A magasinier who cannot record a delivery this morning is a
+     * far worse outcome than an administrator who cannot invite a colleague.
+     *
+     * So the failure is moved to where it belongs. Boot warns loudly, and the
+     * endpoints that actually need mail refuse with MAIL_NOT_CONFIGURED rather
+     * than reporting success over a message nobody received.
      */
-    apiKey: isProduction ? required('RESEND_API_KEY') : optional('RESEND_API_KEY', ''),
-    from: optional('MAIL_FROM', 'SIPROCOM SGS <noreply@siprocom.local>'),
+    apiKey: optional('RESEND_API_KEY', ''),
+    from: optional('MAIL_FROM', 'SIPROCOM SGS <onboarding@resend.dev>'),
     enabled: Boolean(optional('RESEND_API_KEY', '')),
   },
 
@@ -170,8 +176,14 @@ if (isProduction) {
   if (!config.cronSecret) {
     warnings.push('CRON_SECRET is empty — POST /api/alerts/sweep will reject every call.');
   }
-  // RESEND_API_KEY is not warned about here — it is required above and boot
-  // has already failed without it.
+  if (!config.mail.enabled) {
+    warnings.push(
+      'RESEND_API_KEY is empty — no email can be sent. Inviting a user refuses ' +
+        'with MAIL_NOT_CONFIGURED, and a password-reset request still answers ok ' +
+        '(it must never disclose whether an address exists) but delivers nothing. ' +
+        'Everything that is not email keeps working.'
+    );
+  }
   if (config.jwt.secret.length < 32) {
     warnings.push('JWT_SECRET is shorter than 32 characters — generate a longer one.');
   }

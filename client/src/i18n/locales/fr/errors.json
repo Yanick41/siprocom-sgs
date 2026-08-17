@@ -35,5 +35,6 @@
   "INVALID_TOKEN": "Ce lien est invalide ou a déjà été utilisé.",
   "TOKEN_EXPIRED": "Ce lien a expiré. Demandez-en un nouveau.",
   "EMAIL_ALREADY_REGISTERED": "Cette adresse email est déjà utilisée par un autre compte.",
-  "ACCOUNT_ALREADY_ACTIVATED": "Ce compte est déjà activé."
+  "ACCOUNT_ALREADY_ACTIVATED": "Ce compte est déjà activé.",
+  "MAIL_NOT_CONFIGURED": "L'envoi d'emails n'est pas configuré sur le serveur. Impossible d'inviter un utilisateur ou de réinitialiser un mot de passe tant que la clé RESEND_API_KEY n'est pas renseignée."
 }

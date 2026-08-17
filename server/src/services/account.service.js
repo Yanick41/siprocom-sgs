@@ -8,7 +8,7 @@ const prisma = require('../lib/prisma');
 const logger = require('../lib/logger');
 const { sendMail } = require('../lib/mailer');
 const { accountEmail } = require('../emails/account');
-const { UnauthorizedError } = require('../lib/errors');
+const { AppError, UnauthorizedError } = require('../lib/errors');
 
 /**
  * Account lifecycle: invitation and password reset.
@@ -62,6 +62,23 @@ const linkFor = (token) => `${config.appUrl}/set-password?token=${encodeURICompo
  * @param {{ id: string, name: string, email: string, locale: string }} user
  * @param {string} [inviterName] who created the account (INVITATION only)
  */
+/**
+ * Refuses an operation that depends on mail when mail cannot be sent.
+ *
+ * Call it *before* the work, not after: an account created with an invitation
+ * nobody receives is worse than no account, because the administrator believes
+ * access has been handed over and the address is now taken.
+ *
+ * Development is exempt — the logged link is a genuine way to test the flow.
+ *
+ * @throws {AppError} MAIL_NOT_CONFIGURED
+ */
+function assertMailConfigured() {
+  if (!config.mail.enabled && config.isProduction) {
+    throw new AppError('MAIL_NOT_CONFIGURED', 503);
+  }
+}
+
 async function sendAccountEmail(type, user, inviterName) {
   const { token } = await issueToken(user.id, type);
   const url = linkFor(token);
@@ -133,6 +150,7 @@ async function inspectToken(token) {
 }
 
 module.exports = {
+  assertMailConfigured,
   sendAccountEmail,
   setPasswordWithToken,
   inspectToken,

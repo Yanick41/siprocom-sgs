@@ -6,7 +6,7 @@ const { z } = require('zod');
 
 const prisma = require('../lib/prisma');
 const logger = require('../lib/logger');
-const { sendAccountEmail } = require('../services/account.service');
+const { assertMailConfigured, sendAccountEmail } = require('../services/account.service');
 const { NotFoundError, ConflictError } = require('../lib/errors');
 const { recordAudit, clientIp } = require('../lib/audit');
 const { asyncHandler } = require('../middleware/errorHandler');
@@ -80,6 +80,10 @@ router.post(
   asyncHandler(async (req, res) => {
     const data = createUserSchema.parse(req.body);
 
+    // Checked before the row is written: the account would otherwise exist with
+    // its address taken and no way for anyone to activate it.
+    assertMailConfigured();
+
     let user;
     try {
       user = await prisma.user.create({ data });
@@ -115,6 +119,8 @@ router.post(
   '/:id/resend-invitation',
   asyncHandler(async (req, res) => {
     const { id } = idParamSchema.parse(req.params);
+
+    assertMailConfigured();
 
     const user = await prisma.user.findUnique({ where: { id } });
     if (!user) throw new NotFoundError('User', id);
