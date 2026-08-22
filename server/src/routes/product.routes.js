@@ -42,7 +42,6 @@ router.get(
               { reference: { contains: q.search, mode: 'insensitive' } },
               { designation: { contains: q.search, mode: 'insensitive' } },
               { designationEn: { contains: q.search, mode: 'insensitive' } },
-              { barcode: { contains: q.search, mode: 'insensitive' } },
             ],
           }
         : {}),
@@ -106,7 +105,6 @@ router.post(
   authorize('ADMIN', 'MAGASINIER'),
   asyncHandler(async (req, res) => {
     const { supplierIds, ...data } = createProductSchema.parse(req.body);
-    if (data.barcode === '') data.barcode = null;
 
     const product = await prisma.product.create({
       data: {
@@ -138,7 +136,6 @@ router.patch(
   asyncHandler(async (req, res) => {
     const { id } = idParamSchema.parse(req.params);
     const { supplierIds, ...data } = updateProductSchema.parse(req.body);
-    if (data.barcode === '') data.barcode = null;
 
     const existing = await prisma.product.findUnique({ where: { id } });
     if (!existing) throw new NotFoundError('Product', id);

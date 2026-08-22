@@ -2,6 +2,13 @@
 
 const { z } = require('zod');
 
+/**
+ * Kept beside the client list in client/src/lib/containers.js. They were two
+ * hardcoded arrays that had to agree, and adding a format to one silently made
+ * the server reject it — naming the list at least makes the pairing visible.
+ */
+const CONTAINERS = ['glass_bottle', 'plastic_bottle', 'can', 'carton_pack', 'pouch'];
+
 const uuid = z.string().uuid();
 const optionalText = z.string().trim().max(255).optional().nullable();
 
@@ -36,10 +43,9 @@ const createProductSchema = z
     reference: z.string().trim().min(1).max(50),
     designation: z.string().trim().min(1).max(200),
     designationEn: z.string().trim().max(200).optional().nullable(),
-    barcode: z.string().trim().max(60).optional().nullable().or(z.literal('')),
     categoryId: uuid,
     unit: z.string().trim().min(1).max(20).default('unit'),
-    container: z.enum(['glass_bottle','plastic_bottle','can','carton_pack']).optional().nullable().or(z.literal('')),
+    container: z.enum(CONTAINERS).optional().nullable().or(z.literal('')),
     minThreshold: z.coerce.number().int().min(0).default(0),
     maxThreshold: z.coerce.number().int().min(0).optional().nullable(),
     buyPrice: z.coerce.number().min(0).default(0),
@@ -63,10 +69,9 @@ const updateProductSchema = z
     reference: z.string().trim().min(1).max(50).optional(),
     designation: z.string().trim().min(1).max(200).optional(),
     designationEn: z.string().trim().max(200).optional().nullable(),
-    barcode: z.string().trim().max(60).optional().nullable().or(z.literal('')),
     categoryId: uuid.optional(),
     unit: z.string().trim().min(1).max(20).optional(),
-    container: z.enum(['glass_bottle','plastic_bottle','can','carton_pack']).optional().nullable().or(z.literal('')),
+    container: z.enum(CONTAINERS).optional().nullable().or(z.literal('')),
     minThreshold: z.coerce.number().int().min(0).optional(),
     maxThreshold: z.coerce.number().int().min(0).optional().nullable(),
     buyPrice: z.coerce.number().min(0).optional(),

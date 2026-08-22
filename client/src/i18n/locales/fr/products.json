@@ -31,7 +31,6 @@
     "designationFr": "Désignation",
     "designationEn": "Désignation (anglais)",
     "designationEnHint": "Facultatif — la désignation française sera utilisée si ce champ est vide",
-    "barcode": "Code-barres",
     "minThreshold": "Seuil minimum",
     "minThresholdHint": "Une alerte est générée en dessous de ce niveau",
     "maxThreshold": "Seuil maximum",

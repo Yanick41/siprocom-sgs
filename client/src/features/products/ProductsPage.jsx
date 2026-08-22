@@ -10,6 +10,7 @@ import { PermissionGate } from '@/components/ProtectedRoute';
 import DataTable from '@/components/DataTable';
 import StatusBadge from '@/components/StatusBadge';
 import { stockTone } from '@/lib/stockState';
+import { unitLabel } from '@/lib/containers';
 import { useErrorMessage } from '@/hooks/useErrorMessage';
 import { formatCurrency, formatQuantity } from '@/lib/format';
 import ProductFormModal from './ProductFormModal';
@@ -75,7 +76,7 @@ export default function ProductsPage() {
       align: 'right',
       render: (p) => (
         <StatusBadge tone={stockTone(p.totalStock, p.minThreshold, p.maxThreshold)}>
-          {formatQuantity(p.totalStock, lng)} {t(`common:units.${p.unit}`, { defaultValue: p.unit })}
+          {formatQuantity(p.totalStock, lng)} {unitLabel(p, t)}
         </StatusBadge>
       ),
     },

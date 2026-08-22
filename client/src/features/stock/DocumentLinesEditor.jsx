@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { FiTrash2, FiPlus, FiAlertTriangle } from 'react-icons/fi';
 
 import { formatQuantity, formatCurrency } from '@/lib/format';
+import { unitLabel } from '@/lib/containers';
 
 /**
  * Editable product lines shared by receipts and issues.
@@ -192,7 +193,7 @@ export default function DocumentLinesEditor({
                     onKeyDown={(e) => handleKeyDown(e, index, !withPrice)}
                     className="input"
                   >
-                    <option value="UNIT">{t(`common:units.${product.unit}`, { defaultValue: product.unit })}</option>
+                    <option value="UNIT">{unitLabel(product, t) || t('common:units.unit')}</option>
                     <option value="CARTON">{t('common:units.carton')}</option>
                   </select>
                 </div>
@@ -245,7 +246,7 @@ export default function DocumentLinesEditor({
                 {packaging === 'CARTON' && baseQuantity > 0 && (
                   <span className="font-medium text-slate-600">
                     = {formatQuantity(baseQuantity, lng)}{' '}
-                    {t(`common:units.${product.unit}`, { defaultValue: product.unit })}
+                    {unitLabel(product, t)}
                   </span>
                 )}
 

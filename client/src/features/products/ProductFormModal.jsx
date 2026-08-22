@@ -7,7 +7,7 @@ import { productsApi } from '@/api/resources';
 import { useErrorMessage } from '@/hooks/useErrorMessage';
 import Modal from '@/components/Modal';
 import FormField from '@/components/FormField';
-import { BASE_UNITS, GROUPING_UNITS, canonicalUnit } from '@/lib/units';
+import { GROUPING_UNITS } from '@/lib/units';
 import { CONTAINERS } from '@/lib/containers';
 
 
@@ -27,9 +27,7 @@ export default function ProductFormModal({ product, categories, onClose, onSaved
     defaultValues: {
       reference: product?.reference ?? '',
       designation: product?.designation ?? '',
-      barcode: product?.barcode ?? '',
       categoryId: product?.categoryId ?? '',
-      unit: canonicalUnit(product?.unit) ?? 'unit',
       container: product?.container ?? '',
       minThreshold: product?.minThreshold ?? 0,
       maxThreshold: product?.maxThreshold ?? '',
@@ -78,7 +76,6 @@ export default function ProductFormModal({ product, categories, onClose, onSaved
           ? null
           : Number(values.cartonSellPrice),
       container: values.container || null,
-      barcode: values.barcode || null,
     });
   };
 
@@ -116,10 +113,6 @@ export default function ProductFormModal({ product, categories, onClose, onSaved
         <div className="grid gap-4 sm:grid-cols-2">
           <FormField label={t('common:fields.reference')} name="reference" error={errors.reference} required>
             {(props) => <input {...props} type="text" {...register('reference', { required: 'VALIDATION_FAILED' })} />}
-          </FormField>
-
-          <FormField label={t('products:form.barcode')} name="barcode" error={errors.barcode}>
-            {(props) => <input {...props} type="text" {...register('barcode')} />}
           </FormField>
         </div>
 
@@ -159,29 +152,6 @@ export default function ProductFormModal({ product, categories, onClose, onSaved
             )}
           </FormField>
 
-          {/* Only base units here. A carton is never what stock is counted in —
-              a carton opened is bottles — so grouping units live below, where a
-              conversion factor is required alongside them. */}
-          <FormField label={t('common:fields.unit')} name="unit" error={errors.unit}>
-            {(props) => (
-              <select {...props} {...register('unit')}>
-                <optgroup label={t('common:unitGroups.counted')}>
-                  {BASE_UNITS.counted.map((u) => (
-                    <option key={u} value={u}>
-                      {t(`common:units.${u}`, { defaultValue: u })}
-                    </option>
-                  ))}
-                </optgroup>
-                <optgroup label={t('common:unitGroups.bulk')}>
-                  {BASE_UNITS.bulk.map((u) => (
-                    <option key={u} value={u}>
-                      {t(`common:units.${u}`, { defaultValue: u })}
-                    </option>
-                  ))}
-                </optgroup>
-              </select>
-            )}
-          </FormField>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">

@@ -198,7 +198,6 @@ model Product {
   reference     String  @unique
   designation   String
   designationEn String?
-  barcode       String? @unique
   categoryId    String
 
   /// The BASE unit — bottle, kilo, piece. Stock levels, thresholds, alerts and

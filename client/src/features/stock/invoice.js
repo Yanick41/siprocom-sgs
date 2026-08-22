@@ -1,4 +1,5 @@
 import { formatCurrency, formatDate } from '@/lib/format';
+import { unitLabel } from '@/lib/containers';
 
 /**
  * Builds the printable form of a goods issue, once, for both outputs.
@@ -15,10 +16,10 @@ export function buildInvoice(issue, { t, lng = 'fr' }) {
   const designation = (line) =>
     lng === 'en' && line.product.designationEn ? line.product.designationEn : line.product.designation;
 
-  const unitLabel = (line) =>
-    line.packaging === 'CARTON'
-      ? t('common:units.carton')
-      : t(`common:units.${line.product.unit}`, { defaultValue: line.product.unit });
+  // "2 cartons" when sold by the carton; otherwise whatever word the product
+  // carries, or none at all.
+  const lineUnit = (line) =>
+    line.packaging === 'CARTON' ? t('common:units.carton') : unitLabel(line.product, t);
 
   const rows = issue.lines.map((line) => {
     const unitPrice = Number(line.unitPrice) || 0;
@@ -30,7 +31,7 @@ export function buildInvoice(issue, { t, lng = 'fr' }) {
       // Quantity as sold, with its packaging — "2 cartons", not "24 bottles".
       // The base quantity is what left the shelf and belongs on the stock
       // journal, not on a customer's invoice.
-      quantity: `${line.quantity} ${unitLabel(line)}`,
+      quantity: `${line.quantity} ${lineUnit(line)}`.trim(),
       baseQuantity: line.baseQuantity,
       unitPrice,
       total,
