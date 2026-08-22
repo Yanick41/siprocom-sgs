@@ -23,6 +23,7 @@ import lazyWithRetry from '@/lib/lazyWithRetry';
  */
 const SetupPage = lazyWithRetry(() => import('@/features/auth/SetupPage'), 'setup');
 const SetPasswordPage = lazyWithRetry(() => import('@/features/auth/SetPasswordPage'), 'set-password');
+const SignupPage = lazyWithRetry(() => import('@/features/auth/SignupPage'), 'signup');
 const ForgotPasswordPage = lazyWithRetry(() => import('@/features/auth/ForgotPasswordPage'), 'forgot-password');
 const SystemStatusPage = lazyWithRetry(() => import('@/features/system/SystemStatusPage'), 'status');
 const DashboardPage = lazyWithRetry(() => import('@/features/dashboard/DashboardPage'), 'dashboard');
@@ -72,6 +73,14 @@ export default function App() {
         }
       />
       {/* Both are reached from an emailed link, so they must work signed out. */}
+      <Route
+        path="/signup"
+        element={
+          <Suspense fallback={<ScreenFallback />}>
+            <SignupPage />
+          </Suspense>
+        }
+      />
       <Route
         path="/set-password"
         element={

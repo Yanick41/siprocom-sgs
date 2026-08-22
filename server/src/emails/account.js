@@ -116,4 +116,58 @@ function accountEmail({ type, locale, name, inviter, url, expiresInHours }) {
   return { subject: t.subject, html, text };
 }
 
-module.exports = { accountEmail };
+const CODE_TEMPLATES = {
+  fr: {
+    subject: (code) => `${code} — votre code SIPROCOM SGS`,
+    heading: 'Votre code de vérification',
+    intro: 'Saisissez ce code dans la page de création de compte pour activer votre accès :',
+    expiry: (minutes) => `Ce code expire dans ${minutes} minutes.`,
+    ignore: "Si vous n'êtes pas à l'origine de cette demande, ignorez ce message.",
+  },
+  en: {
+    subject: (code) => `${code} — your SIPROCOM SGS code`,
+    heading: 'Your verification code',
+    intro: 'Enter this code on the account creation page to activate your access:',
+    expiry: (minutes) => `This code expires in ${minutes} minutes.`,
+    ignore: 'If you did not request this, ignore the message.',
+  },
+};
+
+/**
+ * The six-digit signup code.
+ *
+ * The code leads the subject line on purpose: most phones surface it in the
+ * notification, so the recipient can type it without opening the message at
+ * all — which is the difference between this flow feeling instant and feeling
+ * like a chore.
+ *
+ * @param {object} params
+ * @param {string} params.locale "fr" | "en" — falls back to French
+ * @param {string} params.code   the six digits, already generated
+ * @param {number} params.expiresInMinutes
+ */
+function signupCodeEmail({ locale, code, expiresInMinutes }) {
+  const lang = CODE_TEMPLATES[locale] ? locale : 'fr';
+  const t = CODE_TEMPLATES[lang];
+
+  const text = [t.heading, '', t.intro, code, '', t.expiry(expiresInMinutes), t.ignore].join('\n');
+
+  const html = `<!doctype html>
+<html lang="${lang}">
+  <body style="margin:0;padding:24px;background:#f1f5f9;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;color:#0f172a">
+    <table role="presentation" style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:12px;padding:32px">
+      <tr><td>
+        <h1 style="margin:0 0 4px;font-size:20px;color:#1e3a5f">SIPROCOM SGS</h1>
+        <h2 style="margin:24px 0 12px;font-size:17px">${escapeHtml(t.heading)}</h2>
+        <p style="margin:0 0 20px;font-size:14px;line-height:1.6">${escapeHtml(t.intro)}</p>
+        <p style="margin:0 0 24px;font-size:34px;font-weight:700;letter-spacing:10px;color:#1e3a5f;text-align:center;background:#f1f5f9;border-radius:10px;padding:18px 0">${escapeHtml(code)}</p>
+        <p style="margin:0;font-size:12px;color:#94a3b8">${escapeHtml(t.expiry(expiresInMinutes))} ${escapeHtml(t.ignore)}</p>
+      </td></tr>
+    </table>
+  </body>
+</html>`;
+
+  return { subject: t.subject(code), html, text };
+}
+
+module.exports = { accountEmail, signupCodeEmail };

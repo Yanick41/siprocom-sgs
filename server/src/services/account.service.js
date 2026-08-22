@@ -1,14 +1,20 @@
 'use strict';
 
 const bcrypt = require('bcryptjs');
-const { randomBytes, createHash } = require('node:crypto');
+const { randomBytes, randomInt, createHash } = require('node:crypto');
 
 const config = require('../config/env');
 const prisma = require('../lib/prisma');
 const logger = require('../lib/logger');
 const { sendMail } = require('../lib/mailer');
-const { accountEmail } = require('../emails/account');
-const { AppError, UnauthorizedError } = require('../lib/errors');
+const { accountEmail, signupCodeEmail } = require('../emails/account');
+const {
+  AppError,
+  UnauthorizedError,
+  ForbiddenError,
+  NotFoundError,
+  ConflictError,
+} = require('../lib/errors');
 
 /**
  * Account lifecycle: invitation and password reset.
@@ -53,15 +59,20 @@ async function issueToken(userId, type) {
   return { token, expiresAt };
 }
 
-/** Points at the SPA, which posts the token back to the API — so the address
- *  bar shows a page rather than a bare endpoint. */
-const linkFor = (token) => `${config.appUrl}/set-password?token=${encodeURIComponent(token)}`;
-
 /**
- * @param {'INVITATION'|'PASSWORD_RESET'} type
- * @param {{ id: string, name: string, email: string, locale: string }} user
- * @param {string} [inviterName] who created the account (INVITATION only)
+ * Points at the SPA, which posts the token back to the API — so the address bar
+ * shows a page rather than a bare endpoint.
+ *
+ * An invitation lands on /signup, where the person fills in their own name and
+ * password before confirming a code; a reset lands on /set-password, which only
+ * asks for the password. Same token, two destinations, because the two arrivals
+ * genuinely need different forms.
  */
+const linkFor = (token, type, email) =>
+  type === 'INVITATION'
+    ? `${config.appUrl}/signup?email=${encodeURIComponent(email)}`
+    : `${config.appUrl}/set-password?token=${encodeURIComponent(token)}`;
+
 /**
  * Refuses an operation that depends on mail when mail cannot be sent.
  *
@@ -79,9 +90,14 @@ function assertMailConfigured() {
   }
 }
 
+/**
+ * @param {'INVITATION'|'PASSWORD_RESET'} type
+ * @param {{ id: string, name: string, email: string, locale: string }} user
+ * @param {string} [inviterName] who created the account (INVITATION only)
+ */
 async function sendAccountEmail(type, user, inviterName) {
   const { token } = await issueToken(user.id, type);
-  const url = linkFor(token);
+  const url = linkFor(token, type, user.email);
 
   const { subject, html, text } = accountEmail({
     type,
@@ -149,9 +165,142 @@ async function inspectToken(token) {
   return { valid: true, type: record.type, name: record.user.name, email: record.user.email };
 }
 
+
+// ---------------------------------------------------------------- signup codes
+
+/** How many wrong guesses a code survives before it is burned. */
+const MAX_CODE_ATTEMPTS = 5;
+
+/** Short on purpose: the code is weak, so its lifetime carries part of the load. */
+const CODE_TTL_MINUTES = 10;
+
+/**
+ * Six digits, uniformly distributed.
+ *
+ * randomInt, not Math.random(): the code is a credential, and a predictable
+ * generator would let an attacker skip the guessing entirely. Leading zeros are
+ * kept — "007431" is a valid code, and trimming it would quietly shrink the
+ * space by a tenth.
+ */
+const generateCode = () => String(randomInt(0, 1_000_000)).padStart(6, '0');
+
+/**
+ * Issues a signup code for an invited account and emails it.
+ *
+ * Supersedes any earlier unused invitation, so a second "resend" leaves exactly
+ * one live code — the older mail is the one likelier to be sitting in a shared
+ * inbox.
+ *
+ * @throws {AppError}          MAIL_NOT_CONFIGURED
+ * @throws {NotFoundError}     no invitation for this address
+ * @throws {ConflictError}     the account is already activated
+ */
+async function sendSignupCode(email) {
+  assertMailConfigured();
+
+  const user = await prisma.user.findUnique({ where: { email } });
+
+  // Deliberately explicit, unlike /login and /forgot-password. This screen is
+  // only reachable by someone an administrator already invited, and telling a
+  // stranger "no invitation for this address" reveals far less than leaving an
+  // invited colleague staring at a form that silently refuses them.
+  if (!user) throw new NotFoundError('Invitation', email);
+  if (user.password) throw new ConflictError('ACCOUNT_ALREADY_ACTIVATED');
+  if (!user.isActive) throw new ForbiddenError('ACCOUNT_DISABLED');
+
+  const code = generateCode();
+  const token = randomBytes(32).toString('base64url');
+  const expiresAt = new Date(Date.now() + CODE_TTL_MINUTES * 60 * 1000);
+
+  await prisma.$transaction([
+    prisma.accountToken.updateMany({
+      where: { userId: user.id, type: 'INVITATION', usedAt: null },
+      data: { usedAt: new Date() },
+    }),
+    prisma.accountToken.create({
+      data: {
+        userId: user.id,
+        type: 'INVITATION',
+        tokenHash: hashToken(token),
+        codeHash: hashToken(code),
+        expiresAt,
+      },
+    }),
+  ]);
+
+  const { subject, html, text } = signupCodeEmail({
+    locale: user.locale,
+    code,
+    expiresInMinutes: CODE_TTL_MINUTES,
+  });
+
+  const { delivered } = await sendMail({ to: user.email, subject, html, text });
+  if (!delivered) logger.warn({ email: user.email, code }, 'Signup code (email delivery disabled)');
+
+  return { delivered, expiresAt };
+}
+
+/**
+ * Checks the code and completes the account in one step.
+ *
+ * Name and password arrive together with the code rather than being stored
+ * between the two screens: a half-finished account sitting in the database with
+ * a password and no verified address is exactly the state this flow exists to
+ * avoid. Nothing is written until the code is proved.
+ *
+ * @throws {UnauthorizedError} INVALID_CODE | CODE_EXPIRED | TOO_MANY_CODE_ATTEMPTS
+ */
+async function completeSignup({ email, code, name, password }) {
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) throw new UnauthorizedError('INVALID_CODE');
+  if (user.password) throw new ConflictError('ACCOUNT_ALREADY_ACTIVATED');
+  if (!user.isActive) throw new ForbiddenError('ACCOUNT_DISABLED');
+
+  const record = await prisma.accountToken.findFirst({
+    where: { userId: user.id, type: 'INVITATION', usedAt: null, codeHash: { not: null } },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  if (!record) throw new UnauthorizedError('INVALID_CODE');
+  if (record.expiresAt < new Date()) throw new UnauthorizedError('CODE_EXPIRED');
+  if (record.attempts >= MAX_CODE_ATTEMPTS) throw new UnauthorizedError('TOO_MANY_CODE_ATTEMPTS');
+
+  if (record.codeHash !== hashToken(code)) {
+    // Counted before the answer goes out, so a client that gives up mid-request
+    // still pays for the guess.
+    const { count } = await prisma.accountToken.updateMany({
+      where: { id: record.id, usedAt: null },
+      data: { attempts: { increment: 1 } },
+    });
+    if (count === 0) throw new UnauthorizedError('INVALID_CODE');
+
+    throw new UnauthorizedError(
+      record.attempts + 1 >= MAX_CODE_ATTEMPTS ? 'TOO_MANY_CODE_ATTEMPTS' : 'INVALID_CODE'
+    );
+  }
+
+  // Claimed conditionally rather than read-then-write, so two submissions
+  // racing each other cannot both complete the account.
+  const claimed = await prisma.accountToken.updateMany({
+    where: { id: record.id, usedAt: null },
+    data: { usedAt: new Date() },
+  });
+  if (claimed.count === 0) throw new UnauthorizedError('INVALID_CODE');
+
+  const passwordHash = await bcrypt.hash(password, config.bcryptRounds);
+
+  return prisma.user.update({
+    where: { id: user.id },
+    data: { name, password: passwordHash },
+  });
+}
+
 module.exports = {
   assertMailConfigured,
   sendAccountEmail,
+  sendSignupCode,
+  completeSignup,
+  CODE_TTL_MINUTES,
   setPasswordWithToken,
   inspectToken,
   TTL_HOURS,

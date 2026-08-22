@@ -382,6 +382,8 @@ Base: `/api`. All routes except `/auth/login` require a valid JWT cookie.
 | POST | `/auth/setup` | public once | First administrator on an empty database |
 | GET | `/auth/token?token=` | public | Is this emailed link still good? Does not spend it |
 | POST | `/auth/set-password` | public | Consumes an invitation or reset token (BR-11), signs in |
+| POST | `/auth/signup/request-code` | public | Emails a 6-digit code — **only** for an address an ADMIN invited |
+| POST | `/auth/signup/complete` | public | Name + password + code; activates and signs in |
 | POST | `/auth/forgot-password` | public | Always answers `{ ok: true }` — never confirms an address |
 | GET/POST | `/categories` | R: all · W: ADMIN | Tree-aware |
 | PATCH/DELETE | `/categories/:id` | ADMIN | Delete blocked if products attached |
@@ -843,11 +845,19 @@ protect; the reset left none, so the column went too.
 `2c218bc` and §8 for the endpoints. `RESEND_API_KEY` is now **required in production**:
 without it an invitation goes to the server log, which is useless to a real colleague.
 
+**Signup screen (added 2026-08-22).** A two-step `/signup` completes an invitation:
+the invited person types their own name and password, then confirms a six-digit
+code. It is invitation-gated by decision — open registration was considered and
+refused, because anyone reaching the URL would otherwise see the stock, the
+purchase prices and the margins. The code is capped at five attempts and expires
+in ten minutes; six digits is only a million combinations, so the cap, not the
+code, is what makes it safe.
+
 **Known gaps, deliberate:**
 - No alert email digest (Q8 still open — see the Phase 5 correction).
 - No settings screen.
-- No self-service account creation: an ADMIN invites, which is correct for an internal
-  team on one site.
+- No open registration: an ADMIN invites and chooses the role; the invited person
+  then completes their own account at `/signup`.
 
 ---
 

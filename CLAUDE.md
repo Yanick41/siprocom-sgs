@@ -38,7 +38,11 @@ without an explicit decision recorded in the plan.
 9. **Money uses `Decimal`**, never `Float`. Formatting via `Intl.NumberFormat`.
 10. **Dates and numbers are formatted with `Intl.*`** using the active locale — never
     manual string building.
-11. **Nobody sets another person's password.** An ADMIN invites; the invited person
+11. **Signup is invitation-only.** `/signup` is a public *screen*, not an open door:
+    the server issues a code only for an address an ADMIN already invited, and the
+    ADMIN fixes the role. Never relax that check — the application holds SIPROCOM's
+    purchase prices, margins and suppliers.
+12. **Nobody sets another person's password.** An ADMIN invites; the invited person
     chooses their own via a single-use emailed link (BR-11). `user.password` is nullable
     and null means "not yet activated" — an account in that state must stay
     indistinguishable from a missing one at `/login`.

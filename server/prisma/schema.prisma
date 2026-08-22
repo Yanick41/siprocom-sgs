@@ -128,6 +128,19 @@ model AccountToken {
   userId    String
   type      AccountTokenType
   tokenHash String           @unique
+
+  /// Six-digit code for the signup screen, stored as its SHA-256.
+  ///
+  /// Hashing buys less here than for the 256-bit link token: a million
+  /// possibilities is a lookup table an attacker builds in seconds, so a leaked
+  /// database gives up live codes either way. What protects this is `attempts`
+  /// below plus a ten-minute expiry — the hash only keeps the code out of plain
+  /// sight in backups and logs.
+  codeHash  String?
+
+  /// Capped guesses. Six digits is 1 000 000 combinations, which is minutes of
+  /// scripted traffic; without a ceiling the code would be decoration.
+  attempts  Int              @default(0)
   expiresAt DateTime
   usedAt    DateTime?
   createdAt DateTime         @default(now())

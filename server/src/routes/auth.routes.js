@@ -15,6 +15,8 @@ const { authenticate } = require('../middleware/authenticate');
 const logger = require('../lib/logger');
 const {
   sendAccountEmail,
+  sendSignupCode,
+  completeSignup,
   setPasswordWithToken,
   inspectToken,
 } = require('../services/account.service');
@@ -25,6 +27,8 @@ const {
   forgotPasswordSchema,
   setPasswordSchema,
   tokenQuerySchema,
+  signupRequestSchema,
+  signupCompleteSchema,
 } = require('../validators/auth.validator');
 
 const router = express.Router();
@@ -132,6 +136,22 @@ const tokenLimiter = rateLimit({
   limit: 60,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
+  handler: tooManyRequests,
+});
+
+/**
+ * Signup attempts. Keyed per (IP, address) like login, so one colleague
+ * fumbling a code never blocks the next person onboarding from the same office.
+ */
+const signupLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  keyGenerator: (req) => {
+    const email = String(req.body?.email ?? '').trim().toLowerCase();
+    return `${ipKeyGenerator(req.ip)}:${email}`;
+  },
   handler: tooManyRequests,
 });
 
@@ -285,6 +305,64 @@ router.post(
     }
 
     res.json({ ok: true });
+  })
+);
+
+/**
+ * Self-service signup for an invited colleague (BR-11).
+ *
+ * The administrator opens the door by inviting an address and choosing a role;
+ * the person then fills in their own name and password here and confirms a
+ * six-digit code. Two endpoints, because the screen is two steps — but nothing
+ * is written until the code is proved, so an abandoned signup leaves no
+ * half-built account behind.
+ */
+
+// POST /api/auth/signup/request-code — step 1 submitted, send the code.
+router.post(
+  '/signup/request-code',
+  signupLimiter,
+  asyncHandler(async (req, res) => {
+    const { email } = signupRequestSchema.parse(req.body);
+    const { delivered, expiresAt } = await sendSignupCode(email);
+    res.json({ emailSent: delivered, expiresAt });
+  })
+);
+
+// POST /api/auth/signup/complete — step 2 submitted, activate the account.
+router.post(
+  '/signup/complete',
+  signupLimiter,
+  asyncHandler(async (req, res) => {
+    const { email, code, firstName, lastName, password } = signupCompleteSchema.parse(req.body);
+
+    const user = await completeSignup({
+      email,
+      code,
+      // The screen asks for the two halves because that is what people expect to
+      // type; the model keeps one name, and nothing in the application needs the
+      // split back. Joining here beats two columns every screen would have to
+      // recombine.
+      name: `${firstName} ${lastName}`,
+      password,
+    });
+
+    await recordAudit({
+      userId: user.id,
+      action: 'ACTIVATE_ACCOUNT',
+      entity: 'User',
+      entityId: user.id,
+      ipAddress: clientIp(req),
+    });
+
+    // Signed in straight away: they proved the address seconds ago and chose the
+    // password themselves, so asking them to type it again is pure friction.
+    const jwtToken = jwt.sign({ sub: user.id, role: user.role }, config.jwt.secret, {
+      expiresIn: config.jwt.expiresIn,
+    });
+    res.cookie(config.jwt.cookieName, jwtToken, cookieOptions());
+
+    res.status(201).json({ user: publicUser(user) });
   })
 );
 
