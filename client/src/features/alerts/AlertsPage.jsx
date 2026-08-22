@@ -97,7 +97,7 @@ export default function AlertsPage() {
                 event.stopPropagation();
                 acknowledgeMutation.mutate(a.id);
               }}
-              className="flex size-11 items-center justify-center rounded-lg text-slate-400 hover:bg-green-50 hover:text-green-600"
+              className="flex size-11 items-center justify-center rounded-lg text-slate-400 hover:bg-emerald-50 hover:text-emerald-600"
               aria-label={t('alerts:acknowledge')}
               title={t('alerts:acknowledge')}
             >

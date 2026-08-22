@@ -64,7 +64,7 @@ export default function SetPasswordPage() {
       <div className="w-full max-w-md">
         <div className="card p-6 sm:p-8">
           <header className="mb-6 text-center">
-            <h1 className="text-2xl font-bold text-sgs-navy">{t('common:app.name')}</h1>
+            <h1 className="text-2xl font-bold text-sgs-primary">{t('common:app.name')}</h1>
             <p className="mt-1 text-sm text-slate-500">{t('common:app.subtitle')}</p>
           </header>
 

@@ -95,7 +95,7 @@ export default function ReceiptsPage() {
             type="button"
             onClick={() => setFilters({ status, page: 1 })}
             className={`min-h-11 rounded-lg px-3 text-sm font-medium ${
-              filters.status === status ? 'bg-sgs-navy text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              filters.status === status ? 'bg-sgs-primary text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
             {status ? t(`stock:status.${status}`) : t('common:filters.all')}

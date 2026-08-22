@@ -100,7 +100,7 @@ export default function AppLayout() {
                   className={({ isActive }) =>
                     `flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors ${
                       isActive
-                        ? 'bg-sgs-navy text-white'
+                        ? 'bg-sgs-primary text-white'
                         : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                     }`
                   }
@@ -131,7 +131,7 @@ export default function AppLayout() {
               {mobileOpen ? <FiX className="size-5" /> : <FiMenu className="size-5" />}
             </button>
             <div>
-              <p className="font-bold leading-tight text-sgs-navy">{t('common:app.name')}</p>
+              <p className="font-bold leading-tight text-sgs-primary">{t('common:app.name')}</p>
               <p className="hidden text-xs leading-tight text-slate-500 sm:block">
                 {t('common:app.subtitle')}
               </p>

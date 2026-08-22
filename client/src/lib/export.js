@@ -65,7 +65,7 @@ export async function exportToPdf({
   const pageWidth = doc.internal.pageSize.getWidth();
 
   doc.setFontSize(14);
-  doc.setTextColor(30, 58, 95); // SIPROCOM navy
+  doc.setTextColor(63, 98, 18); // sgs-primary
   doc.text('SIPROCOM', 14, 15);
 
   doc.setFontSize(11);
@@ -99,7 +99,7 @@ export async function exportToPdf({
     head: [columns.map((c) => pdfText(c.header))],
     body: rows.map((row) => columns.map((column) => pdfText(cellValue(row, column)))),
     styles: { fontSize: 8, cellPadding: 2 },
-    headStyles: { fillColor: [30, 58, 95], textColor: 255, fontStyle: 'bold' },
+    headStyles: { fillColor: [63, 98, 18], textColor: 255, fontStyle: 'bold' },
     alternateRowStyles: { fillColor: [248, 250, 252] },
     columnStyles: Object.fromEntries(
       columns.map((column, index) => [index, { halign: column.align === 'right' ? 'right' : 'left' }])

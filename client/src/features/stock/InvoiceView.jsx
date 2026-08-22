@@ -15,11 +15,11 @@ export default function InvoiceView({ invoice }) {
     <div id="sgs-invoice" className="bg-white p-6 text-slate-900 print:p-0">
       <header className="mb-6 flex items-start justify-between border-b border-slate-200 pb-4">
         <div>
-          <p className="text-2xl font-bold text-sgs-navy">SIPROCOM</p>
+          <p className="text-2xl font-bold text-sgs-primary">SIPROCOM</p>
           <p className="text-xs text-slate-500">{t('common:app.subtitle')}</p>
         </div>
         <div className="text-right">
-          <p className="text-lg font-semibold text-sgs-navy">{t('stock:invoice.title')}</p>
+          <p className="text-lg font-semibold text-sgs-primary">{t('stock:invoice.title')}</p>
           <p className="font-mono text-sm">{invoice.number}</p>
           <p className="text-sm text-slate-500">{invoice.date}</p>
         </div>
@@ -46,7 +46,7 @@ export default function InvoiceView({ invoice }) {
 
       <table className="w-full border-collapse text-sm">
         <thead>
-          <tr className="bg-sgs-navy text-white print:bg-slate-200 print:text-slate-900">
+          <tr className="bg-sgs-primary text-white print:bg-slate-200 print:text-slate-900">
             <th className="border border-slate-300 px-3 py-2 text-left">{t('common:fields.reference')}</th>
             <th className="border border-slate-300 px-3 py-2 text-left">{t('stock:invoice.designation')}</th>
             <th className="border border-slate-300 px-3 py-2 text-right">{t('stock:invoice.quantity')}</th>

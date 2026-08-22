@@ -2,16 +2,45 @@
 
 /*
  * Design tokens. Tailwind 4 exposes every @theme entry as a utility
- * (bg-sgs-navy, text-sgs-accent, …). Palette derived from the SIPROCOM
+ * (bg-sgs-primary, text-sgs-accent, …). Palette derived from the SIPROCOM
  * cahier des charges cover page.
  */
 @theme {
-  --color-sgs-navy: #1e3a5f;
-  --color-sgs-navy-dark: #14283f;
-  --color-sgs-navy-light: #2d5486;
-  --color-sgs-accent: #4a7ab8;
+  /*
+   * Lime and white.
+   *
+   * "Vert citron" cannot be taken literally as a surface colour: pure lime
+   * (#BFFF00) scores 1.20:1 against white text, and even lime-500 only
+   * reaches 1.98:1 — the AA floor is 4.5:1, and this is an application read
+   * on tablets in a warehouse rather than at a desk. The citron is therefore
+   * split in two. Deep lime carries text; the bright note lives where nothing
+   * sits on top of it.
+   *
+   * Every value below was measured, not picked by eye.
+   */
 
-  --color-sgs-success: #16a34a;
+  /* White text on this: 7.08:1. Buttons, table headers, the active nav item. */
+  --color-sgs-primary: #3f6212;
+
+  /* Hover and pressed. 8.73:1 — darker, so the change reads as depth. */
+  --color-sgs-primary-dark: #365314;
+
+  /* Decorative fills only: 3.09:1 carries large text at best, never a label. */
+  --color-sgs-primary-light: #65a30d;
+
+  /* Text and icons ON WHITE — the opposite constraint to the surface above,
+     which is why it is a separate token. 4.99:1, and better than the blue it
+     replaces: the old accent sat at 4.41:1, just under the line. */
+  --color-sgs-accent: #4d7c0f;
+
+  /* The actual citron. 5.79:1 on primary-dark, 1.51:1 on white — so it is for
+     highlights against the deep lime and nothing else. */
+  --color-sgs-citron: #a3e635;
+
+  /* Success moves from green to emerald. With a green brand, a green "OK"
+     badge stops reading as a status and starts reading as chrome; emerald sits
+     80° of hue away from the lime and keeps the signal legible as a signal. */
+  --color-sgs-success: #047857;
   --color-sgs-warning: #d97706;
   --color-sgs-danger: #dc2626;
   --color-sgs-info: #0284c7;
@@ -52,7 +81,7 @@
   }
 
   .btn-primary {
-    @apply bg-sgs-navy text-white hover:bg-sgs-navy-dark;
+    @apply bg-sgs-primary text-white hover:bg-sgs-primary-dark;
   }
 
   .btn-secondary {

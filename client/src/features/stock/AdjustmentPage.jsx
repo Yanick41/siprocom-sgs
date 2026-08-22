@@ -123,7 +123,7 @@ export default function AdjustmentPage() {
                   delta === null || delta === 0
                     ? 'text-slate-400'
                     : delta > 0
-                      ? 'text-green-600'
+                      ? 'text-emerald-600'
                       : 'text-red-600'
                 }`}
               >

@@ -59,7 +59,7 @@ export default function LoginPage() {
 
         <div className="card p-6 sm:p-8">
           <header className="mb-6 text-center">
-            <h1 className="text-2xl font-bold text-sgs-navy">{t('common:app.name')}</h1>
+            <h1 className="text-2xl font-bold text-sgs-primary">{t('common:app.name')}</h1>
             <p className="mt-1 text-sm text-slate-500">{t('common:app.subtitle')}</p>
           </header>
 
@@ -77,7 +77,7 @@ export default function LoginPage() {
               </p>
               <Link
                 to={`/signup?email=${encodeURIComponent(attemptedEmail)}`}
-                className="mt-3 flex min-h-11 items-center justify-center rounded-lg bg-sgs-navy px-4 font-medium text-white"
+                className="mt-3 flex min-h-11 items-center justify-center rounded-lg bg-sgs-primary px-4 font-medium text-white"
               >
                 {t('auth:login.goActivate')}
               </Link>

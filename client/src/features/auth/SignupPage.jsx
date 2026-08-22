@@ -115,7 +115,7 @@ export default function SignupPage() {
       <div className="w-full max-w-[390px] sm:max-w-[440px]">
         <div className="rounded-[20px] bg-white p-6 shadow-sm sm:p-8">
           <header className="text-center">
-            <h1 className="text-2xl font-bold text-sgs-navy">{t('common:app.name')}</h1>
+            <h1 className="text-2xl font-bold text-sgs-primary">{t('common:app.name')}</h1>
             <p className="mt-1 text-sm text-slate-500">{t('common:app.subtitle')}</p>
           </header>
 
@@ -124,7 +124,7 @@ export default function SignupPage() {
             {[1, 2].map((n) => (
               <span
                 key={n}
-                className={`h-1.5 flex-1 rounded-full ${n <= step ? 'bg-sgs-navy' : 'bg-slate-200'}`}
+                className={`h-1.5 flex-1 rounded-full ${n <= step ? 'bg-sgs-primary' : 'bg-slate-200'}`}
               />
             ))}
           </div>
@@ -275,7 +275,7 @@ export default function SignupPage() {
                 <button
                   type="submit"
                   disabled={checkInvitation.isPending}
-                  className="h-[50px] w-full rounded-[10px] bg-sgs-navy font-bold text-white disabled:opacity-60"
+                  className="h-[50px] w-full rounded-[10px] bg-sgs-primary font-bold text-white disabled:opacity-60"
                 >
                   {checkInvitation.isPending ? t('auth:signup.checking') : t('auth:signup.continue')}
                 </button>
@@ -283,7 +283,7 @@ export default function SignupPage() {
 
               <p className="mt-6 text-center text-sm text-slate-500">
                 {t('auth:signup.haveAccount')}{' '}
-                <Link to="/login" className="font-medium text-sgs-navy hover:underline">
+                <Link to="/login" className="font-medium text-sgs-primary hover:underline">
                   {t('auth:login.submit')}
                 </Link>
               </p>
@@ -331,7 +331,7 @@ export default function SignupPage() {
                         autoComplete={index === 0 ? 'one-time-code' : 'off'}
                         maxLength={CODE_LENGTH}
                         aria-label={t('auth:signup.digitLabel', { position: index + 1 })}
-                        className="h-14 w-full min-w-0 rounded-[10px] border border-slate-300 text-center text-xl font-semibold text-slate-900 focus:border-sgs-navy focus:outline-none"
+                        className="h-14 w-full min-w-0 rounded-[10px] border border-slate-300 text-center text-xl font-semibold text-slate-900 focus:border-sgs-primary focus:outline-none"
                       />
                     ))}
                   </div>
@@ -340,7 +340,7 @@ export default function SignupPage() {
                 <button
                   type="submit"
                   disabled={codeValue.length < CODE_LENGTH || complete.isPending}
-                  className="mt-6 h-[50px] w-full rounded-[10px] bg-sgs-navy font-bold text-white disabled:opacity-60"
+                  className="mt-6 h-[50px] w-full rounded-[10px] bg-sgs-primary font-bold text-white disabled:opacity-60"
                 >
                   {complete.isPending ? t('auth:signup.verifying') : t('auth:signup.verify')}
                 </button>

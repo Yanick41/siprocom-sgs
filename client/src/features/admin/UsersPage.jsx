@@ -107,7 +107,7 @@ export default function UsersPage() {
             else resetMutation.mutate(u.id);
           }}
           disabled={codeMutation.isPending || resetMutation.isPending}
-          className="min-h-11 text-sm font-medium text-sgs-navy hover:underline disabled:text-slate-400"
+          className="min-h-11 text-sm font-medium text-sgs-primary hover:underline disabled:text-slate-400"
         >
           {u.pending ? t('admin:users.newCode') : t('admin:users.resetPassword')}
         </button>

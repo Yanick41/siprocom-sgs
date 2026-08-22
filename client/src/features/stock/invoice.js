@@ -74,7 +74,7 @@ export async function downloadInvoicePdf(invoice, { t }) {
   const pageWidth = doc.internal.pageSize.getWidth();
 
   doc.setFontSize(20);
-  doc.setTextColor(30, 58, 95);
+  doc.setTextColor(63, 98, 18); // sgs-primary
   doc.setFont(undefined, 'bold');
   doc.text('SIPROCOM', 14, 20);
 
@@ -84,7 +84,7 @@ export async function downloadInvoicePdf(invoice, { t }) {
   doc.text(pdfText(t('common:app.subtitle')), 14, 26);
 
   doc.setFontSize(14);
-  doc.setTextColor(30, 58, 95);
+  doc.setTextColor(63, 98, 18); // sgs-primary
   doc.text(pdfText(t('stock:invoice.title')), pageWidth - 14, 20, { align: 'right' });
 
   doc.setFontSize(10);
@@ -139,8 +139,8 @@ export async function downloadInvoicePdf(invoice, { t }) {
     // last row even when the lines spill onto a second page.
     foot: [['', '', '', t('stock:invoice.grandTotal'), invoice.grandTotalLabel].map(pdfText)],
     styles: { fontSize: 9, cellPadding: 3 },
-    headStyles: { fillColor: [30, 58, 95], textColor: 255, fontStyle: 'bold' },
-    footStyles: { fillColor: [241, 245, 249], textColor: [30, 58, 95], fontStyle: 'bold', fontSize: 10 },
+    headStyles: { fillColor: [63, 98, 18], textColor: 255, fontStyle: 'bold' },
+    footStyles: { fillColor: [241, 245, 249], textColor: [63, 98, 18], fontStyle: 'bold', fontSize: 10 },
     columnStyles: {
       0: { cellWidth: 24 },
       1: { cellWidth: 'auto' },

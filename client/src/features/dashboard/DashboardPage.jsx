@@ -23,7 +23,7 @@ function StatCard({ icon: Icon, label, value, tone = 'navy', to }) {
     <div className="card flex items-center gap-4 p-4">
       <span
         className={`flex size-11 shrink-0 items-center justify-center rounded-lg ${
-          tone === 'danger' ? 'bg-red-50 text-sgs-danger' : 'bg-sgs-navy/10 text-sgs-navy'
+          tone === 'danger' ? 'bg-red-50 text-sgs-danger' : 'bg-sgs-primary/10 text-sgs-primary'
         }`}
       >
         <Icon className="size-5" aria-hidden="true" />
@@ -198,7 +198,7 @@ export default function DashboardPage() {
                 </div>
                 <span
                   className={`shrink-0 text-sm font-semibold ${
-                    movement.type === 'OUT' ? 'text-red-600' : 'text-green-600'
+                    movement.type === 'OUT' ? 'text-red-600' : 'text-emerald-600'
                   }`}
                 >
                   {movement.type === 'OUT' ? '−' : '+'}

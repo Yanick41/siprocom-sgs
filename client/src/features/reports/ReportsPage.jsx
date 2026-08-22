@@ -166,7 +166,7 @@ export default function ReportsPage() {
             type="button"
             onClick={() => setTab(item.id)}
             className={`min-h-11 rounded-lg px-3 text-sm font-medium ${
-              tab === item.id ? 'bg-sgs-navy text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              tab === item.id ? 'bg-sgs-primary text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
             {item.label}

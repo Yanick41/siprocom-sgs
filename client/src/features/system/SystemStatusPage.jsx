@@ -26,7 +26,7 @@ export default function SystemStatusPage() {
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center px-4 py-12">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-sgs-navy">
+          <h1 className="text-2xl font-bold tracking-tight text-sgs-primary">
             {t('common:app.name')}
           </h1>
           <p className="text-sm text-slate-500">{t('common:app.subtitle')}</p>
