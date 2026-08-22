@@ -27,7 +27,13 @@ export default function Modal({ open, onClose, title, children, footer, size = '
 
   if (!open) return null;
 
-  const width = { sm: 'max-w-md', md: 'max-w-2xl', lg: 'max-w-4xl' }[size];
+  /**
+   * `xl` exists for the document forms. A goods receipt or issue is a table
+   * being typed — product, quantity, packaging, price, total — and at 2xl the
+   * product field was narrow enough that a designation scrolled inside it
+   * while half the screen sat empty behind the overlay.
+   */
+  const width = { sm: 'max-w-md', md: 'max-w-2xl', lg: 'max-w-4xl', xl: 'max-w-6xl' }[size];
 
   return (
     <div

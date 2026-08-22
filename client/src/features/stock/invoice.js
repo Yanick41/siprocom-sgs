@@ -1,4 +1,4 @@
-import { formatCurrency, formatDate } from '@/lib/format';
+import { formatCurrency, formatDate, pdfText } from '@/lib/format';
 import { unitLabel } from '@/lib/containers';
 
 /**
@@ -79,16 +79,16 @@ export async function downloadInvoicePdf(invoice, { t }) {
   doc.setFontSize(9);
   doc.setFont(undefined, 'normal');
   doc.setTextColor(100);
-  doc.text(t('common:app.subtitle'), 14, 26);
+  doc.text(pdfText(t('common:app.subtitle')), 14, 26);
 
   doc.setFontSize(14);
   doc.setTextColor(30, 58, 95);
-  doc.text(t('stock:invoice.title'), pageWidth - 14, 20, { align: 'right' });
+  doc.text(pdfText(t('stock:invoice.title')), pageWidth - 14, 20, { align: 'right' });
 
   doc.setFontSize(10);
   doc.setTextColor(60);
-  doc.text(invoice.number, pageWidth - 14, 27, { align: 'right' });
-  doc.text(invoice.date, pageWidth - 14, 33, { align: 'right' });
+  doc.text(pdfText(invoice.number), pageWidth - 14, 27, { align: 'right' });
+  doc.text(pdfText(invoice.date), pageWidth - 14, 33, { align: 'right' });
 
   doc.setDrawColor(226, 232, 240);
   doc.line(14, 38, pageWidth - 14, 38);
@@ -99,26 +99,26 @@ export async function downloadInvoicePdf(invoice, { t }) {
   let y = 46;
 
   doc.setTextColor(100);
-  doc.text(`${t('stock:issue.recipient')} :`, 14, y);
+  doc.text(pdfText(`${t('stock:issue.recipient')} :`), 14, y);
   doc.setTextColor(30);
   doc.setFont(undefined, 'bold');
-  doc.text(invoice.recipient, 45, y);
+  doc.text(pdfText(invoice.recipient), 45, y);
   doc.setFont(undefined, 'normal');
 
   if (invoice.recipientPhone) {
     y += 5;
     doc.setTextColor(100);
-    doc.text(`${t('stock:invoice.phone')} :`, 14, y);
+    doc.text(pdfText(`${t('stock:invoice.phone')} :`), 14, y);
     doc.setTextColor(30);
-    doc.text(invoice.recipientPhone, 45, y);
+    doc.text(pdfText(invoice.recipientPhone), 45, y);
   }
 
   if (invoice.recipientAddress) {
     y += 5;
     doc.setTextColor(100);
-    doc.text(`${t('stock:invoice.address')} :`, 14, y);
+    doc.text(pdfText(`${t('stock:invoice.address')} :`), 14, y);
     doc.setTextColor(30);
-    doc.text(invoice.recipientAddress, 45, y);
+    doc.text(pdfText(invoice.recipientAddress), 45, y);
   }
 
   autoTable(doc, {
@@ -129,11 +129,13 @@ export async function downloadInvoicePdf(invoice, { t }) {
       t('stock:invoice.quantity'),
       t('stock:invoice.unitPrice'),
       t('stock:invoice.lineTotal'),
-    ]],
-    body: invoice.rows.map((row) => [row.reference, row.designation, row.quantity, row.unitPriceLabel, row.totalLabel]),
+    ].map(pdfText)],
+    body: invoice.rows.map((row) =>
+      [row.reference, row.designation, row.quantity, row.unitPriceLabel, row.totalLabel].map(pdfText)
+    ),
     // The grand total rides in the table's foot so it stays attached to the
     // last row even when the lines spill onto a second page.
-    foot: [['', '', '', t('stock:invoice.grandTotal'), invoice.grandTotalLabel]],
+    foot: [['', '', '', t('stock:invoice.grandTotal'), invoice.grandTotalLabel].map(pdfText)],
     styles: { fontSize: 9, cellPadding: 3 },
     headStyles: { fillColor: [30, 58, 95], textColor: 255, fontStyle: 'bold' },
     footStyles: { fillColor: [241, 245, 249], textColor: [30, 58, 95], fontStyle: 'bold', fontSize: 10 },
@@ -150,8 +152,8 @@ export async function downloadInvoicePdf(invoice, { t }) {
   const endY = doc.lastAutoTable.finalY + 20;
   doc.setFontSize(8);
   doc.setTextColor(120);
-  doc.text(`${t('stock:invoice.issuedBy')} ..............................`, 14, endY);
-  doc.text(`${t('stock:invoice.receivedBy')} ..............................`, pageWidth - 14, endY, {
+  doc.text(pdfText(`${t('stock:invoice.issuedBy')} ..............................`), 14, endY);
+  doc.text(pdfText(`${t('stock:invoice.receivedBy')} ..............................`), pageWidth - 14, endY, {
     align: 'right',
   });
 

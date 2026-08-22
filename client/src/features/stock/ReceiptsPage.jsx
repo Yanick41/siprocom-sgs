@@ -163,6 +163,7 @@ function ReceiptFormModal({ onClose, onCreated }) {
     <Modal
       open
       onClose={onClose}
+      size="xl"
       title={t('stock:receipt.createTitle')}
       footer={
         <>

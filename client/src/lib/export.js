@@ -14,6 +14,8 @@
  * who never exports anything. They load on the first click instead.
  */
 
+
+import { pdfText } from '@/lib/format';
 const cellValue = (row, column) => {
   const value = column.value ? column.value(row) : row[column.key];
   return value === undefined || value === null ? '' : value;
@@ -68,21 +70,23 @@ export async function exportToPdf({
 
   doc.setFontSize(11);
   doc.setTextColor(60);
-  doc.text(title, 14, 22);
+  doc.text(pdfText(title), 14, 22);
 
   if (subtitle) {
     doc.setFontSize(9);
     doc.setTextColor(120);
-    doc.text(subtitle, 14, 27);
+    doc.text(pdfText(subtitle), 14, 27);
   }
 
   doc.setFontSize(8);
   doc.setTextColor(150);
   doc.text(
-    new Intl.DateTimeFormat(locale === 'en' ? 'en-GB' : 'fr-FR', {
-      dateStyle: 'short',
-      timeStyle: 'short',
-    }).format(new Date()),
+    pdfText(
+      new Intl.DateTimeFormat(locale === 'en' ? 'en-GB' : 'fr-FR', {
+        dateStyle: 'short',
+        timeStyle: 'short',
+      }).format(new Date())
+    ),
     pageWidth - 14,
     15,
     { align: 'right' }
@@ -90,8 +94,10 @@ export async function exportToPdf({
 
   autoTable(doc, {
     startY: subtitle ? 32 : 27,
-    head: [columns.map((c) => c.header)],
-    body: rows.map((row) => columns.map((column) => String(cellValue(row, column)))),
+    // Same WinAnsi trap as the invoice: fr-FR separates thousands with a
+    // narrow no-break space the built-in fonts cannot draw.
+    head: [columns.map((c) => pdfText(c.header))],
+    body: rows.map((row) => columns.map((column) => pdfText(cellValue(row, column)))),
     styles: { fontSize: 8, cellPadding: 2 },
     headStyles: { fillColor: [30, 58, 95], textColor: 255, fontStyle: 'bold' },
     alternateRowStyles: { fillColor: [248, 250, 252] },

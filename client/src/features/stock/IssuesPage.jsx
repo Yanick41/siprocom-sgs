@@ -209,6 +209,7 @@ function IssueFormModal({ onClose, onCreated }) {
     <Modal
       open
       onClose={onClose}
+      size="xl"
       title={t('stock:issue.createTitle')}
       footer={
         <>

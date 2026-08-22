@@ -23,6 +23,22 @@ export const formatCurrency = (value, lng) =>
     maximumFractionDigits: CURRENCY_DECIMALS,
   });
 
+/**
+ * Makes a formatted string safe for jsPDF's built-in fonts.
+ *
+ * French formatting separates thousands with a NARROW NO-BREAK SPACE
+ * (U+202F) and puts a NO-BREAK SPACE (U+00A0) before the currency. The
+ * standard PDF fonts are WinAnsi-encoded and have no glyph for either, so
+ * jsPDF emitted stray slashes: "72 300 F CFA" printed as "7 2 / 3 0 0 F / C
+ * F A", which is how an invoice reaches a customer looking broken.
+ *
+ * Applied at the PDF boundary rather than in the formatters, because on
+ * screen those characters are exactly right — they are what stops a number
+ * wrapping across a line.
+ */
+export const pdfText = (value) =>
+  String(value ?? '').replace(/[   ]/g, ' ');
+
 export const formatQuantity = (value, lng) =>
   formatNumber(value, lng, { maximumFractionDigits: 0 });
 
