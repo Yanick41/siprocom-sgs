@@ -5,8 +5,10 @@ const express = require('express');
 const { z } = require('zod');
 
 const prisma = require('../lib/prisma');
-const logger = require('../lib/logger');
-const { assertMailConfigured, sendAccountEmail } = require('../services/account.service');
+const {
+  issueActivationCode,
+  issuePasswordResetLink,
+} = require('../services/account.service');
 const { NotFoundError, ConflictError } = require('../lib/errors');
 const { recordAudit, clientIp } = require('../lib/audit');
 const { asyncHandler } = require('../middleware/errorHandler');
@@ -70,19 +72,19 @@ router.get(
 /**
  * POST /api/users — invites a colleague.
  *
- * The account is created without a password and an invitation link is emailed;
- * the invited person chooses their own. The administrator never types, sees or
- * has to pass on somebody else's password, which is the point: a secret spoken
- * across a desk is a secret two people know.
+ * The account is created without a password and the response carries a
+ * one-time activation code. There is no email in this system: SIPROCOM is one
+ * site, so the administrator reads the code out or writes it down, and the
+ * colleague chooses their own password at /signup. Nobody ever types somebody
+ * else's password (BR-11).
+ *
+ * The code is returned exactly once. It is stored only as a hash, so a lost
+ * code is regenerated below, never recovered.
  */
 router.post(
   '/',
   asyncHandler(async (req, res) => {
     const data = createUserSchema.parse(req.body);
-
-    // Checked before the row is written: the account would otherwise exist with
-    // its address taken and no way for anyone to activate it.
-    assertMailConfigured();
 
     let user;
     try {
@@ -92,22 +94,7 @@ router.post(
       throw error;
     }
 
-    // A mail outage must not roll back the account — the address would be taken
-    // with nothing to show for it. Resend exists for exactly this case.
-    //
-    // The reason is handed back rather than only logged. "The invitation was not
-    // sent" leaves an administrator with nowhere to go, while the provider's own
-    // words ("domain is not verified") name the fix. This route is ADMIN-only
-    // and the message describes our configuration, not the recipient, so there
-    // is nothing here to withhold.
-    let delivered = false;
-    let deliveryError;
-    try {
-      ({ delivered } = await sendAccountEmail('INVITATION', user, req.user.name));
-    } catch (error) {
-      logger.error({ err: error, email: user.email }, 'Failed to send invitation');
-      deliveryError = error.message;
-    }
+    const { code, expiresAt } = await issueActivationCode(user.email);
 
     await recordAudit({
       userId: req.user.id,
@@ -118,43 +105,64 @@ router.post(
       ipAddress: clientIp(req),
     });
 
-    res.status(201).json({ ...publicUser(user), invitationSent: delivered, deliveryError });
+    res.status(201).json({ ...publicUser(user), activationCode: code, codeExpiresAt: expiresAt });
   })
 );
 
-/** POST /api/users/:id/resend-invitation — for the mail that never arrived. */
+/**
+ * POST /api/users/:id/activation-code — a fresh code for a pending account.
+ *
+ * Replaces "resend the invitation": there is nothing to resend, so this mints a
+ * new code and invalidates the last one. Used when the first code expired, was
+ * mistyped five times, or was simply lost.
+ */
 router.post(
-  '/:id/resend-invitation',
+  '/:id/activation-code',
   asyncHandler(async (req, res) => {
     const { id } = idParamSchema.parse(req.params);
 
-    assertMailConfigured();
-
     const user = await prisma.user.findUnique({ where: { id } });
     if (!user) throw new NotFoundError('User', id);
-    if (user.password) throw new ConflictError('ACCOUNT_ALREADY_ACTIVATED');
 
-    let delivered = false;
-    let deliveryError;
-    try {
-      ({ delivered } = await sendAccountEmail('INVITATION', user, req.user.name));
-    } catch (error) {
-      logger.error({ err: error, email: user.email }, 'Failed to resend invitation');
-      deliveryError = error.message;
-    }
+    const { code, expiresAt } = await issueActivationCode(user.email);
 
     await recordAudit({
       userId: req.user.id,
-      action: 'RESEND_INVITATION',
+      action: 'REISSUE_ACTIVATION_CODE',
       entity: 'User',
       entityId: id,
       ipAddress: clientIp(req),
     });
 
-    res.json({ invitationSent: delivered, deliveryError });
+    res.json({ activationCode: code, codeExpiresAt: expiresAt });
   })
 );
 
+/**
+ * POST /api/users/:id/password-reset-link — for a colleague who is locked out.
+ *
+ * Self-service recovery went with the email. The administrator produces a
+ * one-time link instead and passes it on; the person still chooses their own
+ * password, so BR-11 holds. A link rather than a code because the account
+ * already exists — they land straight on "choose a new password".
+ */
+router.post(
+  '/:id/password-reset-link',
+  asyncHandler(async (req, res) => {
+    const { id } = idParamSchema.parse(req.params);
+    const { url, expiresAt } = await issuePasswordResetLink(id);
+
+    await recordAudit({
+      userId: req.user.id,
+      action: 'ISSUE_PASSWORD_RESET_LINK',
+      entity: 'User',
+      entityId: id,
+      ipAddress: clientIp(req),
+    });
+
+    res.json({ resetUrl: url, expiresAt });
+  })
+);
 // PATCH /api/users/:id
 router.patch(
   '/:id',

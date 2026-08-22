@@ -99,7 +99,7 @@ learning curve and patterns can be reused directly.
 | Auth | **JWT in httpOnly cookie** + **bcryptjs** | Meets "chiffrement des mots de passe"; httpOnly beats localStorage for XSS safety |
 | Validation | **zod** | Shared schemas with the client |
 | Logging | **pino** | Structured logs, cheap |
-| Transactional email | **Resend** (free 3 000 mails/mo) | Account invitations and password resets (BR-11). Alert digests are *not* built — see Phase 5 |
+| Transactional email | **None** | Removed 2026-08-22. Codes and reset links are handed over by the administrator — see Phase 9 |
 | Rate limiting | **express-rate-limit** on `/auth/*` | Brute-force protection |
 | Scheduled alert sweep | **Vercel Cron** (free) or `node-cron` if self-hosted | §7.3 "surveille en continu" |
 
@@ -382,9 +382,8 @@ Base: `/api`. All routes except `/auth/login` require a valid JWT cookie.
 | POST | `/auth/setup` | public once | First administrator on an empty database |
 | GET | `/auth/token?token=` | public | Is this emailed link still good? Does not spend it |
 | POST | `/auth/set-password` | public | Consumes an invitation or reset token (BR-11), signs in |
-| POST | `/auth/signup/request-code` | public | Emails a 6-digit code — **only** for an address an ADMIN invited |
+| POST | `/auth/signup/check` | public | Is there a pending invitation for this address? Sends nothing |
 | POST | `/auth/signup/complete` | public | Name + password + code; activates and signs in |
-| POST | `/auth/forgot-password` | public | Always answers `{ ok: true }` — never confirms an address |
 | GET/POST | `/categories` | R: all · W: ADMIN | Tree-aware |
 | PATCH/DELETE | `/categories/:id` | ADMIN | Delete blocked if products attached |
 | GET/POST | `/products` | R: all · W: ADMIN, MAGASINIER | Filters: category, supplier, status, stock level |
@@ -412,7 +411,8 @@ Base: `/api`. All routes except `/auth/login` require a valid JWT cookie.
 | GET | `/reports/dashboard` | all | KPI payload, single round trip |
 | GET | `/users` | ADMIN | Reports `pending` for accounts not yet activated |
 | POST | `/users` | ADMIN | **Invites** — creates without a password, emails a link (BR-11) |
-| POST | `/users/:id/resend-invitation` | ADMIN | For the mail that never arrived |
+| POST | `/users/:id/activation-code` | ADMIN | Mints a fresh code and returns it on screen |
+| POST | `/users/:id/password-reset-link` | ADMIN | One-time link for a locked-out colleague |
 | PATCH | `/users/:id` | ADMIN | Name, email, role, status, locale. **Not** the password |
 | GET | `/audit-logs` | ADMIN | Paginated, filterable |
 

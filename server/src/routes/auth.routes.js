@@ -8,14 +8,16 @@ const { randomUUID } = require('node:crypto');
 
 const config = require('../config/env');
 const prisma = require('../lib/prisma');
-const { UnauthorizedError, ForbiddenError, ConflictError } = require('../lib/errors');
+const {
+  UnauthorizedError,
+  ForbiddenError,
+  ConflictError,
+  NotFoundError,
+} = require('../lib/errors');
 const { recordAudit, clientIp } = require('../lib/audit');
 const { asyncHandler } = require('../middleware/errorHandler');
 const { authenticate } = require('../middleware/authenticate');
-const logger = require('../lib/logger');
 const {
-  sendAccountEmail,
-  sendSignupCode,
   completeSignup,
   setPasswordWithToken,
   inspectToken,
@@ -24,7 +26,6 @@ const {
   loginSchema,
   updateLocaleSchema,
   setupSchema,
-  forgotPasswordSchema,
   setPasswordSchema,
   tokenQuerySchema,
   signupRequestSchema,
@@ -100,24 +101,6 @@ const loginIpLimiter = rateLimit({
   standardHeaders: 'draft-7',
   legacyHeaders: false,
   skipSuccessfulRequests: true,
-  handler: tooManyRequests,
-});
-
-/**
- * Password-reset requests. Successful ones count too, unlike login: the abuse
- * here is mailbombing an address, and skipping successes would leave exactly
- * that uncapped. Keyed per address as well as per IP, so one person requesting
- * a reset does not stop a colleague doing the same from the next desk.
- */
-const forgotPasswordLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000,
-  limit: 10,
-  standardHeaders: 'draft-7',
-  legacyHeaders: false,
-  keyGenerator: (req) => {
-    const email = String(req.body?.email ?? '').trim().toLowerCase();
-    return `${ipKeyGenerator(req.ip)}:${email}`;
-  },
   handler: tooManyRequests,
 });
 
@@ -284,30 +267,6 @@ router.post(
   })
 );
 
-// POST /api/auth/forgot-password
-router.post(
-  '/forgot-password',
-  forgotPasswordLimiter,
-  asyncHandler(async (req, res) => {
-    const { email } = forgotPasswordSchema.parse(req.body);
-
-    const user = await prisma.user.findUnique({ where: { email } });
-
-    // Always the same answer. Reporting "no such account" would turn this into
-    // the address enumerator that /login is careful not to be. A deactivated
-    // account is skipped for the same reason it cannot log in.
-    if (user?.isActive) {
-      try {
-        await sendAccountEmail('PASSWORD_RESET', user);
-      } catch (error) {
-        logger.error({ err: error, email }, 'Failed to send password reset email');
-      }
-    }
-
-    res.json({ ok: true });
-  })
-);
-
 /**
  * Self-service signup for an invited colleague (BR-11).
  *
@@ -318,14 +277,23 @@ router.post(
  * half-built account behind.
  */
 
-// POST /api/auth/signup/request-code — step 1 submitted, send the code.
+// POST /api/auth/signup/check — step 1 submitted: is there an invitation?
+//
+// It sends nothing. The code was handed to the administrator when they
+// invited; this only tells the screen whether to move on, so nobody fills in
+// a whole form before learning there is nothing waiting for them.
 router.post(
-  '/signup/request-code',
+  '/signup/check',
   signupLimiter,
   asyncHandler(async (req, res) => {
     const { email } = signupRequestSchema.parse(req.body);
-    const { delivered, expiresAt } = await sendSignupCode(email);
-    res.json({ emailSent: delivered, expiresAt });
+
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) throw new NotFoundError('Invitation', email);
+    if (user.password) throw new ConflictError('ACCOUNT_ALREADY_ACTIVATED');
+    if (!user.isActive) throw new ForbiddenError('ACCOUNT_DISABLED');
+
+    res.json({ ok: true });
   })
 );
 

@@ -15,8 +15,7 @@ export const authApi = {
   setup: (data) => api.post('/auth/setup', data),
   inspectToken: (token) => api.get(`/auth/token${qs({ token })}`),
   setPassword: (data) => api.post('/auth/set-password', data),
-  forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
-  signupRequestCode: (email) => api.post('/auth/signup/request-code', { email }),
+  signupCheck: (email) => api.post('/auth/signup/check', { email }),
   signupComplete: (data) => api.post('/auth/signup/complete', data),
   login: (credentials) => api.post('/auth/login', credentials),
   logout: () => api.post('/auth/logout'),
@@ -95,7 +94,8 @@ export const usersApi = {
   list: (params) => api.get(`/users${qs(params)}`),
   create: (data) => api.post('/users', data),
   update: ({ id, ...data }) => api.patch(`/users/${id}`, data),
-  resendInvitation: (id) => api.post(`/users/${id}/resend-invitation`),
+  activationCode: (id) => api.post(`/users/${id}/activation-code`),
+  passwordResetLink: (id) => api.post(`/users/${id}/password-reset-link`),
 };
 
 export const auditApi = {

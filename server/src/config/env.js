@@ -112,14 +112,13 @@ const config = {
   clientUrls,
 
   /**
-   * Where the links we email point. The allowlist above may hold several origins
-   * (apex and www, say) but a confirmation link needs exactly one, so the first
-   * entry wins. Falls back to the dev server, which is where it has to work when
-   * no CLIENT_URL is set at all.
+   * Base of the password-reset links an administrator hands out. The allowlist
+   * above may hold several origins (apex and www, say) but a link needs exactly
+   * one, so the first entry wins. Falls back to the dev server, which is where
+   * it has to work when no CLIENT_URL is set at all.
    *
-   * Getting this wrong is silent and total: the mail still sends, and every
-   * recipient gets a link that goes nowhere. `npm run test:email` prints it for
-   * that reason.
+   * Get it wrong and every link an administrator copies points somewhere the
+   * colleague cannot reach, with nothing to say so.
    */
   appUrl: clientUrls[0] || 'http://localhost:5280',
 
@@ -140,27 +139,6 @@ const config = {
   // Protects the internal cron endpoints (alert sweep).
   cronSecret: optional('CRON_SECRET', ''),
 
-  mail: {
-    /**
-     * Deliberately NOT required at boot, even in production.
-     *
-     * It was, briefly. The reasoning was that an invitation written to a log
-     * file is useless to a real colleague, so the operator should find out at
-     * deploy time rather than at the first invitation. That much is true — but
-     * the punishment was wrong: refusing to boot takes down stock entry,
-     * validation, the dashboard and every report because *email* is
-     * unconfigured. A magasinier who cannot record a delivery this morning is a
-     * far worse outcome than an administrator who cannot invite a colleague.
-     *
-     * So the failure is moved to where it belongs. Boot warns loudly, and the
-     * endpoints that actually need mail refuse with MAIL_NOT_CONFIGURED rather
-     * than reporting success over a message nobody received.
-     */
-    apiKey: optional('RESEND_API_KEY', ''),
-    from: optional('MAIL_FROM', 'SIPROCOM SGS <onboarding@resend.dev>'),
-    enabled: Boolean(optional('RESEND_API_KEY', '')),
-  },
-
   defaultLocale: optional('DEFAULT_LOCALE', 'fr'),
 
   // In-process daily sweep. Off by default: on a multi-instance deployment every
@@ -175,14 +153,6 @@ if (isProduction) {
   const warnings = [];
   if (!config.cronSecret) {
     warnings.push('CRON_SECRET is empty — POST /api/alerts/sweep will reject every call.');
-  }
-  if (!config.mail.enabled) {
-    warnings.push(
-      'RESEND_API_KEY is empty — no email can be sent. Inviting a user refuses ' +
-        'with MAIL_NOT_CONFIGURED, and a password-reset request still answers ok ' +
-        '(it must never disclose whether an address exists) but delivers nothing. ' +
-        'Everything that is not email keeps working.'
-    );
   }
   if (config.jwt.secret.length < 32) {
     warnings.push('JWT_SECRET is shorter than 32 characters — generate a longer one.');

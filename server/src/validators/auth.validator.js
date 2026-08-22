@@ -22,10 +22,6 @@ const setupSchema = z.object({
   locale: z.enum(['fr', 'en']).default('fr'),
 });
 
-const forgotPasswordSchema = z.object({
-  email: z.string().trim().toLowerCase().email(),
-});
-
 const tokenQuerySchema = z.object({
   token: z.string().min(1).max(500),
 });
@@ -70,7 +66,6 @@ module.exports = {
   loginSchema,
   updateLocaleSchema,
   setupSchema,
-  forgotPasswordSchema,
   tokenQuerySchema,
   setPasswordSchema,
   signupRequestSchema,

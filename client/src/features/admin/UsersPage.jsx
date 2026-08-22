@@ -33,25 +33,28 @@ export default function UsersPage() {
   });
 
   /**
-   * A failed send is reported with the provider's own words when there are any.
-   * "The invitation was not sent" leaves an administrator with nowhere to go,
-   * while "domain is not verified" names the fix. Held longer on screen than a
-   * success, because it has to be read rather than noticed.
+   * The credential being handed over, or null.
+   *
+   * There is no email in this system, so the administrator reads the code out or
+   * writes it down. It is stored only as a hash, so the dialog below is the only
+   * place it will ever appear — closing it without noting the value means
+   * issuing a new one, which is what the button on each row does.
    */
-  const reportInvitation = (result) => {
-    if (result.invitationSent) return toast.success(t('admin:users.toast.invitationSent'));
+  const [handout, setHandout] = useState(null);
 
-    return toast.error(
-      result.deliveryError
-        ? `${t('admin:users.toast.invitationNotDelivered')} — ${result.deliveryError}`
-        : t('admin:users.toast.invitationNotDelivered'),
-      { duration: 12000 }
-    );
-  };
+  const findUser = (id) => (query.data?.items ?? []).find((u) => u.id === id);
 
-  const resendMutation = useMutation({
-    mutationFn: usersApi.resendInvitation,
-    onSuccess: reportInvitation,
+  const codeMutation = useMutation({
+    mutationFn: usersApi.activationCode,
+    onSuccess: (result, id) =>
+      setHandout({ kind: 'code', value: result.activationCode, user: findUser(id) }),
+    onError: (error) => toast.error(translateError(error)),
+  });
+
+  const resetMutation = useMutation({
+    mutationFn: usersApi.passwordResetLink,
+    onSuccess: (result, id) =>
+      setHandout({ kind: 'link', value: result.resetUrl, user: findUser(id) }),
     onError: (error) => toast.error(translateError(error)),
   });
 
@@ -91,22 +94,24 @@ export default function UsersPage() {
         ),
     },
     {
-      key: 'invite',
+      key: 'credentials',
       header: '',
-      render: (u) =>
-        u.pending ? (
-          <button
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation(); // the row itself opens the edit form
-              resendMutation.mutate(u.id);
-            }}
-            disabled={resendMutation.isPending}
-            className="text-sm font-medium text-sgs-navy hover:underline"
-          >
-            {t('admin:users.resendInvitation')}
-          </button>
-        ) : null,
+      // A pending account needs a code to activate; an active one needs a reset
+      // link when its owner is locked out. Same gesture, different artefact.
+      render: (u) => (
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation(); // the row itself opens the edit form
+            if (u.pending) codeMutation.mutate(u.id);
+            else resetMutation.mutate(u.id);
+          }}
+          disabled={codeMutation.isPending || resetMutation.isPending}
+          className="min-h-11 text-sm font-medium text-sgs-navy hover:underline disabled:text-slate-400"
+        >
+          {u.pending ? t('admin:users.newCode') : t('admin:users.resetPassword')}
+        </button>
+      ),
     },
   ];
 
@@ -157,15 +162,82 @@ export default function UsersPage() {
             setEditing(null);
             queryClient.invalidateQueries({ queryKey: ['users'] });
 
-            // On creation the account is only half the story: it is unusable
-            // until the invitation arrives, so the mail result is what the
-            // administrator actually needs to know.
-            if (wasCreate) return reportInvitation(result);
+            // On creation the account is only half the story: it stays unusable
+            // until someone passes the code on, so that is what gets shown.
+            if (wasCreate) {
+              setHandout({ kind: 'code', value: result.activationCode, user: result });
+              return;
+            }
             toast.success(t('admin:users.toast.updated'));
           }}
         />
       )}
+
+      {handout && <CredentialModal handout={handout} onClose={() => setHandout(null)} />}
     </div>
+  );
+}
+
+/**
+ * Shows a code or a reset link once, with a copy button.
+ *
+ * Deliberately a blocking dialog rather than a toast: the value cannot be
+ * retrieved again, so it must not slide away while the administrator is looking
+ * elsewhere.
+ */
+function CredentialModal({ handout, onClose }) {
+  const { t } = useTranslation(['admin', 'common']);
+  const [copied, setCopied] = useState(false);
+
+  const isCode = handout.kind === 'code';
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(handout.value);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard access can be refused — insecure origin, or a permission the
+      // browser withholds. The value is on screen and selectable, so this is a
+      // convenience rather than the only way out.
+      toast.error(t('admin:users.copyFailed'));
+    }
+  };
+
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      size="sm"
+      title={isCode ? t('admin:users.codeTitle') : t('admin:users.resetTitle')}
+      footer={
+        <button type="button" onClick={onClose} className="btn-primary">
+          {t('common:actions.close')}
+        </button>
+      }
+    >
+      <p className="text-sm text-slate-600">
+        {isCode
+          ? t('admin:users.codeBody', { name: handout.user?.name, email: handout.user?.email })
+          : t('admin:users.resetBody', { name: handout.user?.name })}
+      </p>
+
+      <p
+        className={`mt-4 select-all rounded-lg bg-slate-50 p-4 text-center font-mono text-slate-900 ${
+          isCode ? 'text-3xl font-bold tracking-[0.3em]' : 'break-all text-xs'
+        }`}
+      >
+        {handout.value}
+      </p>
+
+      <button type="button" onClick={copy} className="btn-secondary mt-4 w-full">
+        {copied ? t('admin:users.copied') : t('admin:users.copy')}
+      </button>
+
+      <p className="mt-4 rounded-lg bg-amber-50 p-3 text-xs text-amber-900">
+        {t('admin:users.handoutWarning')}
+      </p>
+    </Modal>
   );
 }
 

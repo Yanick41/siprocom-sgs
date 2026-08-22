@@ -22,7 +22,6 @@
     "db:reset": "prisma migrate reset",
     "test:stock": "node scripts/test-stock-engine.js",
     "demo-data": "node scripts/demo-data.js",
-    "test:email": "node scripts/test-email.js",
     "format": "prettier --write \"**/*.{js,json,md}\"",
     "doctor": "npm --prefix .. run doctor",
     "stop": "npm --prefix .. run stop",

@@ -57,13 +57,20 @@
     "searchPlaceholder": "Nom ou email…",
     "toast": {
       "created": "Utilisateur créé",
-      "updated": "Utilisateur mis à jour",
-      "invitationSent": "Invitation envoyée",
-      "invitationNotDelivered": "Compte créé, mais l'email n'a pas pu être envoyé. Vérifiez la configuration."
+      "updated": "Utilisateur mis à jour"
     },
     "pending": "En attente",
-    "resendInvitation": "Renvoyer l'invitation",
-    "invitationNotice": "Un lien d'invitation sera envoyé à cette adresse. La personne y choisira elle-même son mot de passe — vous n'avez pas à en définir un."
+    "invitationNotice": "Un code d'activation s'affichera après la création. Communiquez-le à la personne : elle choisira elle-même son mot de passe. Vous n'avez pas à en définir un.",
+    "newCode": "Nouveau code",
+    "resetPassword": "Réinitialiser le mot de passe",
+    "codeTitle": "Code d'activation",
+    "codeBody": "Communiquez ce code à {{name}} ({{email}}). La personne le saisira sur la page de création de compte et choisira son mot de passe.",
+    "resetTitle": "Lien de réinitialisation",
+    "resetBody": "Transmettez ce lien à {{name}}. Il permet de choisir un nouveau mot de passe et expire dans 2 heures.",
+    "copy": "Copier",
+    "copied": "Copié",
+    "copyFailed": "Copie impossible — sélectionnez la valeur à la main.",
+    "handoutWarning": "Cette valeur ne s'affichera qu'une seule fois. Notez-la avant de fermer : elle n'est pas conservée en clair, il faudra en générer une nouvelle."
   },
   "audit": {
     "title": "Journal d'audit",

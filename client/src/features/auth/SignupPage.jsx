@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
@@ -9,7 +9,6 @@ import { authApi } from '@/api/resources';
 import { useErrorMessage } from '@/hooks/useErrorMessage';
 import FormField from '@/components/FormField';
 
-const RESEND_COOLDOWN_SECONDS = 60;
 const CODE_LENGTH = 6;
 
 /**
@@ -36,7 +35,6 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [code, setCode] = useState(Array(CODE_LENGTH).fill(''));
-  const [cooldown, setCooldown] = useState(0);
 
   const codeInputs = useRef([]);
 
@@ -50,8 +48,8 @@ export default function SignupPage() {
     defaultValues: {
       firstName: '',
       lastName: '',
-      // Pre-filled when the invitation email links here, so nobody retypes the
-      // address the administrator already chose.
+      // Pre-filled when the administrator hands over a link carrying the address,
+      // so nobody retypes what was already chosen for them.
       email: searchParams.get('email') ?? '',
       password: '',
       confirm: '',
@@ -61,20 +59,11 @@ export default function SignupPage() {
   const password = watch('password') ?? '';
   const email = watch('email') ?? '';
 
-  // A courtesy to the mail provider and a hint that the last message may still
-  // be in flight. The server enforces its own limit regardless.
-  useEffect(() => {
-    if (cooldown <= 0) return undefined;
-    const timer = setTimeout(() => setCooldown((value) => value - 1), 1000);
-    return () => clearTimeout(timer);
-  }, [cooldown]);
-
-  const requestCode = useMutation({
-    mutationFn: authApi.signupRequestCode,
+  const checkInvitation = useMutation({
+    mutationFn: authApi.signupCheck,
     onSuccess: () => {
       setSubmitError(null);
       setStep(2);
-      setCooldown(RESEND_COOLDOWN_SECONDS);
       setTimeout(() => codeInputs.current[0]?.focus(), 50);
     },
     onError: setSubmitError,
@@ -161,7 +150,7 @@ export default function SignupPage() {
               <form
                 onSubmit={handleSubmit((values) => {
                   setSubmitError(null);
-                  requestCode.mutate(values.email);
+                  checkInvitation.mutate(values.email);
                 })}
                 className="mt-6 space-y-5"
                 noValidate
@@ -285,10 +274,10 @@ export default function SignupPage() {
 
                 <button
                   type="submit"
-                  disabled={requestCode.isPending}
+                  disabled={checkInvitation.isPending}
                   className="h-[50px] w-full rounded-[10px] bg-sgs-navy font-bold text-white disabled:opacity-60"
                 >
-                  {requestCode.isPending ? t('auth:signup.sending') : t('auth:signup.continue')}
+                  {checkInvitation.isPending ? t('auth:signup.checking') : t('auth:signup.continue')}
                 </button>
               </form>
 
@@ -357,21 +346,8 @@ export default function SignupPage() {
                 </button>
               </form>
 
-              <p className="mt-4 text-center text-sm text-slate-500">
-                {t('auth:signup.nothingReceived')}{' '}
-                <button
-                  type="button"
-                  disabled={cooldown > 0 || requestCode.isPending}
-                  onClick={() => {
-                    setSubmitError(null);
-                    requestCode.mutate(email);
-                  }}
-                  className="font-medium text-sgs-navy hover:underline disabled:text-slate-400 disabled:no-underline"
-                >
-                  {cooldown > 0
-                    ? t('auth:signup.resendIn', { seconds: cooldown })
-                    : t('auth:signup.resend')}
-                </button>
+              <p className="mt-4 rounded-lg bg-slate-50 p-3 text-center text-xs text-slate-500">
+                {t('auth:signup.codeFromAdmin')}
               </p>
 
               <button

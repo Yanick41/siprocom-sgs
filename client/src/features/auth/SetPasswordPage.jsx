@@ -81,13 +81,10 @@ export default function SetPasswordPage() {
                   : t('auth:setPassword.invalidTitle')}
               </h2>
               <p className="mb-6 text-sm text-slate-500">{t('auth:setPassword.invalidBody')}</p>
-              <Link to="/forgot-password" className="btn-primary inline-flex w-full justify-center">
-                {t('auth:forgot.submit')}
-              </Link>
-              <Link
-                to="/login"
-                className="mt-4 inline-block text-sm font-medium text-sgs-navy hover:underline"
-              >
+              <p className="mb-6 rounded-lg bg-slate-50 p-3 text-xs text-slate-500">
+                {t('auth:setPassword.askAdmin')}
+              </p>
+              <Link to="/login" className="btn-primary inline-flex w-full justify-center">
                 {t('auth:setPassword.backToLogin')}
               </Link>
             </div>

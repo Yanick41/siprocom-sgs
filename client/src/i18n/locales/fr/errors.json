@@ -36,11 +36,11 @@
   "TOKEN_EXPIRED": "Ce lien a expiré. Demandez-en un nouveau.",
   "EMAIL_ALREADY_REGISTERED": "Cette adresse email est déjà utilisée par un autre compte.",
   "ACCOUNT_ALREADY_ACTIVATED": "Ce compte est déjà activé.",
-  "MAIL_NOT_CONFIGURED": "L'envoi d'emails n'est pas configuré sur le serveur. Impossible d'inviter un utilisateur ou de réinitialiser un mot de passe tant que la clé RESEND_API_KEY n'est pas renseignée.",
   "INVALID_CODE": "Code incorrect. Vérifiez les 6 chiffres reçus par email.",
   "CODE_EXPIRED": "Ce code a expiré. Demandez-en un nouveau.",
   "TOO_MANY_CODE_ATTEMPTS": "Trop de codes erronés. Ce code est désormais invalide — demandez-en un nouveau.",
   "PASSWORD_NEEDS_UPPERCASE": "Le mot de passe doit contenir au moins une majuscule.",
   "PASSWORD_NEEDS_LOWERCASE": "Le mot de passe doit contenir au moins une minuscule.",
-  "PASSWORD_NEEDS_DIGIT": "Le mot de passe doit contenir au moins un chiffre."
+  "PASSWORD_NEEDS_DIGIT": "Le mot de passe doit contenir au moins un chiffre.",
+  "ACCOUNT_NOT_ACTIVATED": "Ce compte n'a jamais été activé. Générez plutôt un code d'activation."
 }
