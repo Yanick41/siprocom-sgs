@@ -18,6 +18,26 @@ import { buildInvoice, downloadInvoicePdf } from './invoice';
 
 const STATUS_TONE = { DRAFT: 'neutral', VALIDATED: 'success', CANCELLED: 'danger' };
 
+/**
+ * Prints, with the document number in the browser's page header.
+ *
+ * Browsers put the document title and the URL in the printed margins and give
+ * no way to remove them. What they do take is whatever title is set at the
+ * moment printing starts — so a sheet that would have read "SIPROCOM — SGS"
+ * reads "BS-2026-0226" instead, which is the one thing worth having up there.
+ * The title is restored straight after; window.print() blocks until the dialog
+ * closes.
+ */
+function printInvoice(number) {
+  const previous = document.title;
+  document.title = number;
+  try {
+    window.print();
+  } finally {
+    document.title = previous;
+  }
+}
+
 export default function IssuesPage() {
   const { t, i18n } = useTranslation(['stock', 'common']);
   const lng = i18n.resolvedLanguage;
@@ -357,7 +377,7 @@ function IssueDetailModal({ id, onClose, canValidate, canCancel, isAdmin, onVali
                 moved nothing and must not be handed to a customer. */}
             {doc.status === 'VALIDATED' && invoice && (
               <>
-                <button type="button" onClick={() => window.print()} className="btn-secondary">
+                <button type="button" onClick={() => printInvoice(invoice.number)} className="btn-secondary">
                   <FiPrinter className="size-4" />
                   {t('stock:invoice.print')}
                 </button>
