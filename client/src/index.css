@@ -25,16 +25,14 @@
   /* Hover and pressed. 8.73:1 — darker, so the change reads as depth. */
   --color-sgs-primary-dark: #365314;
 
-  /* Decorative fills only: 3.09:1 carries large text at best, never a label. */
-  --color-sgs-primary-light: #65a30d;
-
   /* Text and icons ON WHITE — the opposite constraint to the surface above,
      which is why it is a separate token. 4.99:1, and better than the blue it
      replaces: the old accent sat at 4.41:1, just under the line. */
   --color-sgs-accent: #4d7c0f;
 
-  /* The actual citron. 5.79:1 on primary-dark, 1.51:1 on white — so it is for
-     highlights against the deep lime and nothing else. */
+  /* The actual citron, and the one place it is legible: the rail on the active
+     nav item. 5.79:1 against the deep lime beside it, 1.51:1 on white — so it
+     marks position against a dark ground, and never carries text. */
   --color-sgs-citron: #a3e635;
 
   /* Success moves from green to emerald. With a green brand, a green "OK"

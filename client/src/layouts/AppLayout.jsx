@@ -98,10 +98,10 @@ export default function AppLayout() {
                   to={item.to}
                   onClick={() => setMobileOpen(false)}
                   className={({ isActive }) =>
-                    `flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors ${
+                    `flex min-h-11 items-center gap-3 rounded-lg border-l-4 px-3 text-sm font-medium transition-colors ${
                       isActive
-                        ? 'bg-sgs-primary text-white'
-                        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                        ? 'border-sgs-citron bg-sgs-primary text-white'
+                        : 'border-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                     }`
                   }
                 >
