@@ -19,7 +19,7 @@ export const CONTAINERS = ['glass_bottle', 'plastic_bottle', 'can', 'carton_pack
  * carry the default, and writing "412 unité" everywhere would be noise, so
  * the word is shown only when it says something. Older products keep theirs.
  */
-export const unitLabel = (product, t) =>
+export const unitLabel = (product, t, count = 1) =>
   product?.unit && product.unit !== 'unit'
-    ? t(`common:units.${product.unit}`, { defaultValue: product.unit })
+    ? t(`common:units.${product.unit}`, { count, defaultValue: product.unit })
     : '';

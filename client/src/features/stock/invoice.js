@@ -19,7 +19,9 @@ export function buildInvoice(issue, { t, lng = 'fr' }) {
   // "2 cartons" when sold by the carton; otherwise whatever word the product
   // carries, or none at all.
   const lineUnit = (line) =>
-    line.packaging === 'CARTON' ? t('common:units.carton') : unitLabel(line.product, t);
+    line.packaging === 'CARTON'
+      ? t('common:units.carton', { count: line.quantity })
+      : unitLabel(line.product, t, line.quantity);
 
   const rows = issue.lines.map((line) => {
     const unitPrice = Number(line.unitPrice) || 0;

@@ -193,7 +193,7 @@ export default function DocumentLinesEditor({
                     onKeyDown={(e) => handleKeyDown(e, index, !withPrice)}
                     className="input"
                   >
-                    <option value="UNIT">{unitLabel(product, t) || t('common:units.unit')}</option>
+                    <option value="UNIT">{unitLabel(product, t, 1) || t('common:units.unit')}</option>
                     <option value="CARTON">{t('common:units.carton')}</option>
                   </select>
                 </div>
@@ -246,7 +246,7 @@ export default function DocumentLinesEditor({
                 {packaging === 'CARTON' && baseQuantity > 0 && (
                   <span className="font-medium text-slate-600">
                     = {formatQuantity(baseQuantity, lng)}{' '}
-                    {unitLabel(product, t)}
+                    {unitLabel(product, t, baseQuantity)}
                   </span>
                 )}
 

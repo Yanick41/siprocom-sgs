@@ -76,7 +76,7 @@ export default function ProductsPage() {
       align: 'right',
       render: (p) => (
         <StatusBadge tone={stockTone(p.totalStock, p.minThreshold, p.maxThreshold)}>
-          {formatQuantity(p.totalStock, lng)} {unitLabel(p, t)}
+          {formatQuantity(p.totalStock, lng)} {unitLabel(p, t, p.totalStock)}
         </StatusBadge>
       ),
     },
