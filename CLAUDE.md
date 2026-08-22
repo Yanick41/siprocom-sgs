@@ -44,8 +44,12 @@ without an explicit decision recorded in the plan.
     purchase prices, margins and suppliers.
 12. **Nobody sets another person's password.** An ADMIN invites and hands over a
     one-time code; the invited person chooses their own password (BR-11).
-    `user.password` is nullable and null means "not yet activated" — an account in
-    that state must stay indistinguishable from a missing one at `/login`.
+    `user.password` is nullable and null means "not yet activated". `/login`
+    **says so plainly** (`ACCOUNT_NOT_ACTIVATED`) and links to `/signup` — it used
+    to hide the state behind INVALID_CREDENTIALS to avoid enumeration, which cost
+    hours of confusion and bought nothing: there is no public signup, company
+    addresses are guessable, and knowing an account is pending grants no access.
+    A wrong password on an *activated* account still answers INVALID_CREDENTIALS.
 13. **There is no email in this system.** Codes and reset links are returned to the
     ADMIN on screen and passed on by hand. Do not add a mail dependency back without
     an explicit decision: it was removed because a misconfigured provider locked

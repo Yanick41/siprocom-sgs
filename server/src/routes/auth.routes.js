@@ -344,14 +344,32 @@ router.post(
 
     const user = await prisma.user.findUnique({ where: { email } });
 
-    // Same error and comparable timing whether the user exists or not, so the
-    // endpoint can't be used to enumerate valid addresses. An invited account
-    // that has not set a password yet is indistinguishable from a missing one,
-    // for the same reason.
-    if (!user || !user.password) {
+    // Same error and comparable timing whether the account exists or not, so a
+    // wrong guess never reveals which addresses are real.
+    if (!user) {
       await bcrypt.compare(password, '$2b$10$invalidinvalidinvalidinvalidinvalidinvalidinvalidinva');
       throw new UnauthorizedError('INVALID_CREDENTIALS');
     }
+
+    /**
+     * An invited account that never chose a password is told so, plainly.
+     *
+     * It used to answer INVALID_CREDENTIALS like a missing account, to avoid
+     * disclosing that the address exists. That was the wrong trade here and it
+     * cost real hours: the owner of the account types a password they believe
+     * they set, is told it is wrong, and has no way to learn that there is no
+     * password to be wrong about.
+     *
+     * What the secrecy bought is close to nothing in this system. There is no
+     * public signup, so nobody can create accounts; the addresses are company
+     * ones and guessable — the placeholder on the login form spells the format
+     * out; and knowing an account is pending grants nothing, because only an
+     * administrator can issue the code that activates it.
+     *
+     * A wrong password on an *activated* account still answers
+     * INVALID_CREDENTIALS. That case is where the ambiguity earns its keep.
+     */
+    if (!user.password) throw new ForbiddenError('ACCOUNT_NOT_ACTIVATED');
 
     const passwordMatches = await bcrypt.compare(password, user.password);
     if (!passwordMatches) throw new UnauthorizedError('INVALID_CREDENTIALS');

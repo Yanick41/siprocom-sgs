@@ -42,5 +42,5 @@
   "PASSWORD_NEEDS_UPPERCASE": "Le mot de passe doit contenir au moins une majuscule.",
   "PASSWORD_NEEDS_LOWERCASE": "Le mot de passe doit contenir au moins une minuscule.",
   "PASSWORD_NEEDS_DIGIT": "Le mot de passe doit contenir au moins un chiffre.",
-  "ACCOUNT_NOT_ACTIVATED": "Ce compte n'a jamais été activé. Générez plutôt un code d'activation."
+  "ACCOUNT_NOT_ACTIVATED": "Ce compte n'a pas encore été activé. Demandez un code d'activation à votre administrateur."
 }

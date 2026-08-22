@@ -19,6 +19,7 @@ export default function LoginPage() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [submitError, setSubmitError] = useState(null);
+  const [attemptedEmail, setAttemptedEmail] = useState('');
 
   // Cheap and unauthenticated by design: it answers a boolean, nothing more.
   const setupQuery = useQuery({
@@ -43,6 +44,7 @@ export default function LoginPage() {
 
   const onSubmit = async (values) => {
     setSubmitError(null);
+    setAttemptedEmail(values.email);
     try {
       await login(values);
       navigate(location.state?.from || '/dashboard', { replace: true });
@@ -64,14 +66,32 @@ export default function LoginPage() {
           <h2 className="mb-1 text-lg font-semibold text-slate-900">{t('auth:login.title')}</h2>
           <p className="mb-6 text-sm text-slate-500">{t('auth:login.subtitle')}</p>
 
-          {submitError && (
+          {submitError?.code === 'ACCOUNT_NOT_ACTIVATED' ? (
             <div
               role="alert"
-              className="mb-4 flex items-start gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-700"
+              className="mb-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-900"
             >
-              <FiAlertCircle className="mt-0.5 size-4 shrink-0" />
-              <span>{translateError(submitError)}</span>
+              <p className="flex items-start gap-2">
+                <FiAlertCircle className="mt-0.5 size-4 shrink-0" />
+                <span>{t('auth:login.notActivated')}</span>
+              </p>
+              <Link
+                to={`/signup?email=${encodeURIComponent(attemptedEmail)}`}
+                className="mt-3 flex min-h-11 items-center justify-center rounded-lg bg-sgs-navy px-4 font-medium text-white"
+              >
+                {t('auth:login.goActivate')}
+              </Link>
             </div>
+          ) : (
+            submitError && (
+              <div
+                role="alert"
+                className="mb-4 flex items-start gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-700"
+              >
+                <FiAlertCircle className="mt-0.5 size-4 shrink-0" />
+                <span>{translateError(submitError)}</span>
+              </div>
+            )
           )}
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
