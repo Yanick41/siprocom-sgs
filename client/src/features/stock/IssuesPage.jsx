@@ -261,7 +261,7 @@ function IssueFormModal({ onClose, onCreated }) {
             onChange={(e) => setForm({ ...form, reason: e.target.value })}
             className="input"
           >
-            {['SALE', 'DAMAGE', 'SAMPLE', 'INTERNAL', 'RETURN_SUPPLIER', 'OTHER'].map((r) => (
+            {['SALE', 'RETURN_SUPPLIER'].map((r) => (
               <option key={r} value={r}>
                 {t(`stock:issueReason.${r}`)}
               </option>

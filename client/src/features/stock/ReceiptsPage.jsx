@@ -225,7 +225,7 @@ function ReceiptFormModal({ onClose, onCreated }) {
               onChange={(e) => setForm({ ...form, reason: e.target.value })}
               className="input"
             >
-              {['PURCHASE', 'RETURN_CUSTOMER', 'ADJUSTMENT'].map((r) => (
+              {['PURCHASE', 'RETURN_CUSTOMER'].map((r) => (
                 <option key={r} value={r}>{t(`stock:receiptReason.${r}`)}</option>
               ))}
             </select>

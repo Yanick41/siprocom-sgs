@@ -45,21 +45,24 @@ enum DocStatus {
   CANCELLED
 }
 
-/// TRANSFER_IN / TRANSFER are gone with the second site: a transfer moves goods
-/// between warehouses, and there is only one.
+/// Why goods came in.
+///
+/// ADJUSTMENT left with the stock-adjustment screen, which posts a
+/// MovementType.ADJUSTMENT directly and never creates a receipt — the value
+/// existed here without a single caller.
 enum EntryReason {
   PURCHASE
   RETURN_CUSTOMER
-  ADJUSTMENT
 }
 
+/// Why goods went out.
+///
+/// Narrowed to what SIPROCOM actually records. Breakage and internal use are
+/// corrections to a count, not sales, and belong on the adjustment screen
+/// where a reason is typed out in full and the audit trail keeps it.
 enum IssueReason {
   SALE
-  DAMAGE
-  SAMPLE
-  INTERNAL
   RETURN_SUPPLIER
-  OTHER
 }
 
 enum AlertType {

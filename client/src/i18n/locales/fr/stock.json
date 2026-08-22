@@ -38,12 +38,11 @@
   },
   "receiptReason": {
     "PURCHASE": "Achat fournisseur",
-    "RETURN_CUSTOMER": "Retour client",
-    "ADJUSTMENT": "Ajustement"
+    "RETURN_CUSTOMER": "Retour client"
   },
   "issue": {
     "title": "Bons de sortie",
-    "subtitle": "Ventes, casses et besoins internes",
+    "subtitle": "Ventes et retours fournisseurs",
     "new": "Nouveau bon de sortie",
     "createTitle": "Nouveau bon de sortie",
     "validate": "Valider la sortie",
@@ -61,11 +60,7 @@
   },
   "issueReason": {
     "SALE": "Vente",
-    "DAMAGE": "Casse",
-    "SAMPLE": "Échantillon",
-    "INTERNAL": "Besoin interne",
-    "RETURN_SUPPLIER": "Retour fournisseur",
-    "OTHER": "Autre"
+    "RETURN_SUPPLIER": "Retour fournisseur"
   },
   "levels": {
     "title": "État du stock",

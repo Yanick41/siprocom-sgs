@@ -18,7 +18,7 @@ const receiptLineSchema = z.object({
 
 const createReceiptSchema = z.object({
   supplierId: uuid.optional().nullable(),
-  reason: z.enum(['PURCHASE', 'RETURN_CUSTOMER', 'ADJUSTMENT']).default('PURCHASE'),
+  reason: z.enum(['PURCHASE', 'RETURN_CUSTOMER']).default('PURCHASE'),
   purchaseOrderRef: z.string().trim().max(60).optional().nullable(),
   receiptDate: z.coerce.date().optional(),
   notes: z.string().trim().max(500).optional().nullable(),
@@ -35,14 +35,7 @@ const issueLineSchema = z.object({
   unitPrice: z.coerce.number().min(0).optional(),
 });
 
-const issueReason = z.enum([
-  'SALE',
-  'DAMAGE',
-  'SAMPLE',
-  'INTERNAL',
-  'RETURN_SUPPLIER',
-  'OTHER',
-]);
+const issueReason = z.enum(['SALE', 'RETURN_SUPPLIER']);
 
 // The two cross-field refinements that used to live here guarded transfers
 // between sites. With one site there is no destination to validate.
