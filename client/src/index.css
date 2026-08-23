@@ -157,9 +157,12 @@
     padding: 0 !important;
 
     /* The header band and the total row pick their own print colours in the
-       markup (print:bg-slate-200 — grey rather than navy, so an office printer
-       is not asked for a solid block of toner). Browsers drop backgrounds
-       unless told otherwise; this says otherwise, and inherits to the cells. */
+       markup: a pale lime wash under deep-lime text, rather than the solid
+       block of toner the on-screen band would ask an office printer for.
+       That pairing is deliberate — Chrome leaves "Background graphics"
+       unchecked by default, so the wash may never arrive, and dark text on
+       white still reads at 7.08:1 when it does not. Browsers drop backgrounds
+       unless told otherwise; the two lines below say otherwise. */
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }

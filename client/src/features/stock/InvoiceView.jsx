@@ -46,7 +46,7 @@ export default function InvoiceView({ invoice }) {
 
       <table className="w-full border-collapse text-sm">
         <thead>
-          <tr className="bg-sgs-primary text-white print:bg-slate-200 print:text-slate-900">
+          <tr className="bg-sgs-primary text-white print:bg-lime-100 print:text-sgs-primary">
             <th className="border border-slate-300 px-3 py-2 text-left">{t('common:fields.reference')}</th>
             <th className="border border-slate-300 px-3 py-2 text-left">{t('stock:invoice.designation')}</th>
             <th className="border border-slate-300 px-3 py-2 text-right">{t('stock:invoice.quantity')}</th>
@@ -66,7 +66,7 @@ export default function InvoiceView({ invoice }) {
           ))}
         </tbody>
         <tfoot>
-          <tr className="bg-slate-100 font-bold">
+          <tr className="bg-lime-50 font-bold text-sgs-primary">
             <td className="border border-slate-300 px-3 py-2" colSpan={3} />
             <td className="border border-slate-300 px-3 py-2 text-right">{t('stock:invoice.grandTotal')}</td>
             <td className="border border-slate-300 px-3 py-2 text-right whitespace-nowrap">

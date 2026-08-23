@@ -140,7 +140,7 @@ export async function downloadInvoicePdf(invoice, { t }) {
     foot: [['', '', '', t('stock:invoice.grandTotal'), invoice.grandTotalLabel].map(pdfText)],
     styles: { fontSize: 9, cellPadding: 3 },
     headStyles: { fillColor: [63, 98, 18], textColor: 255, fontStyle: 'bold' },
-    footStyles: { fillColor: [241, 245, 249], textColor: [63, 98, 18], fontStyle: 'bold', fontSize: 10 },
+    footStyles: { fillColor: [247, 254, 231], textColor: [63, 98, 18], fontStyle: 'bold', fontSize: 10 },
     columnStyles: {
       0: { cellWidth: 24 },
       1: { cellWidth: 'auto' },
