@@ -39,6 +39,7 @@ const ReportsPage = lazyWithRetry(() => import('@/features/reports/ReportsPage')
 const UsersPage = lazyWithRetry(() => import('@/features/admin/UsersPage'), 'users');
 const AuditLogPage = lazyWithRetry(() => import('@/features/admin/AuditLogPage'), 'audit');
 const SyncQueuePage = lazyWithRetry(() => import('@/features/system/SyncQueuePage'), 'sync');
+const BootstrapAdminPage = lazyWithRetry(() => import('@/features/auth/BootstrapAdminPage'), 'bootstrap-admin');
 
 function ScreenFallback() {
   const { t } = useTranslation();
@@ -94,6 +95,17 @@ export default function App() {
         element={
           <Suspense fallback={<ScreenFallback />}>
             <SystemStatusPage />
+          </Suspense>
+        }
+      />
+      {/* Break glass. Not linked from anywhere on purpose: the server answers
+          404 unless ADMIN_BOOTSTRAP_SECRET is set, so this screen is a form
+          around a request that usually does not exist. */}
+      <Route
+        path="/bootstrap-admin"
+        element={
+          <Suspense fallback={<ScreenFallback />}>
+            <BootstrapAdminPage />
           </Suspense>
         }
       />
