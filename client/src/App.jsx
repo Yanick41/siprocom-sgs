@@ -6,6 +6,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import AppLayout from '@/layouts/AppLayout';
 import LoginPage from '@/features/auth/LoginPage';
 import lazyWithRetry from '@/lib/lazyWithRetry';
+import { useAuth } from '@/context/AuthContext';
 
 /**
  * Routes are code-split per screen.
@@ -58,6 +59,39 @@ const guarded = (permission, Screen) => (
     </Suspense>
   </ProtectedRoute>
 );
+
+/**
+ * What the bare link opens.
+ *
+ * Someone sent the address for the first time gets the install page: that is
+ * the whole point of handing out a link, and a login form tells a new
+ * colleague nothing about how to get the app onto their phone.
+ *
+ * Two exceptions, both of which would otherwise be daily irritations. Anyone
+ * already signed in goes straight to their dashboard rather than being asked
+ * to install what they are evidently using. And a launch from an installed
+ * icon skips it too, because opening your own app to "install this app" is
+ * absurd. The manifest points start_url at /dashboard as well, so an installed
+ * launch does not even reach here.
+ */
+function RootRoute() {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  const standalone =
+    typeof window !== 'undefined' &&
+    (window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true);
+
+  // Deciding before /auth/me settles would flash the install page at someone
+  // who is signed in, on every single load.
+  if (isLoading) return <ScreenFallback />;
+  if (isAuthenticated || standalone) return <Navigate to="/dashboard" replace />;
+
+  return (
+    <Suspense fallback={<ScreenFallback />}>
+      <InstallPage />
+    </Suspense>
+  );
+}
 
 export default function App() {
   return (
@@ -144,7 +178,7 @@ export default function App() {
         <Route path="/audit" element={guarded('audit.view', AuditLogPage)} />
       </Route>
 
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/" element={<RootRoute />} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );

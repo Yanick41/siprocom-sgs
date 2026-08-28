@@ -8,6 +8,12 @@ automatique.
 
 ## Installer
 
+**Envoyez simplement l'adresse du SGS.** La page d'accueil est la page
+d'installation : trois boutons, un par type d'appareil, et les étapes de celui
+que la personne utilise déjà ouvertes. Une fois connectée, cette même adresse
+l'emmène directement au tableau de bord, et l'application installée ne repasse
+jamais par là.
+
 1. Ouvrir **Microsoft Edge** (ou Google Chrome) sur l'adresse du SGS.
 2. Se connecter une premiere fois.
 3. Dans la barre d'adresse, cliquer sur l'icone **Installer** (un ecran avec une

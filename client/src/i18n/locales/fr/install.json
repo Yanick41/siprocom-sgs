@@ -1,9 +1,8 @@
 {
   "title": "Installer SIPROCOM SGS",
   "subtitle": "Installez l'application sur votre téléphone ou votre ordinateur : une icône, sa propre fenêtre, et elle continue de fonctionner quand le réseau tombe.",
-  "installNow": "Installer maintenant",
-  "installNowHint": "Votre navigateur va demander confirmation. L'installation prend quelques secondes.",
-  "useStepsBelow": "Votre navigateur ne propose pas l'installation automatique ici. Suivez les étapes correspondant à votre appareil.",
+  "installNowHint": "Votre navigateur peut installer l'application : touchez le bouton de votre appareil.",
+  "useStepsBelow": "Touchez votre appareil pour voir les étapes.",
   "dismissed": "Installation annulée. Vous pouvez recommencer à tout moment, ou suivre les étapes ci-dessous.",
   "alreadyInstalled": "L'application est déjà installée",
   "alreadyInstalledHint": "Vous l'utilisez actuellement en mode application. Retrouvez-la dans le menu Démarrer ou sur votre écran d'accueil.",
@@ -12,20 +11,26 @@
     "step1": "Ouvrez cette page dans Microsoft Edge ou Google Chrome.",
     "step2": "Cliquez sur l'icône d'installation à droite de la barre d'adresse. Sinon : menu ... puis Applications, puis Installer ce site en tant qu'application.",
     "step3": "Confirmez. L'application apparaît dans le menu Démarrer.",
-    "step4": "Clic droit sur l'entrée du menu Démarrer pour l'épingler à la barre des tâches."
+    "step4": "Clic droit sur l'entrée du menu Démarrer pour l'épingler à la barre des tâches.",
+    "button": "Ordinateur Windows",
+    "sublabel": "Edge ou Chrome - menu Démarrer et fenêtre dédiée"
   },
   "android": {
     "title": "Téléphone Android",
     "step1": "Ouvrez cette page dans Google Chrome.",
     "step2": "Touchez Installer si la bannière apparaît, sinon ouvrez le menu ⋮.",
     "step3": "Choisissez Installer l'application ou Ajouter à l'écran d'accueil.",
-    "step4": "L'icône SGS rejoint votre écran d'accueil, comme n'importe quelle autre application."
+    "step4": "L'icône SGS rejoint votre écran d'accueil, comme n'importe quelle autre application.",
+    "button": "Téléphone Android",
+    "sublabel": "Chrome - icône sur l'écran d'accueil"
   },
   "ios": {
     "title": "iPhone et iPad",
     "step1": "Ouvrez cette page dans Safari. Les autres navigateurs iOS ne savent pas installer.",
     "step2": "Touchez le bouton Partager, puis Sur l'écran d'accueil.",
-    "step3": "Touchez Ajouter."
+    "step3": "Touchez Ajouter.",
+    "button": "iPhone ou iPad",
+    "sublabel": "Safari - via le bouton Partager"
   },
   "why": {
     "title": "Ce que l'installation apporte",

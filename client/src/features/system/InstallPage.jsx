@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  FiDownload,
   FiSmartphone,
   FiMonitor,
   FiCheckCircle,
@@ -75,12 +74,42 @@ function Step({ children }) {
   return <li className="leading-relaxed text-slate-600">{children}</li>;
 }
 
-function PlatformCard({ icon: Icon, title, steps, highlighted }) {
+/**
+ * The download button for one platform.
+ *
+ * Always present, whether or not the browser offers a prompt. A button that
+ * appears only on Chromium meant most visitors saw a paragraph of apology
+ * where they expected something to press. Here the press always does
+ * something: it installs where it can, and otherwise opens the steps for that
+ * device.
+ */
+function DownloadButton({ icon: Icon, label, sublabel, primary, onClick, expanded }) {
   return (
-    <section
-      className={`card p-5 ${highlighted ? 'ring-2 ring-sgs-accent' : ''}`}
-      aria-current={highlighted ? 'true' : undefined}
+    <button
+      type="button"
+      onClick={onClick}
+      aria-expanded={expanded}
+      className={`flex min-h-16 w-full items-center gap-3 rounded-xl px-4 py-3 text-left transition ${
+        primary
+          ? 'bg-sgs-primary text-white shadow-sm hover:brightness-110'
+          : 'border border-slate-200 bg-white text-slate-800 hover:border-sgs-accent hover:bg-lime-50'
+      }`}
     >
+      <Icon className={`size-6 shrink-0 ${primary ? 'text-lime-200' : 'text-sgs-primary'}`} aria-hidden="true" />
+      <span className="min-w-0">
+        <span className="block font-semibold leading-tight">{label}</span>
+        <span className={`block text-xs leading-tight ${primary ? 'text-lime-100' : 'text-slate-500'}`}>
+          {sublabel}
+        </span>
+      </span>
+    </button>
+  );
+}
+
+function PlatformSteps({ icon: Icon, title, steps, open }) {
+  if (!open) return null;
+  return (
+    <section className="card p-5">
       <header className="mb-3 flex items-center gap-2">
         <Icon className="size-5 shrink-0 text-sgs-primary" aria-hidden="true" />
         <h2 className="font-semibold text-slate-900">{title}</h2>
@@ -95,9 +124,24 @@ export default function InstallPage() {
   const { promptEvent, installed, setPromptEvent } = useInstallState();
   const [platform] = useState(detectPlatform);
   const [dismissed, setDismissed] = useState(false);
+  // Which platform's steps are showing. The visitor's own device starts open,
+  // so the common case needs no clicks at all.
+  const [open, setOpen] = useState(platform);
 
-  const install = async () => {
-    if (!promptEvent) return;
+  /**
+   * One press, two meanings.
+   *
+   * On the device we are running on, and where the browser has offered a
+   * prompt, this installs. Everywhere else - a different platform, or a
+   * browser that never offers one - it opens the steps. Either way pressing it
+   * does something, which is the whole reason these are buttons and not
+   * headings.
+   */
+  const choose = async (target) => {
+    setOpen((current) => (current === target ? null : target));
+
+    if (target !== platform || !promptEvent) return;
+
     promptEvent.prompt();
     const { outcome } = await promptEvent.userChoice;
     // The event is single-use: Chromium will not let the same one prompt twice.
@@ -123,61 +167,74 @@ export default function InstallPage() {
             </div>
           </div>
         ) : (
-          <div className="card p-5 text-center">
-            {promptEvent ? (
-              <>
-                <button type="button" onClick={install} className="btn-primary mx-auto text-base">
-                  <FiDownload className="size-5" />
-                  {t('install:installNow')}
-                </button>
-                <p className="mt-3 text-sm text-slate-500">{t('install:installNowHint')}</p>
-              </>
-            ) : (
-              <p className="text-sm text-slate-600">
-                {dismissed ? t('install:dismissed') : t('install:useStepsBelow')}
-              </p>
-            )}
+          <div className="card space-y-3 p-5">
+            {/* The device this visitor is holding goes first and is the filled
+                button. Everyone else's platform is still one press away. */}
+            <DownloadButton
+              icon={FiMonitor}
+              label={t('install:desktop.button')}
+              sublabel={t('install:desktop.sublabel')}
+              primary={platform === 'desktop'}
+              expanded={open === 'desktop'}
+              onClick={() => choose('desktop')}
+            />
+            <DownloadButton
+              icon={FiSmartphone}
+              label={t('install:android.button')}
+              sublabel={t('install:android.sublabel')}
+              primary={platform === 'android'}
+              expanded={open === 'android'}
+              onClick={() => choose('android')}
+            />
+            <DownloadButton
+              icon={FiShare}
+              label={t('install:ios.button')}
+              sublabel={t('install:ios.sublabel')}
+              primary={platform === 'ios'}
+              expanded={open === 'ios'}
+              onClick={() => choose('ios')}
+            />
+
+            <p className="pt-1 text-center text-xs text-slate-500">
+              {dismissed
+                ? t('install:dismissed')
+                : promptEvent
+                  ? t('install:installNowHint')
+                  : t('install:useStepsBelow')}
+            </p>
           </div>
         )}
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <PlatformCard
-            icon={FiMonitor}
-            title={t('install:desktop.title')}
-            highlighted={platform === 'desktop'}
-            steps={[
-              t('install:desktop.step1'),
-              t('install:desktop.step2'),
-              t('install:desktop.step3'),
-              t('install:desktop.step4'),
-            ]}
-          />
-          <PlatformCard
-            icon={FiSmartphone}
-            title={t('install:android.title')}
-            highlighted={platform === 'android'}
-            steps={[
-              t('install:android.step1'),
-              t('install:android.step2'),
-              t('install:android.step3'),
-              t('install:android.step4'),
-            ]}
-          />
-        </div>
-
+        <PlatformSteps
+          icon={FiMonitor}
+          title={t('install:desktop.title')}
+          open={open === 'desktop'}
+          steps={[
+            t('install:desktop.step1'),
+            t('install:desktop.step2'),
+            t('install:desktop.step3'),
+            t('install:desktop.step4'),
+          ]}
+        />
+        <PlatformSteps
+          icon={FiSmartphone}
+          title={t('install:android.title')}
+          open={open === 'android'}
+          steps={[
+            t('install:android.step1'),
+            t('install:android.step2'),
+            t('install:android.step3'),
+            t('install:android.step4'),
+          ]}
+        />
         {/* iOS never fires beforeinstallprompt and hides the action in the share
             sheet, so it needs saying rather than leaving people hunting. */}
-        <section className="card p-5">
-          <header className="mb-2 flex items-center gap-2">
-            <FiShare className="size-5 shrink-0 text-sgs-primary" aria-hidden="true" />
-            <h2 className="font-semibold text-slate-900">{t('install:ios.title')}</h2>
-          </header>
-          <ol className="list-decimal space-y-1.5 pl-5 text-sm">
-            <Step>{t('install:ios.step1')}</Step>
-            <Step>{t('install:ios.step2')}</Step>
-            <Step>{t('install:ios.step3')}</Step>
-          </ol>
-        </section>
+        <PlatformSteps
+          icon={FiShare}
+          title={t('install:ios.title')}
+          open={open === 'ios'}
+          steps={[t('install:ios.step1'), t('install:ios.step2'), t('install:ios.step3')]}
+        />
 
         <section className="card p-5">
           <h2 className="mb-3 font-semibold text-slate-900">{t('install:why.title')}</h2>
