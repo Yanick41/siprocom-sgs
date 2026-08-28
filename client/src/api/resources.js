@@ -76,6 +76,8 @@ export const issuesApi = {
   validate: ({ id, allowNegative = false }) =>
     api.post(`/issues/${id}/validate`, { allowNegative }),
   cancel: ({ id, reason }) => api.post(`/issues/${id}/cancel`, { reason }),
+  deliver: (id) => api.post(`/issues/${id}/deliver`),
+  createInvoice: (id) => api.post(`/issues/${id}/invoice`),
 };
 
 export const alertsApi = {

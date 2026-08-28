@@ -34,6 +34,10 @@ export const PERMISSIONS = {
   'stock.view': ALL,
   'stock.write': [ROLES.ADMIN, ROLES.MAGASINIER],
   'stock.validate': [ROLES.ADMIN, ROLES.MAGASINIER],
+  // Recording a handover is the magasinier job; raising the facture is a
+  // commercial act, so ACHATS can do it and MAGASINIER can too.
+  'stock.deliver': [ROLES.ADMIN, ROLES.MAGASINIER],
+  'stock.invoice': [ROLES.ADMIN, ROLES.MAGASINIER, ROLES.ACHATS],
   'stock.cancel': [ROLES.ADMIN],
   'stock.overrideNegative': [ROLES.ADMIN],
 

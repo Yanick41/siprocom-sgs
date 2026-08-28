@@ -105,6 +105,8 @@ model User {
   validatedReceipts GoodsReceipt[]  @relation("ReceiptValidatedBy")
   createdIssues     GoodsIssue[]    @relation("IssueCreatedBy")
   validatedIssues   GoodsIssue[]    @relation("IssueValidatedBy")
+  deliveredIssues   GoodsIssue[]    @relation("IssueDeliveredBy")
+  createdInvoices   Invoice[]       @relation("InvoiceCreatedBy")
 
   @@index([role])
   @@map("users")
@@ -388,6 +390,11 @@ model GoodsIssue {
   issueDate        DateTime    @default(now())
   validatedAt      DateTime?
   validatedById    String?
+  /// Handover to the customer, which is not the same event as validation.
+  /// Validating deducts stock; delivering says the goods reached the person
+  /// named on the bon. Null means "not yet delivered".
+  deliveredAt      DateTime?
+  deliveredById    String?
   notes            String?
   createdById      String
   createdAt        DateTime    @default(now())
@@ -395,10 +402,38 @@ model GoodsIssue {
 
   createdBy   User             @relation("IssueCreatedBy", fields: [createdById], references: [id])
   validatedBy User?            @relation("IssueValidatedBy", fields: [validatedById], references: [id])
+  deliveredBy User?            @relation("IssueDeliveredBy", fields: [deliveredById], references: [id])
   lines       GoodsIssueLine[]
+  invoice     Invoice?
 
   @@index([status, issueDate])
   @@map("goods_issues")
+}
+
+/// The commercial half of a sale, numbered and dated separately from the bon
+/// de sortie that moved the goods.
+///
+/// It holds no lines and no prices of its own. Every figure is already frozen
+/// on GoodsIssueLine.unitPrice, and copying it here would let the two drift:
+/// an invoice reprinted next year must show what was billed, and there is only
+/// one place that can honestly come from.
+///
+/// One invoice per bon de sortie, enforced by the unique issueId. Partial and
+/// consolidated invoicing were not asked for, and a nullable one-to-one is far
+/// easier to widen later than a many-to-one is to narrow.
+model Invoice {
+  id          String    @id @default(uuid())
+  number      String    @unique // FA-2026-0001
+  issueId     String    @unique
+  notes       String?
+  createdById String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  issue     GoodsIssue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  createdBy User       @relation("InvoiceCreatedBy", fields: [createdById], references: [id])
+
+  @@map("invoices")
 }
 
 model GoodsIssueLine {

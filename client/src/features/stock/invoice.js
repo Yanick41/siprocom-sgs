@@ -45,8 +45,13 @@ export function buildInvoice(issue, { t, lng = 'fr' }) {
   const grandTotal = rows.reduce((sum, row) => sum + row.total, 0);
 
   return {
-    number: issue.number,
-    date: formatDate(issue.issueDate, lng),
+    // The facture carries its own number and its own date. It falls back to
+    // the bon's only when no invoice has been raised yet, which is the preview
+    // shown before someone presses "generate".
+    number: issue.invoice?.number ?? issue.number,
+    issueNumber: issue.number,
+    exists: Boolean(issue.invoice),
+    date: formatDate(issue.invoice?.createdAt ?? issue.issueDate, lng),
     recipient: issue.recipient || '-',
     recipientPhone: issue.recipientPhone || '',
     recipientAddress: issue.recipientAddress || '',

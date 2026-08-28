@@ -44,5 +44,6 @@
   "PASSWORD_NEEDS_DIGIT": "Le mot de passe doit contenir au moins un chiffre.",
   "ACCOUNT_NOT_ACTIVATED": "Ce compte n'a pas encore été activé. Demandez un code d'activation à votre administrateur.",
   "SUPPLIER_HAS_RECEIPTS": "Ce fournisseur figure sur {{count}} bon(s) de réception. Il ne peut pas être supprimé sans effacer cet historique d'achat : désactivez-le à la place.",
-  "SUPPLIER_HAS_PRODUCTS": "Ce fournisseur est rattaché à {{count}} produit(s). Retirez-le de ces produits, ou désactivez-le à la place."
+  "SUPPLIER_HAS_PRODUCTS": "Ce fournisseur est rattaché à {{count}} produit(s). Retirez-le de ces produits, ou désactivez-le à la place.",
+  "DOCUMENT_NOT_VALIDATED": "Ce bon n'est pas validé. Validez-le d'abord : rien n'a encore quitté le stock."
 }

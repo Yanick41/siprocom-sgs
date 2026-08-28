@@ -22,6 +22,12 @@ export default function InvoiceView({ invoice }) {
           <p className="text-lg font-semibold text-sgs-primary">{t('stock:invoice.title')}</p>
           <p className="font-mono text-sm">{invoice.number}</p>
           <p className="text-sm text-slate-500">{invoice.date}</p>
+          {/* The bon this bills. A customer querying a line needs to reach the
+              delivery it came from, and the two documents have different
+              numbers now. */}
+          <p className="mt-1 text-xs text-slate-500">
+            {t('stock:invoice.fromIssue')} <span className="font-mono">{invoice.issueNumber}</span>
+          </p>
         </div>
       </header>
 

@@ -53,10 +53,15 @@
     "allowNegative": "Autoriser un stock négatif (action tracée)",
     "toast": {
       "created": "Bon de sortie créé",
-      "validated": "Sortie validée, stock mis à jour"
+      "validated": "Sortie validée, stock mis à jour",
+      "delivered": "Bon marqué comme livré"
     },
     "recipientPhone": "Téléphone du client",
-    "recipientAddress": "Adresse du client"
+    "recipientAddress": "Adresse du client",
+    "sectionTitle": "Bon de sortie",
+    "delivered": "Livré le {{date}}",
+    "notDelivered": "Non livré",
+    "markDelivered": "Marquer comme livré"
   },
   "issueReason": {
     "SALE": "Vente",
@@ -112,7 +117,7 @@
     "description": "Recalcule chaque niveau de stock à partir du journal des mouvements et signale toute divergence."
   },
   "invoice": {
-    "title": "BON DE SORTIE",
+    "title": "FACTURE",
     "designation": "DÉSIGNATION",
     "quantity": "QTE",
     "unitPrice": "PRIX UNITAIRE",
@@ -122,6 +127,15 @@
     "issuedBy": "Établi par",
     "receivedBy": "Reçu par",
     "phone": "Téléphone",
-    "address": "Adresse"
+    "address": "Adresse",
+    "sectionTitle": "Facture",
+    "fromIssue": "Bon de sortie",
+    "generate": "Générer la facture",
+    "notRaised": "Aucune facture n'a encore été générée pour ce bon.",
+    "raisedOn": "Facture {{number}} du {{date}}",
+    "emptyHint": "Générez la facture pour éditer le document commercial (prix, totaux) à remettre au client.",
+    "toast": {
+      "created": "Facture {{number}} générée"
+    }
   }
 }
