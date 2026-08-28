@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { FiSmartphone, FiMonitor, FiShare, FiCheckCircle, FiLogIn } from 'react-icons/fi';
+
+import PublicHeader, { HeaderAction } from '@/components/PublicHeader';
 
 /**
  * The front door.
@@ -177,24 +178,9 @@ export default function InstallPage() {
         }
       `}</style>
 
-      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/85 backdrop-blur">
-        <nav className="mx-auto flex h-16 max-w-5xl items-center justify-between gap-4 px-5">
-          <span className="flex items-center gap-2.5">
-            <img src="/icon.svg" alt="" width="32" height="32" className="rounded-lg" />
-            <span className="text-sm font-bold tracking-tight text-slate-900 sm:text-base">
-              {t('install:brand')}
-            </span>
-          </span>
-
-          <Link
-            to="/login"
-            className="flex min-h-11 items-center gap-2 rounded-xl bg-sgs-primary px-4 text-sm font-semibold text-white transition hover:bg-sgs-primary-dark"
-          >
-            <FiLogIn className="size-4" aria-hidden="true" />
-            {t('auth:login.submit')}
-          </Link>
-        </nav>
-      </header>
+      <PublicHeader
+        action={<HeaderAction to="/login" icon={FiLogIn} label={t('auth:login.submit')} />}
+      />
 
       <main>
         <section className="flex min-h-[calc(100vh-4rem)] items-center bg-sgs-primary">
