@@ -55,7 +55,20 @@ const importers = new Set();
  * request they are actually waiting on.
  */
 export async function preloadScreens() {
-  if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
+  if (typeof navigator === 'undefined' || navigator.onLine === false) return;
+
+  /**
+   * Never on a metered or slow connection.
+   *
+   * This is close to a megabyte of screens nobody has asked for. On the office
+   * wifi that is free; on a phone on mobile data in Abidjan it is somebody's
+   * bundle, spent so the app might work offline later. Save-Data is an explicit
+   * request not to do this, and 2g means the fetch would compete with the
+   * screen they are actually waiting for.
+   */
+  const link = navigator.connection;
+  if (link?.saveData) return;
+  if (link?.effectiveType && /(^|-)2g$/.test(link.effectiveType)) return;
 
   for (const importer of importers) {
     try {
