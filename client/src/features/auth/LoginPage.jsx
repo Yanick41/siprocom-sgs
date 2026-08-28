@@ -146,6 +146,14 @@ export default function LoginPage() {
           <p className="mt-6 text-center text-sm text-slate-500">
             {t('auth:login.forgotPassword')}
           </p>
+
+          {/* The one place everyone already goes, so the one place the install
+              link will actually be found. */}
+          <p className="mt-3 text-center text-sm">
+            <Link to="/install" className="text-sgs-accent hover:underline">
+              {t('auth:login.installApp')}
+            </Link>
+          </p>
         </div>
       </div>
     </main>

@@ -9,6 +9,7 @@ import frAdmin from './locales/fr/admin.json';
 import frStock from './locales/fr/stock.json';
 import frAlerts from './locales/fr/alerts.json';
 import frReports from './locales/fr/reports.json';
+import frInstall from './locales/fr/install.json';
 
 /**
  * French only. The i18n layer stays in place rather than inlining 370 strings
@@ -26,12 +27,13 @@ i18n
       fr: {
         common: frCommon, auth: frAuth, errors: frErrors, products: frProducts,
         admin: frAdmin, stock: frStock, alerts: frAlerts, reports: frReports,
+        install: frInstall,
       },
     },
     fallbackLng: DEFAULT_LANGUAGE,
     supportedLngs: ['fr'],
     lng: 'fr', // fixed: no detection, no stored preference, no negotiation
-    ns: ['common', 'auth', 'errors', 'products', 'admin', 'stock', 'alerts', 'reports'],
+    ns: ['common', 'auth', 'errors', 'products', 'admin', 'stock', 'alerts', 'reports', 'install'],
     defaultNS: 'common',
     interpolation: {
       escapeValue: false, // React already escapes

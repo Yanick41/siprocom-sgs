@@ -39,6 +39,7 @@ const ReportsPage = lazyWithRetry(() => import('@/features/reports/ReportsPage')
 const UsersPage = lazyWithRetry(() => import('@/features/admin/UsersPage'), 'users');
 const AuditLogPage = lazyWithRetry(() => import('@/features/admin/AuditLogPage'), 'audit');
 const SyncQueuePage = lazyWithRetry(() => import('@/features/system/SyncQueuePage'), 'sync');
+const InstallPage = lazyWithRetry(() => import('@/features/system/InstallPage'), 'install');
 
 function ScreenFallback() {
   const { t } = useTranslation();
@@ -94,6 +95,16 @@ export default function App() {
         element={
           <Suspense fallback={<ScreenFallback />}>
             <SystemStatusPage />
+          </Suspense>
+        }
+      />
+      {/* Public: the person being onboarded has no account yet, so putting
+          this behind the login they cannot pass would defeat it. */}
+      <Route
+        path="/install"
+        element={
+          <Suspense fallback={<ScreenFallback />}>
+            <InstallPage />
           </Suspense>
         }
       />
