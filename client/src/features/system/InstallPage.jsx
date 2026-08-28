@@ -1,27 +1,27 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import {
-  FiSmartphone,
-  FiMonitor,
-  FiCheckCircle,
-  FiWifiOff,
-  FiZap,
-  FiShare,
-} from 'react-icons/fi';
+import { FiSmartphone, FiMonitor, FiShare, FiCheckCircle, FiLogIn } from 'react-icons/fi';
 
 /**
- * Install page, shared as a link with the team.
+ * The front door.
  *
- * There is no APK and no .exe to hand out, and the page says so rather than
- * pretending otherwise. The SGS installs from the browser: same code, same
- * URL, updates itself, nothing to sign and nothing for SmartScreen to warn
- * about. What people actually want from a "download" - an icon that opens the
- * app in its own window and works without signal - is exactly what installing
- * gives them.
+ * Rendered at "/" for anyone not signed in, so it is the first thing a new
+ * colleague sees when they are sent the address. Its single job is to get the
+ * app onto their device; everything that does not serve that is gone.
  *
- * Public on purpose. Someone being onboarded has no account yet, and sending
- * them to a page behind the login they cannot pass would be useless.
+ * The three options sit as tiles on a citron rail, which is the same device
+ * the sidebar uses to mark the active item. Borrowing the product's own
+ * vernacular is what stops this reading as a generic download page bolted onto
+ * a warehouse tool.
+ *
+ * The hero inverts the palette: the app is lime on white, so the front door is
+ * white on lime. White on #3f6212 measures 7.08:1, which is why that token
+ * exists and why the inversion is safe rather than merely bold.
+ *
+ * No prose. Instructions exist, but only once someone asks for them by
+ * pressing a tile, because iOS cannot be installed programmatically and a
+ * silent tile there would be a dead end.
  */
 
 /** What the browser will actually let us do, which is not the same everywhere. */
@@ -30,17 +30,14 @@ function useInstallState() {
   const [installed, setInstalled] = useState(false);
 
   useEffect(() => {
-    // Already running as an installed app: no point offering to install it.
     const standalone =
       window.matchMedia?.('(display-mode: standalone)').matches ||
       window.navigator.standalone === true;
     if (standalone) setInstalled(true);
 
-    /**
-     * Chromium fires this when the app qualifies. Holding onto it is what lets
-     * a real button exist: calling prompt() later requires the saved event, and
-     * the browser will not let us conjure one on demand.
-     */
+    // Chromium fires this when the app qualifies. Holding onto it is what lets
+    // a real button exist: prompt() needs the saved event and cannot be
+    // conjured on demand later.
     const onPrompt = (event) => {
       event.preventDefault();
       setPromptEvent(event);
@@ -61,7 +58,7 @@ function useInstallState() {
   return { promptEvent, installed, setPromptEvent };
 }
 
-/** Coarse, and only used to put the right instructions first. */
+/** Coarse, and only used to decide which tile leads. */
 function detectPlatform() {
   if (typeof navigator === 'undefined') return 'desktop';
   const ua = navigator.userAgent;
@@ -70,199 +67,180 @@ function detectPlatform() {
   return 'desktop';
 }
 
-function Step({ children }) {
-  return <li className="leading-relaxed text-slate-600">{children}</li>;
-}
-
 /**
- * The download button for one platform.
+ * One crate on the rack.
  *
- * Always present, whether or not the browser offers a prompt. A button that
- * appears only on Chromium meant most visitors saw a paragraph of apology
- * where they expected something to press. Here the press always does
- * something: it installs where it can, and otherwise opens the steps for that
- * device.
+ * The icon carries the meaning and the word underneath names it; there is no
+ * third line, because a tile that explains itself is a tile nobody trusts at a
+ * glance. The visitor's own device is the filled one, so the common case is
+ * the loudest thing on the page.
  */
-function DownloadButton({ icon: Icon, label, sublabel, primary, onClick, expanded }) {
+function InstallTile({ icon: Icon, label, active, current, onClick, index }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      aria-expanded={expanded}
-      className={`flex min-h-16 w-full items-center gap-3 rounded-xl px-4 py-3 text-left transition ${
-        primary
-          ? 'bg-sgs-primary text-white shadow-sm hover:brightness-110'
-          : 'border border-slate-200 bg-white text-slate-800 hover:border-sgs-accent hover:bg-lime-50'
-      }`}
+      aria-expanded={active}
+      className={`group flex flex-col items-center gap-3 rounded-2xl px-3 py-6 transition duration-200
+        motion-safe:animate-[tile_500ms_ease-out_backwards]
+        hover:-translate-y-1 focus-visible:-translate-y-1 sm:px-6 sm:py-8
+        ${
+          current
+            ? 'bg-white text-sgs-primary shadow-lg shadow-black/20 ring-1 ring-white/60'
+            : 'bg-white/10 text-white ring-1 ring-white/25 hover:bg-white/20'
+        }
+        ${active ? 'ring-2 ring-sgs-citron' : ''}`}
+      style={{ animationDelay: `${120 + index * 90}ms` }}
     >
-      <Icon className={`size-6 shrink-0 ${primary ? 'text-lime-200' : 'text-sgs-primary'}`} aria-hidden="true" />
-      <span className="min-w-0">
-        <span className="block font-semibold leading-tight">{label}</span>
-        <span className={`block text-xs leading-tight ${primary ? 'text-lime-100' : 'text-slate-500'}`}>
-          {sublabel}
-        </span>
-      </span>
+      <Icon
+        className="size-9 shrink-0 transition-transform duration-200 group-hover:scale-110 sm:size-11"
+        aria-hidden="true"
+      />
+      <span className="text-sm font-semibold tracking-tight sm:text-base">{label}</span>
     </button>
   );
 }
 
-function PlatformSteps({ icon: Icon, title, steps, open }) {
-  if (!open) return null;
+function Steps({ title, steps }) {
   return (
-    <section className="card p-5">
-      <header className="mb-3 flex items-center gap-2">
-        <Icon className="size-5 shrink-0 text-sgs-primary" aria-hidden="true" />
-        <h2 className="font-semibold text-slate-900">{title}</h2>
-      </header>
-      <ol className="list-decimal space-y-1.5 pl-5 text-sm">{steps.map((s, i) => <Step key={i}>{s}</Step>)}</ol>
+    <section className="mx-auto w-full max-w-2xl px-5 pb-16">
+      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+        <h2 className="mb-4 text-sm font-bold uppercase tracking-widest text-sgs-accent">{title}</h2>
+        <ol className="space-y-3">
+          {steps.map((step, i) => (
+            <li key={i} className="flex gap-3 text-sm leading-relaxed text-slate-700">
+              {/* Numbered because installing genuinely is a sequence: step 3
+                  makes no sense before step 1. */}
+              <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-lime-100 font-mono text-xs font-bold text-sgs-primary">
+                {i + 1}
+              </span>
+              <span>{step}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
     </section>
   );
 }
 
 export default function InstallPage() {
-  const { t } = useTranslation(['install', 'common']);
+  const { t } = useTranslation(['install', 'auth']);
   const { promptEvent, installed, setPromptEvent } = useInstallState();
   const [platform] = useState(detectPlatform);
-  const [dismissed, setDismissed] = useState(false);
-  // Which platform's steps are showing. The visitor's own device starts open,
-  // so the common case needs no clicks at all.
-  const [open, setOpen] = useState(platform);
+  const [open, setOpen] = useState(null);
 
   /**
-   * One press, two meanings.
-   *
-   * On the device we are running on, and where the browser has offered a
-   * prompt, this installs. Everywhere else - a different platform, or a
-   * browser that never offers one - it opens the steps. Either way pressing it
-   * does something, which is the whole reason these are buttons and not
-   * headings.
+   * One press, two meanings: install where the browser offered a prompt, open
+   * the steps everywhere else. Pressing always does something, which is why
+   * these are buttons.
    */
   const choose = async (target) => {
     setOpen((current) => (current === target ? null : target));
-
     if (target !== platform || !promptEvent) return;
 
     promptEvent.prompt();
-    const { outcome } = await promptEvent.userChoice;
-    // The event is single-use: Chromium will not let the same one prompt twice.
+    await promptEvent.userChoice;
+    // Single-use: Chromium will not let the same event prompt twice.
     setPromptEvent(null);
-    if (outcome === 'dismissed') setDismissed(true);
   };
 
+  const tiles = [
+    { key: 'desktop', icon: FiMonitor, label: t('install:desktop.button') },
+    { key: 'android', icon: FiSmartphone, label: t('install:android.button') },
+    { key: 'ios', icon: FiShare, label: t('install:ios.button') },
+  ];
+
+  const steps = open
+    ? {
+        title: t(`install:${open}.title`),
+        steps:
+          open === 'ios'
+            ? [t('install:ios.step1'), t('install:ios.step2'), t('install:ios.step3')]
+            : [
+                t(`install:${open}.step1`),
+                t(`install:${open}.step2`),
+                t(`install:${open}.step3`),
+                t(`install:${open}.step4`),
+              ],
+      }
+    : null;
+
   return (
-    <main className="min-h-screen bg-slate-100 px-4 py-10">
-      <div className="mx-auto max-w-3xl space-y-6">
-        <header className="text-center">
-          <img src="/icon.svg" alt="" width="72" height="72" className="mx-auto mb-3 rounded-2xl" />
-          <h1 className="text-2xl font-bold text-sgs-primary">{t('install:title')}</h1>
-          <p className="mx-auto mt-2 max-w-xl text-slate-600">{t('install:subtitle')}</p>
-        </header>
+    <div className="min-h-screen bg-white">
+      {/* The animation is declared here so the page carries its own motion and
+          does not add a rule to the global stylesheet for one screen. */}
+      <style>{`
+        @keyframes tile { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+        @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+        @media (prefers-reduced-motion: reduce) {
+          [class*="animate-"] { animation: none !important; }
+        }
+      `}</style>
 
-        {installed ? (
-          <div role="status" className="card flex items-start gap-3 p-5">
-            <FiCheckCircle className="mt-0.5 size-6 shrink-0 text-sgs-accent" aria-hidden="true" />
-            <div>
-              <p className="font-semibold text-slate-900">{t('install:alreadyInstalled')}</p>
-              <p className="mt-1 text-sm text-slate-600">{t('install:alreadyInstalledHint')}</p>
-            </div>
-          </div>
-        ) : (
-          <div className="card space-y-3 p-5">
-            {/* The device this visitor is holding goes first and is the filled
-                button. Everyone else's platform is still one press away. */}
-            <DownloadButton
-              icon={FiMonitor}
-              label={t('install:desktop.button')}
-              sublabel={t('install:desktop.sublabel')}
-              primary={platform === 'desktop'}
-              expanded={open === 'desktop'}
-              onClick={() => choose('desktop')}
-            />
-            <DownloadButton
-              icon={FiSmartphone}
-              label={t('install:android.button')}
-              sublabel={t('install:android.sublabel')}
-              primary={platform === 'android'}
-              expanded={open === 'android'}
-              onClick={() => choose('android')}
-            />
-            <DownloadButton
-              icon={FiShare}
-              label={t('install:ios.button')}
-              sublabel={t('install:ios.sublabel')}
-              primary={platform === 'ios'}
-              expanded={open === 'ios'}
-              onClick={() => choose('ios')}
-            />
+      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/85 backdrop-blur">
+        <nav className="mx-auto flex h-16 max-w-5xl items-center justify-between gap-4 px-5">
+          <span className="flex items-center gap-2.5">
+            <img src="/icon.svg" alt="" width="32" height="32" className="rounded-lg" />
+            <span className="text-sm font-bold tracking-tight text-slate-900 sm:text-base">
+              {t('install:brand')}
+            </span>
+          </span>
 
-            <p className="pt-1 text-center text-xs text-slate-500">
-              {dismissed
-                ? t('install:dismissed')
-                : promptEvent
-                  ? t('install:installNowHint')
-                  : t('install:useStepsBelow')}
+          <Link
+            to="/login"
+            className="flex min-h-11 items-center gap-2 rounded-xl bg-sgs-primary px-4 text-sm font-semibold text-white transition hover:bg-sgs-primary-dark"
+          >
+            <FiLogIn className="size-4" aria-hidden="true" />
+            {t('auth:login.submit')}
+          </Link>
+        </nav>
+      </header>
+
+      <main>
+        <section className="flex min-h-[calc(100vh-4rem)] items-center bg-sgs-primary">
+          <div className="mx-auto w-full max-w-5xl px-5 py-16 sm:py-20">
+            <p className="motion-safe:animate-[rise_400ms_ease-out_backwards] font-mono text-xs uppercase tracking-[0.2em] text-sgs-citron">
+              {t('install:eyebrow')}
             </p>
+            <h1 className="motion-safe:animate-[rise_500ms_ease-out_backwards] mt-4 max-w-2xl text-4xl font-extrabold leading-[1.05] tracking-tight text-white sm:text-6xl">
+              {t('install:headline')}
+            </h1>
+
+            {installed ? (
+              <p className="mt-10 flex items-center gap-2.5 text-lime-100">
+                <FiCheckCircle className="size-5 shrink-0" aria-hidden="true" />
+                {t('install:alreadyInstalled')}
+              </p>
+            ) : (
+              <div className="mt-10 sm:mt-14">
+                <div className="grid max-w-2xl grid-cols-3 gap-3 sm:gap-5">
+                  {tiles.map((tile, i) => (
+                    <InstallTile
+                      key={tile.key}
+                      index={i}
+                      icon={tile.icon}
+                      label={tile.label}
+                      current={platform === tile.key}
+                      active={open === tile.key}
+                      onClick={() => choose(tile.key)}
+                    />
+                  ))}
+                </div>
+
+                {/* The rack the crates sit on, and the same citron rail the
+                    sidebar uses to mark position. */}
+                <div className="mt-4 h-1 max-w-2xl rounded-full bg-sgs-citron/70" />
+
+                <p className="mt-5 max-w-md text-sm leading-relaxed text-lime-100/80">
+                  {t('install:noBinary')}
+                </p>
+              </div>
+            )}
           </div>
-        )}
-
-        <PlatformSteps
-          icon={FiMonitor}
-          title={t('install:desktop.title')}
-          open={open === 'desktop'}
-          steps={[
-            t('install:desktop.step1'),
-            t('install:desktop.step2'),
-            t('install:desktop.step3'),
-            t('install:desktop.step4'),
-          ]}
-        />
-        <PlatformSteps
-          icon={FiSmartphone}
-          title={t('install:android.title')}
-          open={open === 'android'}
-          steps={[
-            t('install:android.step1'),
-            t('install:android.step2'),
-            t('install:android.step3'),
-            t('install:android.step4'),
-          ]}
-        />
-        {/* iOS never fires beforeinstallprompt and hides the action in the share
-            sheet, so it needs saying rather than leaving people hunting. */}
-        <PlatformSteps
-          icon={FiShare}
-          title={t('install:ios.title')}
-          open={open === 'ios'}
-          steps={[t('install:ios.step1'), t('install:ios.step2'), t('install:ios.step3')]}
-        />
-
-        <section className="card p-5">
-          <h2 className="mb-3 font-semibold text-slate-900">{t('install:why.title')}</h2>
-          <ul className="space-y-3 text-sm">
-            <li className="flex items-start gap-2.5">
-              <FiWifiOff className="mt-0.5 size-4 shrink-0 text-sgs-accent" aria-hidden="true" />
-              <span className="text-slate-600">{t('install:why.offline')}</span>
-            </li>
-            <li className="flex items-start gap-2.5">
-              <FiZap className="mt-0.5 size-4 shrink-0 text-sgs-accent" aria-hidden="true" />
-              <span className="text-slate-600">{t('install:why.updates')}</span>
-            </li>
-            <li className="flex items-start gap-2.5">
-              <FiMonitor className="mt-0.5 size-4 shrink-0 text-sgs-accent" aria-hidden="true" />
-              <span className="text-slate-600">{t('install:why.window')}</span>
-            </li>
-          </ul>
-          <p className="mt-4 border-t border-slate-200 pt-3 text-xs text-slate-500">
-            {t('install:why.noBinary')}
-          </p>
         </section>
 
-        <p className="text-center text-sm">
-          <Link to="/login" className="text-sgs-accent hover:underline">
-            {t('install:backToLogin')}
-          </Link>
-        </p>
-      </div>
-    </main>
+        {steps && <div className="pt-10">{<Steps {...steps} />}</div>}
+      </main>
+    </div>
   );
 }

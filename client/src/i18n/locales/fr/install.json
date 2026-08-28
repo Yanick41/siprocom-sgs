@@ -1,19 +1,12 @@
 {
-  "title": "Installer SIPROCOM SGS",
-  "subtitle": "Installez l'application sur votre téléphone ou votre ordinateur : une icône, sa propre fenêtre, et elle continue de fonctionner quand le réseau tombe.",
-  "installNowHint": "Votre navigateur peut installer l'application : touchez le bouton de votre appareil.",
-  "useStepsBelow": "Touchez votre appareil pour voir les étapes.",
-  "dismissed": "Installation annulée. Vous pouvez recommencer à tout moment, ou suivre les étapes ci-dessous.",
-  "alreadyInstalled": "L'application est déjà installée",
-  "alreadyInstalledHint": "Vous l'utilisez actuellement en mode application. Retrouvez-la dans le menu Démarrer ou sur votre écran d'accueil.",
+  "alreadyInstalled": "L'application est déjà installée sur cet appareil.",
   "desktop": {
     "title": "Ordinateur (Windows)",
     "step1": "Ouvrez cette page dans Microsoft Edge ou Google Chrome.",
     "step2": "Cliquez sur l'icône d'installation à droite de la barre d'adresse. Sinon : menu ... puis Applications, puis Installer ce site en tant qu'application.",
     "step3": "Confirmez. L'application apparaît dans le menu Démarrer.",
     "step4": "Clic droit sur l'entrée du menu Démarrer pour l'épingler à la barre des tâches.",
-    "button": "Ordinateur Windows",
-    "sublabel": "Edge ou Chrome - menu Démarrer et fenêtre dédiée"
+    "button": "Windows"
   },
   "android": {
     "title": "Téléphone Android",
@@ -21,23 +14,17 @@
     "step2": "Touchez Installer si la bannière apparaît, sinon ouvrez le menu ⋮.",
     "step3": "Choisissez Installer l'application ou Ajouter à l'écran d'accueil.",
     "step4": "L'icône SGS rejoint votre écran d'accueil, comme n'importe quelle autre application.",
-    "button": "Téléphone Android",
-    "sublabel": "Chrome - icône sur l'écran d'accueil"
+    "button": "Android"
   },
   "ios": {
     "title": "iPhone et iPad",
     "step1": "Ouvrez cette page dans Safari. Les autres navigateurs iOS ne savent pas installer.",
     "step2": "Touchez le bouton Partager, puis Sur l'écran d'accueil.",
     "step3": "Touchez Ajouter.",
-    "button": "iPhone ou iPad",
-    "sublabel": "Safari - via le bouton Partager"
+    "button": "iPhone"
   },
-  "why": {
-    "title": "Ce que l'installation apporte",
-    "offline": "Le catalogue et les niveaux de stock restent consultables sans réseau. Les bons saisis hors ligne partent tout seuls dès que la connexion revient.",
-    "updates": "Pas de mise à jour à installer : l'application se met à jour d'elle-même au prochain lancement connecté.",
-    "window": "Sa propre fenêtre, sans barre d'adresse, avec une icône dans le menu Démarrer ou sur l'écran d'accueil.",
-    "noBinary": "Il n'y a volontairement aucun fichier .exe ni .apk à télécharger. L'application s'installe depuis le navigateur : rien à signer, aucun avertissement de sécurité à contourner, et tout le monde utilise la même version."
-  },
-  "backToLogin": "Retour à la connexion"
+  "brand": "SIPROCOM SGS",
+  "eyebrow": "SIPROCOM · Gestion de stock",
+  "headline": "Installez le SGS sur votre appareil.",
+  "noBinary": "Aucun fichier à télécharger. L'installation se fait depuis le navigateur, et l'application se met à jour toute seule."
 }
