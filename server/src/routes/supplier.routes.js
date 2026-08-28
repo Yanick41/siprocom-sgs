@@ -2,7 +2,7 @@
 
 const express = require('express');
 const prisma = require('../lib/prisma');
-const { NotFoundError } = require('../lib/errors');
+const { NotFoundError, ConflictError } = require('../lib/errors');
 const { recordAudit, clientIp } = require('../lib/audit');
 const { asyncHandler } = require('../middleware/errorHandler');
 const { authenticate, authorize } = require('../middleware/authenticate');
@@ -145,6 +145,51 @@ router.patch(
     });
 
     res.json(supplier);
+  })
+);
+
+// DELETE /api/suppliers/:id - permanent, and only for a supplier nothing points at.
+//
+// Refused the moment anything references it, because the schema would not
+// refuse: ProductSupplier cascades, so the links would disappear, and
+// GoodsReceipt.supplierId is optional with no action declared, so Prisma sets
+// it null and years of purchase documents quietly forget who supplied them.
+// Neither failure announces itself, which is the whole reason rule 8 says
+// soft-delete for anything referenced.
+//
+// So this is the mistake-eraser: a supplier typed in wrongly ten minutes ago.
+// Anything with history is deactivated instead, and the error says so.
+router.delete(
+  '/:id',
+  authorize('ADMIN'),
+  asyncHandler(async (req, res) => {
+    const { id } = idParamSchema.parse(req.params);
+
+    const supplier = await prisma.supplier.findUnique({
+      where: { id },
+      include: { _count: { select: { products: true, receipts: true } } },
+    });
+    if (!supplier) throw new NotFoundError('Supplier', id);
+
+    if (supplier._count.receipts > 0) {
+      throw new ConflictError('SUPPLIER_HAS_RECEIPTS', { count: supplier._count.receipts });
+    }
+    if (supplier._count.products > 0) {
+      throw new ConflictError('SUPPLIER_HAS_PRODUCTS', { count: supplier._count.products });
+    }
+
+    await prisma.supplier.delete({ where: { id } });
+
+    await recordAudit({
+      userId: req.user.id,
+      action: 'DELETE_SUPPLIER',
+      entity: 'Supplier',
+      entityId: id,
+      before: supplier,
+      ipAddress: clientIp(req),
+    });
+
+    res.status(204).end();
   })
 );
 

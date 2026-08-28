@@ -47,6 +47,7 @@ export const suppliersApi = {
   update: ({ id, ...data }) => api.patch(`/suppliers/${id}`, data),
   deactivate: (id) => api.patch(`/suppliers/${id}/deactivate`),
   activate: (id) => api.patch(`/suppliers/${id}/activate`),
+  remove: (id) => api.delete(`/suppliers/${id}`),
 };
 
 export const stockApi = {

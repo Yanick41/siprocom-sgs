@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
-import { FiPlus, FiSearch, FiSlash, FiRotateCcw } from 'react-icons/fi';
+import { FiPlus, FiSearch, FiSlash, FiRotateCcw, FiEdit2, FiTrash2 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
 import { suppliersApi } from '@/api/resources';
@@ -51,6 +51,18 @@ export default function SuppliersPage() {
     onError: (error) => toast.error(translateError(error)),
   });
 
+  const removeMutation = useMutation({
+    mutationFn: suppliersApi.remove,
+    onSuccess: () => {
+      invalidate();
+      toast.success(t('admin:suppliers.toast.deleted'));
+    },
+    // The refusals here are the useful case: the server explains that products
+    // or receipts still point at this supplier, and the message names the
+    // alternative rather than leaving the user at a dead end.
+    onError: (error) => toast.error(translateError(error)),
+  });
+
   const columns = [
     {
       key: 'name',
@@ -75,45 +87,83 @@ export default function SuppliersPage() {
     },
   ];
 
-  // Retiring a supplier is an ADMIN action, so the column only exists for one
-  // role. ACHATS still creates and edits by clicking the row.
-  if (can('suppliers.deactivate')) {
+  // Every button here stops propagation: the row itself opens the edit modal,
+  // and without it a click would both confirm a deletion and open a form
+  // underneath the dialog.
+  const stop = (e) => e.stopPropagation();
+
+  if (can('suppliers.write')) {
     columns.push({
       key: 'actions',
       header: '',
       align: 'right',
-      render: (s) =>
-        s.isActive ? (
-          <button
-            type="button"
-            // The row itself opens the edit modal; without this the click does
-            // both, and the confirm dialog appears over a form nobody asked for.
-            onClick={(e) => {
-              e.stopPropagation();
-              if (window.confirm(t('admin:suppliers.confirmDeactivate', { name: s.name }))) {
-                deactivateMutation.mutate(s.id);
-              }
-            }}
-            aria-label={t('admin:suppliers.deactivate')}
-            title={t('admin:suppliers.deactivate')}
-            className="flex size-11 items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-sgs-danger"
-          >
-            <FiSlash className="size-4" />
-          </button>
-        ) : (
+      render: (s) => (
+        <div className="flex justify-end gap-1">
+          {/* Clicking the row already edits, but nothing on screen said so.
+              An explicit pencil is how the categories page reads, and a
+              discoverable action beats a hidden one. */}
           <button
             type="button"
             onClick={(e) => {
-              e.stopPropagation();
-              activateMutation.mutate(s.id);
+              stop(e);
+              setEditing(s);
             }}
-            aria-label={t('admin:suppliers.activate')}
-            title={t('admin:suppliers.activate')}
-            className="flex size-11 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-sgs-accent"
+            aria-label={t('common:actions.edit')}
+            title={t('common:actions.edit')}
+            className="flex size-11 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700"
           >
-            <FiRotateCcw className="size-4" />
+            <FiEdit2 className="size-4" />
           </button>
-        ),
+
+          {can('suppliers.deactivate') &&
+            (s.isActive ? (
+              <button
+                type="button"
+                onClick={(e) => {
+                  stop(e);
+                  if (window.confirm(t('admin:suppliers.confirmDeactivate', { name: s.name }))) {
+                    deactivateMutation.mutate(s.id);
+                  }
+                }}
+                aria-label={t('admin:suppliers.deactivate')}
+                title={t('admin:suppliers.deactivate')}
+                className="flex size-11 items-center justify-center rounded-lg text-slate-400 hover:bg-amber-50 hover:text-amber-600"
+              >
+                <FiSlash className="size-4" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={(e) => {
+                  stop(e);
+                  activateMutation.mutate(s.id);
+                }}
+                aria-label={t('admin:suppliers.activate')}
+                title={t('admin:suppliers.activate')}
+                className="flex size-11 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-sgs-accent"
+              >
+                <FiRotateCcw className="size-4" />
+              </button>
+            ))}
+
+          {can('suppliers.delete') && (
+            <button
+              type="button"
+              onClick={(e) => {
+                stop(e);
+                if (window.confirm(t('admin:suppliers.confirmDelete', { name: s.name }))) {
+                  removeMutation.mutate(s.id);
+                }
+              }}
+              aria-label={t('common:actions.delete')}
+              title={t('common:actions.delete')}
+              className="flex size-11 items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-sgs-danger"
+            >
+              <FiTrash2 className="size-4" />
+            </button>
+          )}
+        </div>
+      ),
     });
   }
 

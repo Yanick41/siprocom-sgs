@@ -27,6 +27,8 @@ export const PERMISSIONS = {
   // ACHATS creates and edits suppliers but does not retire them, matching the
   // server guard on /deactivate and /activate and the products split above.
   'suppliers.deactivate': [ROLES.ADMIN],
+  // Permanent removal, and only ever for a supplier nothing references.
+  'suppliers.delete': [ROLES.ADMIN],
 
   // Stock operations (Phase 3-4)
   'stock.view': ALL,
