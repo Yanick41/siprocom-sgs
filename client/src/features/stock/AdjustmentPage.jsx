@@ -8,6 +8,7 @@ import { stockApi, productsApi } from '@/api/resources';
 import { useAuth } from '@/context/AuthContext';
 import { useErrorMessage } from '@/hooks/useErrorMessage';
 import { formatQuantity } from '@/lib/format';
+import { submitOrQueue } from '@/lib/offline/submit';
 
 /**
  * Physical inventory correction (§4.4) plus the ledger consistency check.
@@ -42,16 +43,31 @@ export default function AdjustmentPage() {
   const delta = counted === null ? null : counted - theoretical;
 
   const mutation = useMutation({
-    mutationFn: stockApi.adjust,
-    onSuccess: (result) => {
+    mutationFn: (values) =>
+      submitOrQueue({
+        label: t('stock:adjustment.title'),
+        url: '/stock/adjust',
+        body: values,
+        send: stockApi.adjust,
+      }),
+    onSuccess: ({ queued, data }) => {
       queryClient.invalidateQueries({ queryKey: ['stock'] });
       queryClient.invalidateQueries({ queryKey: ['alerts'] });
       queryClient.invalidateQueries({ queryKey: ['reports'] });
-      toast.success(
-        t('stock:adjustment.toast.done', {
-          delta: result.delta > 0 ? `+${result.delta}` : String(result.delta),
-        })
-      );
+
+      // Queued is a promise to send, not a correction that has happened. The
+      // server has not seen this count and the level on screen has not moved,
+      // so the message must not say it has.
+      if (queued) {
+        toast.success(t('common:offline.queued'));
+      } else {
+        toast.success(
+          t('stock:adjustment.toast.done', {
+            delta: data.delta > 0 ? `+${data.delta}` : String(data.delta),
+          })
+        );
+      }
+
       setForm({ ...form, countedQuantity: '', reason: '' });
       setAllowNegative(false);
     },

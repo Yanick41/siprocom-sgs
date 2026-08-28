@@ -149,12 +149,29 @@ router.post(
   '/adjust',
   authorize('ADMIN', 'MAGASINIER'),
   asyncHandler(async (req, res) => {
-    const { productId, countedQuantity, reason, allowNegative = false } = adjustStockSchema.parse(
-      req.body
-    );
+    const { id, productId, countedQuantity, reason, allowNegative = false } =
+      adjustStockSchema.parse(req.body);
 
     if (allowNegative && req.user.role !== 'ADMIN') {
       throw new ForbiddenError('NEGATIVE_OVERRIDE_REQUIRES_ADMIN');
+    }
+
+    // A replay of a correction already posted. The ledger is append-only, so
+    // re-running it would leave two ADJUSTMENT rows and a level that no longer
+    // matches the count that was taken. The stored movement carries everything
+    // the original response did: quantity is the delta, and the level before
+    // the correction is balanceAfter minus that delta.
+    if (id) {
+      const already = await prisma.stockMovement.findUnique({ where: { id } });
+      if (already) {
+        return res.json({
+          theoretical: already.balanceAfter - already.quantity,
+          counted: already.balanceAfter,
+          delta: already.quantity,
+          balanceAfter: already.balanceAfter,
+          movement: already,
+        });
+      }
     }
 
     const result = await prisma.$transaction(async (tx) => {
@@ -169,6 +186,7 @@ router.post(
 
       // Signed ADJUSTMENT: positive for a surplus found, negative for shrinkage.
       const { movement, balanceAfter } = await applyMovement(tx, {
+        id,
         type: 'ADJUSTMENT',
         productId,
         quantity: delta,

@@ -6,6 +6,19 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#3f6212" />
+
+    <!--
+      Installability. With this manifest and a service worker, Edge and Chrome
+      on Windows offer "Install this app": the SGS gets a Start-menu entry, a
+      desktop icon and its own window with no address bar. See
+      docs/INSTALLATION_POSTE.md.
+    -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/icon.svg" />
+    <meta name="application-name" content="SIPROCOM SGS" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="SGS" />
+
     <title>SIPROCOM - SGS</title>
   </head>
   <body>

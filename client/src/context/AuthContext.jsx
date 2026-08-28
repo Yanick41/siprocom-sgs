@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { authApi } from '@/api/resources';
 import { can } from '@/lib/permissions';
+import { clearApiCache } from '@/lib/offline/register';
 
 // Exported so tests can mount a screen with a chosen role without standing up
 // the whole provider and its /auth/me round trip.
@@ -40,7 +41,15 @@ export function AuthProvider({ children }) {
     mutationFn: authApi.logout,
     // Clear cached data either way: if the call failed the cookie may still be
     // gone, and keeping another user's data in cache would be worse.
-    onSettled: () => queryClient.clear(),
+    //
+    // The service worker holds its own copy of the API responses, which
+    // queryClient.clear() knows nothing about. Without the second call the next
+    // person at this machine could read the previous session's stock levels and
+    // purchase prices straight out of the HTTP cache.
+    onSettled: () => {
+      queryClient.clear();
+      clearApiCache();
+    },
   });
 
   // Adopt the signed-in user's stored language on first load.

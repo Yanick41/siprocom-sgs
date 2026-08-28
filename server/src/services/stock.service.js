@@ -97,6 +97,7 @@ async function decrement(tx, productId, quantity, { allowNegative = false } = {}
 async function applyMovement(
   tx,
   {
+    id = null,
     type,
     productId,
     quantity,
@@ -133,6 +134,10 @@ async function applyMovement(
 
   const movement = await tx.stockMovement.create({
     data: {
+      // Supplied only by a replayed offline write, which reuses the same id on
+      // every attempt so the primary key rejects the duplicate. Left undefined
+      // for an ordinary write, where @default(uuid()) applies.
+      ...(id ? { id } : {}),
       type,
       productId,
       quantity,

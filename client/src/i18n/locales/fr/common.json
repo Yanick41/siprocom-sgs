@@ -19,7 +19,8 @@
     "users": "Utilisateurs",
     "auditLog": "Journal d'audit",
     "administration": "Administration",
-    "stockLevels": "État du stock"
+    "stockLevels": "État du stock",
+    "syncQueue": "File d'attente"
   },
   "actions": {
     "create": "Créer",
@@ -127,5 +128,35 @@
     "counted": "Unités de base (comptées à la pièce)",
     "bulk": "Unités de base (vrac / pesé)",
     "grouping": "Unités de regroupement"
+  },
+  "offline": {
+    "offline": "Hors ligne",
+    "offlineHint": "Aucune connexion. Les saisies sont conservées sur cet appareil et seront envoyées au retour du réseau.",
+    "offlineWithPending_one": "Hors ligne - {{count}} en attente",
+    "offlineWithPending_other": "Hors ligne - {{count}} en attente",
+    "pending_one": "{{count}} à envoyer",
+    "pending_other": "{{count}} à envoyer",
+    "pendingHint": "Envoi en cours. Cliquez pour réessayer maintenant.",
+    "conflicts_one": "{{count}} refusé",
+    "conflicts_other": "{{count}} refusés",
+    "conflictsHint": "Le serveur a refusé des saisies enregistrées hors ligne. Ouvrez la file d'attente pour les traiter.",
+    "queued": "Enregistré sur l'appareil. Sera envoyé au retour du réseau."
+  },
+  "sync": {
+    "title": "File d'attente",
+    "subtitle": "Saisies enregistrées hors ligne, en attente d'envoi au serveur",
+    "sendNow": "Envoyer maintenant",
+    "waiting": "En attente",
+    "empty": "Rien en attente. Tout est enregistré sur le serveur.",
+    "pendingTitle_one": "{{count}} saisie en attente",
+    "pendingTitle_other": "{{count}} saisies en attente",
+    "refusedTitle_one": "{{count}} saisie refusée",
+    "refusedTitle_other": "{{count}} saisies refusées",
+    "refusedHelp": "Le serveur a refusé ces saisies. Elles ne partiront pas d'elles-mêmes : supprimez-les, puis ressaisissez-les si nécessaire en tenant compte du stock réel.",
+    "attempts_one": "{{count}} tentative",
+    "attempts_other": "{{count}} tentatives",
+    "discard": "Supprimer",
+    "confirmDiscard": "Supprimer définitivement \"{{label}}\" de la file ? Cette saisie ne sera jamais envoyée.",
+    "discarded": "Saisie supprimée de la file"
   }
 }

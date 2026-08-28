@@ -38,6 +38,7 @@ const AlertsPage = lazyWithRetry(() => import('@/features/alerts/AlertsPage'), '
 const ReportsPage = lazyWithRetry(() => import('@/features/reports/ReportsPage'), 'reports');
 const UsersPage = lazyWithRetry(() => import('@/features/admin/UsersPage'), 'users');
 const AuditLogPage = lazyWithRetry(() => import('@/features/admin/AuditLogPage'), 'audit');
+const SyncQueuePage = lazyWithRetry(() => import('@/features/system/SyncQueuePage'), 'sync');
 
 function ScreenFallback() {
   const { t } = useTranslation();
@@ -117,6 +118,8 @@ export default function App() {
         <Route path="/issues" element={guarded('stock.view', IssuesPage)} />
         <Route path="/stock" element={guarded('stock.view', StockLevelsPage)} />
         <Route path="/movements" element={guarded('stock.view', MovementsPage)} />
+        {/* Anyone who can record stock can see what of theirs has not been sent. */}
+        <Route path="/sync" element={guarded('stock.view', SyncQueuePage)} />
         <Route path="/adjustments" element={guarded('stock.write', AdjustmentPage)} />
 
         <Route path="/products" element={guarded('products.view', ProductsPage)} />

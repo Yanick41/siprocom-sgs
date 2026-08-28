@@ -13,6 +13,7 @@ import StatusBadge from '@/components/StatusBadge';
 import { useErrorMessage } from '@/hooks/useErrorMessage';
 import { formatDate, formatQuantity } from '@/lib/format';
 import DocumentLinesEditor from './DocumentLinesEditor';
+import { submitOrQueue } from '@/lib/offline/submit';
 import InvoiceView from './InvoiceView';
 import { buildInvoice, downloadInvoicePdf } from './invoice';
 
@@ -143,10 +144,10 @@ export default function IssuesPage() {
       {creating && (
         <IssueFormModal
           onClose={() => setCreating(false)}
-          onCreated={() => {
+          onCreated={(queued) => {
             setCreating(false);
             refresh();
-            toast.success(t('stock:issue.toast.created'));
+            toast.success(queued ? t('common:offline.queued') : t('stock:issue.toast.created'));
           }}
         />
       )}
@@ -217,8 +218,14 @@ function IssueFormModal({ onClose, onCreated }) {
   );
 
   const mutation = useMutation({
-    mutationFn: issuesApi.create,
-    onSuccess: onCreated,
+    mutationFn: (values) =>
+      submitOrQueue({
+        label: t('stock:issue.createTitle'),
+        url: '/issues',
+        body: values,
+        send: issuesApi.create,
+      }),
+    onSuccess: ({ queued }) => onCreated(queued),
     onError: setSubmitError,
   });
 

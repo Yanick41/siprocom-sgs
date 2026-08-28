@@ -11,6 +11,7 @@ const { applyMovements } = require('../services/stock.service');
 const { allocateNumber } = require('../services/counter.service');
 const { checkThresholdsAsync } = require('../services/alert.service');
 const { resolveIssueLine } = require('../services/packaging.service');
+const { createOnce } = require('../lib/idempotency');
 
 /** Products whose level moved, and therefore whose thresholds must be re-checked. */
 const affectedProducts = (doc) => doc.lines.map((line) => line.productId);
@@ -137,7 +138,17 @@ router.post(
   '/',
   authorize('ADMIN', 'MAGASINIER'),
   asyncHandler(async (req, res) => {
-    const { lines, ...data } = createIssueSchema.parse(req.body);
+    const { lines, id, ...data } = createIssueSchema.parse(req.body);
+
+    // A replay of an issue this server already recorded. Answer with what
+    // exists instead of allocating a second BS number for the same goods.
+    if (id) {
+      const already = await prisma.goodsIssue.findUnique({
+        where: { id },
+        include: DOC_INCLUDE,
+      });
+      if (already) return res.status(200).json(already);
+    }
 
     // Conversion happens once, here, against the product's current factor and
     // price - both are then frozen on the line, so a later change to either
@@ -153,18 +164,29 @@ router.post(
       return resolveIssueLine(product, line);
     });
 
-    const issue = await prisma.$transaction(async (tx) => {
-      const number = await allocateNumber(tx, 'ISSUE');
-      return tx.goodsIssue.create({
-        data: {
-          ...data,
-          number,
-          status: 'DRAFT',
-          createdById: req.user.id,
-          lines: { create: resolvedLines },
-        },
-        include: DOC_INCLUDE,
-      });
+    // The lookup above answers the ordinary replay. This catches the race
+    // where two replays arrive together and both found nothing: the primary
+    // key rejects the loser, and it gets the winner document back. The
+    // counter increment rolls back with the transaction, so no BS number is
+    // burned.
+    const { record: issue } = await createOnce({
+      id,
+      find: (rowId) => prisma.goodsIssue.findUnique({ where: { id: rowId }, include: DOC_INCLUDE }),
+      create: () =>
+        prisma.$transaction(async (tx) => {
+          const number = await allocateNumber(tx, 'ISSUE');
+          return tx.goodsIssue.create({
+            data: {
+              ...(id ? { id } : {}),
+              ...data,
+              number,
+              status: 'DRAFT',
+              createdById: req.user.id,
+              lines: { create: resolvedLines },
+            },
+            include: DOC_INCLUDE,
+          });
+        }),
     });
 
     await recordAudit({

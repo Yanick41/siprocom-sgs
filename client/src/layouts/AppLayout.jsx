@@ -9,6 +9,7 @@ import {
 
 import { useAuth } from '@/context/AuthContext';
 import { alertsApi } from '@/api/resources';
+import OfflineIndicator from '@/components/OfflineIndicator';
 
 /**
  * Navigation is declared once with the permission each entry needs; the sidebar
@@ -139,6 +140,7 @@ export default function AppLayout() {
           </div>
 
           <div className="flex items-center gap-3">
+            <OfflineIndicator />
             {can('alerts.view') && (
               <Link
                 to="/alerts"

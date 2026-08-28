@@ -11,6 +11,7 @@ const { applyMovements } = require('../services/stock.service');
 const { allocateNumber } = require('../services/counter.service');
 const { checkThresholdsAsync } = require('../services/alert.service');
 const { resolveReceiptLine } = require('../services/packaging.service');
+const { createOnce } = require('../lib/idempotency');
 const {
   createReceiptSchema,
   updateReceiptSchema,
@@ -91,7 +92,17 @@ router.post(
   '/',
   authorize('ADMIN', 'MAGASINIER'),
   asyncHandler(async (req, res) => {
-    const { lines, ...data } = createReceiptSchema.parse(req.body);
+    const { lines, id, ...data } = createReceiptSchema.parse(req.body);
+
+    // A replay of a receipt this server already recorded. Answer with what
+    // exists instead of allocating a second BE number for the same goods.
+    if (id) {
+      const already = await prisma.goodsReceipt.findUnique({
+        where: { id },
+        include: DOC_INCLUDE,
+      });
+      if (already) return res.status(200).json(already);
+    }
 
     // Receiving 3 cartons of 12 must add 36 bottles, so the conversion happens
     // before anything is stored - the same resolution the issue side uses.
@@ -106,18 +117,28 @@ router.post(
       return resolveReceiptLine(product, line);
     });
 
-    const receipt = await prisma.$transaction(async (tx) => {
-      const number = await allocateNumber(tx, 'RECEIPT');
-      return tx.goodsReceipt.create({
-        data: {
-          ...data,
-          number,
-          status: 'DRAFT',
-          createdById: req.user.id,
-          lines: { create: resolvedLines },
-        },
-        include: DOC_INCLUDE,
-      });
+    // The lookup above answers the ordinary replay. This catches the race where
+    // two replays arrive together and both found nothing: the primary key
+    // rejects the loser, and it gets the winner's document back. The counter
+    // increment rolls back with the transaction, so no BE number is burned.
+    const { record: receipt } = await createOnce({
+      id,
+      find: (rowId) => prisma.goodsReceipt.findUnique({ where: { id: rowId }, include: DOC_INCLUDE }),
+      create: () =>
+        prisma.$transaction(async (tx) => {
+          const number = await allocateNumber(tx, 'RECEIPT');
+          return tx.goodsReceipt.create({
+            data: {
+              ...(id ? { id } : {}),
+              ...data,
+              number,
+              status: 'DRAFT',
+              createdById: req.user.id,
+              lines: { create: resolvedLines },
+            },
+            include: DOC_INCLUDE,
+          });
+        }),
     });
 
     await recordAudit({
