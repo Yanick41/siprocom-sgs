@@ -62,7 +62,10 @@
     "delivered": "Livré le {{date}}",
     "notDelivered": "Non livré",
     "markDelivered": "Marquer comme livré",
-    "deliveryColumn": "Livraison"
+    "deliveryColumn": "Livraison",
+    "deliveryAll": "Toutes livraisons",
+    "deliveryPending": "Reste à livrer",
+    "deliveryDone": "Livrés"
   },
   "issueReason": {
     "SALE": "Vente",

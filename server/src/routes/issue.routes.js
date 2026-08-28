@@ -58,11 +58,26 @@ router.get(
       sortable: ['issueDate', 'number', 'createdAt'],
       defaultSort: 'issueDate',
     });
-    const { status, reason, from, to } = req.query;
+    const { status, reason, from, to, delivery } = req.query;
+
+    /**
+     * delivery=pending answers "what is still to be delivered?", which is the
+     * question a magasinier works from. It implies VALIDATED on its own: a
+     * draft has moved nothing and a cancelled bon came back, so neither is
+     * waiting on anybody, and listing them as pending would be a queue nobody
+     * can clear.
+     */
+    const deliveryWhere =
+      delivery === 'pending'
+        ? { status: 'VALIDATED', deliveredAt: null }
+        : delivery === 'done'
+          ? { deliveredAt: { not: null } }
+          : {};
 
     const where = {
       ...(status ? { status } : {}),
       ...(reason ? { reason } : {}),
+      ...deliveryWhere,
       ...(from || to
         ? { issueDate: { ...(from ? { gte: new Date(from) } : {}), ...(to ? { lte: new Date(to) } : {}) } }
         : {}),

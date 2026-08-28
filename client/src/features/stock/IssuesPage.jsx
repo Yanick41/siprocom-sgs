@@ -46,7 +46,7 @@ export default function IssuesPage() {
   const translateError = useErrorMessage();
   const { can, user } = useAuth();
 
-  const [filters, setFilters] = useState({ status: '', page: 1 });
+  const [filters, setFilters] = useState({ status: '', delivery: '', page: 1 });
   const [creating, setCreating] = useState(false);
   const [viewing, setViewing] = useState(null);
 
@@ -139,12 +139,12 @@ export default function IssuesPage() {
         </PermissionGate>
       </div>
 
-      <div className="card flex flex-wrap gap-2 p-3">
+      <div className="card flex flex-wrap items-center gap-2 p-3">
         {['', 'DRAFT', 'VALIDATED', 'CANCELLED'].map((status) => (
           <button
             key={status || 'all'}
             type="button"
-            onClick={() => setFilters({ status, page: 1 })}
+            onClick={() => setFilters((f) => ({ ...f, status, page: 1 }))}
             className={`min-h-11 rounded-lg px-3 text-sm font-medium ${
               filters.status === status ? 'bg-sgs-primary text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
@@ -152,6 +152,21 @@ export default function IssuesPage() {
             {status ? t(`stock:status.${status}`) : t('common:filters.all', { defaultValue: 'Tous' })}
           </button>
         ))}
+
+        <span className="mx-1 hidden h-6 w-px bg-slate-200 sm:block" aria-hidden="true" />
+
+        {/* Answers "what is still to be delivered?" across the whole list, not
+            just the page in front of you. */}
+        <select
+          value={filters.delivery}
+          onChange={(e) => setFilters((f) => ({ ...f, delivery: e.target.value, page: 1 }))}
+          aria-label={t('stock:issue.deliveryColumn')}
+          className="input w-auto min-w-40"
+        >
+          <option value="">{t('stock:issue.deliveryAll')}</option>
+          <option value="pending">{t('stock:issue.deliveryPending')}</option>
+          <option value="done">{t('stock:issue.deliveryDone')}</option>
+        </select>
       </div>
 
       <DataTable
