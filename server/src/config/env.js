@@ -149,13 +149,30 @@ const config = {
 
 // Warnings, not failures - the system works without these, just with a feature
 // silently inert, which is worth saying out loud at boot.
+/**
+ * A short JWT secret is fatal in production, not a warning.
+ *
+ * It used to print a line at boot and carry on. Nobody reads boot logs on a
+ * serverless platform, and the consequence is not cosmetic: the signing key is
+ * the only thing standing between a stranger and a forged ADMIN session, and
+ * this application holds SIPROCOM's purchase prices, margins and suppliers. A
+ * secret short enough to brute-force offline makes every other control here
+ * decorative.
+ *
+ * 32 characters is the floor, matching the length the deployment runbook tells
+ * you to generate.
+ */
+if (isProduction && config.jwt.secret.length < 32) {
+  throw new Error(
+    `JWT_SECRET is ${config.jwt.secret.length} characters; production requires at least 32. ` +
+      'Generate one with: node -e "console.log(require(\'crypto\').randomBytes(48).toString(\'base64url\'))"'
+  );
+}
+
 if (isProduction) {
   const warnings = [];
   if (!config.cronSecret) {
     warnings.push('CRON_SECRET is empty - POST /api/alerts/sweep will reject every call.');
-  }
-  if (config.jwt.secret.length < 32) {
-    warnings.push('JWT_SECRET is shorter than 32 characters - generate a longer one.');
   }
   if (warnings.length) {
     // eslint-disable-next-line no-console -- the logger imports this module
