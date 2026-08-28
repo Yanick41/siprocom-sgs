@@ -1,27 +1,16 @@
 {
   "alreadyInstalled": "L'application est déjà installée sur cet appareil.",
   "desktop": {
-    "title": "Ordinateur (Windows)",
-    "step1": "Ouvrez cette page dans Microsoft Edge ou Google Chrome.",
-    "step2": "Cliquez sur l'icône d'installation à droite de la barre d'adresse. Sinon : menu ... puis Applications, puis Installer ce site en tant qu'application.",
-    "step3": "Confirmez. L'application apparaît dans le menu Démarrer.",
-    "step4": "Clic droit sur l'entrée du menu Démarrer pour l'épingler à la barre des tâches.",
-    "button": "Windows"
+    "button": "Windows",
+    "hint": "L'installation se fait depuis Microsoft Edge ou Google Chrome. Ouvrez cette page dans l'un des deux, puis touchez ce bouton."
   },
   "android": {
-    "title": "Téléphone Android",
-    "step1": "Ouvrez cette page dans Google Chrome.",
-    "step2": "Touchez Installer si la bannière apparaît, sinon ouvrez le menu ⋮.",
-    "step3": "Choisissez Installer l'application ou Ajouter à l'écran d'accueil.",
-    "step4": "L'icône SGS rejoint votre écran d'accueil, comme n'importe quelle autre application.",
-    "button": "Android"
+    "button": "Android",
+    "hint": "Ouvrez cette page dans Chrome sur votre téléphone, puis touchez ce bouton."
   },
   "ios": {
-    "title": "iPhone et iPad",
-    "step1": "Ouvrez cette page dans Safari. Les autres navigateurs iOS ne savent pas installer.",
-    "step2": "Touchez le bouton Partager, puis Sur l'écran d'accueil.",
-    "step3": "Touchez Ajouter.",
-    "button": "iPhone"
+    "button": "iPhone",
+    "hint": "Sur iPhone, Safari ne sait pas installer tout seul : bouton Partager, puis « Sur l'écran d'accueil »."
   },
   "brand": "SIPROCOM SGS",
   "eyebrow": "SIPROCOM · Gestion de stock",

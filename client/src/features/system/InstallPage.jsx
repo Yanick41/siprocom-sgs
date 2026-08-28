@@ -81,7 +81,6 @@ function InstallTile({ icon: Icon, label, active, current, onClick, index }) {
     <button
       type="button"
       onClick={onClick}
-      aria-expanded={active}
       className={`group flex flex-col items-center gap-3 rounded-2xl px-3 py-6 transition duration-200
         motion-safe:animate-[tile_500ms_ease-out_backwards]
         hover:-translate-y-1 focus-visible:-translate-y-1 sm:px-6 sm:py-8
@@ -102,69 +101,38 @@ function InstallTile({ icon: Icon, label, active, current, onClick, index }) {
   );
 }
 
-function Steps({ title, steps }) {
-  return (
-    <section className="mx-auto w-full max-w-2xl px-5 pb-16">
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        <h2 className="mb-4 text-sm font-bold uppercase tracking-widest text-sgs-accent">{title}</h2>
-        <ol className="space-y-3">
-          {steps.map((step, i) => (
-            <li key={i} className="flex gap-3 text-sm leading-relaxed text-slate-700">
-              {/* Numbered because installing genuinely is a sequence: step 3
-                  makes no sense before step 1. */}
-              <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-lime-100 font-mono text-xs font-bold text-sgs-primary">
-                {i + 1}
-              </span>
-              <span>{step}</span>
-            </li>
-          ))}
-        </ol>
-      </div>
-    </section>
-  );
-}
-
 export default function InstallPage() {
   const { t } = useTranslation(['install', 'auth']);
   const { promptEvent, installed, setPromptEvent } = useInstallState();
   const [platform] = useState(detectPlatform);
-  const [open, setOpen] = useState(null);
+  const [hint, setHint] = useState(null);
 
   /**
-   * One press, two meanings: install where the browser offered a prompt, open
-   * the steps everywhere else. Pressing always does something, which is why
-   * these are buttons.
+   * One press installs. That is the whole interaction.
+   *
+   * Chromium only offers the prompt on the device it is running on, and only
+   * over a secure origin with a registered worker. Where it has not offered
+   * one - iOS, Firefox, or the dev server, which has no worker on purpose -
+   * pressing leaves a single line saying what to do instead. A line, not a
+   * numbered procedure: anyone who needs the long version is reading
+   * docs/INSTALLATION_POSTE.md, not standing on a landing page.
    */
   const choose = async (target) => {
-    setOpen((current) => (current === target ? null : target));
-    if (target !== platform || !promptEvent) return;
-
-    promptEvent.prompt();
-    await promptEvent.userChoice;
-    // Single-use: Chromium will not let the same event prompt twice.
-    setPromptEvent(null);
+    if (target === platform && promptEvent) {
+      setHint(null);
+      promptEvent.prompt();
+      await promptEvent.userChoice;
+      // Single-use: Chromium will not let the same event prompt twice.
+      setPromptEvent(null);
+      return;
+    }
+    setHint(target);
   };
-
   const tiles = [
     { key: 'desktop', icon: FiMonitor, label: t('install:desktop.button') },
     { key: 'android', icon: FiSmartphone, label: t('install:android.button') },
     { key: 'ios', icon: FiShare, label: t('install:ios.button') },
   ];
-
-  const steps = open
-    ? {
-        title: t(`install:${open}.title`),
-        steps:
-          open === 'ios'
-            ? [t('install:ios.step1'), t('install:ios.step2'), t('install:ios.step3')]
-            : [
-                t(`install:${open}.step1`),
-                t(`install:${open}.step2`),
-                t(`install:${open}.step3`),
-                t(`install:${open}.step4`),
-              ],
-      }
-    : null;
 
   return (
     <div className="min-h-screen bg-white">
@@ -207,7 +175,7 @@ export default function InstallPage() {
                       icon={tile.icon}
                       label={tile.label}
                       current={platform === tile.key}
-                      active={open === tile.key}
+                      active={hint === tile.key}
                       onClick={() => choose(tile.key)}
                     />
                   ))}
@@ -217,15 +185,20 @@ export default function InstallPage() {
                     sidebar uses to mark position. */}
                 <div className="mt-4 h-1 max-w-2xl rounded-full bg-sgs-citron/70" />
 
-                <p className="mt-5 max-w-md text-sm leading-relaxed text-lime-100/80">
-                  {t('install:noBinary')}
+                {/* One slot. Either the press could not install and says why in
+                    a sentence, or the standing note about there being no file
+                    to download. Never both, and never a procedure. */}
+                <p
+                  role={hint ? 'status' : undefined}
+                  className="mt-5 max-w-md text-sm leading-relaxed text-lime-100/80"
+                >
+                  {hint ? t(`install:${hint}.hint`) : t('install:noBinary')}
                 </p>
               </div>
             )}
           </div>
         </section>
 
-        {steps && <div className="pt-10">{<Steps {...steps} />}</div>}
       </main>
     </div>
   );
