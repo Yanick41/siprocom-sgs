@@ -85,7 +85,12 @@ function localSecrets() {
   for (const full of envFiles()) {
     if (!fs.existsSync(full)) continue;
 
-    for (const line of fs.readFileSync(full, 'utf8').split('\n')) {
+    // Split on \r?\n, not \n. A .env written by a Windows editor is CRLF, and
+    // JS `.` never matches \r, so the KEY=VALUE regex below failed on every
+    // line but the last one in the file. This pass, the decisive one, was
+    // silently checking nothing on Windows: it reported "0 local values
+    // checked" while sitting next to a .env full of live credentials.
+    for (const line of fs.readFileSync(full, 'utf8').split(/\r?\n/)) {
       const match = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.+)$/);
       if (!match) continue;
 
@@ -140,7 +145,7 @@ for (const file of stagedFiles()) {
     continue; // binary
   }
 
-  content.split('\n').forEach((line, index) => {
+  content.split(/\r?\n/).forEach((line, index) => {
     if (PLACEHOLDER.test(line)) return;
 
     for (const [pattern, label] of PATTERNS) {
