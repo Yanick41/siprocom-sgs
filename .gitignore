@@ -64,3 +64,6 @@ backups/
 # Scratch
 tmp/
 *.tmp
+
+# Playwright MCP scratch snapshots from browser-driven checks.
+.playwright-mcp/
