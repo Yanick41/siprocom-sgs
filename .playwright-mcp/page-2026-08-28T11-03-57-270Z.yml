@@ -1,0 +1,20 @@
+- main [ref=f6e3]:
+  - generic [ref=f6e5]:
+    - generic [ref=f6e6]:
+      - heading "SIPROCOM" [level=1] [ref=f6e7]
+      - paragraph [ref=f6e8]: Système de Gestion de Stock
+    - heading "Connexion" [level=2] [ref=f6e9]
+    - paragraph [ref=f6e10]: Accédez à votre espace de gestion de stock
+    - generic [ref=f6e11]:
+      - generic [ref=f6e12]:
+        - generic [ref=f6e13]: Adresse email*
+        - textbox "Adresse email" [active] [ref=f6e14]:
+          - /placeholder: prenom.nom@siprocom.com
+      - generic [ref=f6e15]:
+        - generic [ref=f6e16]: Mot de passe*
+        - generic [ref=f6e17]:
+          - textbox "Mot de passe" [ref=f6e18]:
+            - /placeholder: Votre mot de passe
+          - button "Afficher le mot de passe" [ref=f6e19]
+      - button "Se connecter" [ref=f6e23]
+    - paragraph [ref=f6e24]: Mot de passe oublié ? Demandez un lien à votre administrateur.

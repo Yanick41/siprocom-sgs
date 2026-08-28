@@ -25,7 +25,9 @@
  * queue lives in src/lib/offline/queue.js instead, where it can.
  */
 
-const VERSION = 'sgs-v1';
+// Bumped to v2: v1 pinned offline visitors to the shell cached at install,
+// so the old caches must go rather than be reused.
+const VERSION = 'sgs-v2';
 const SHELL_CACHE = `${VERSION}-shell`;
 const ASSET_CACHE = `${VERSION}-assets`;
 const API_CACHE = `${VERSION}-api`;
@@ -43,6 +45,32 @@ const CACHEABLE_API = [/\/api\/products/, /\/api\/categories/, /\/api\/suppliers
 
 const isHashedAsset = (url) => url.pathname.startsWith('/assets/');
 
+/**
+ * Caches the entry script and stylesheet named by index.html.
+ *
+ * These are the one thing the page cannot cache for itself. A document's own
+ * `<script src>` is requested before the worker controls the page, so on a
+ * first visit it goes straight to the network and never reaches the fetch
+ * handler. The result looked like offline mode working right up until it
+ * mattered: the shell was served, and then sat on the boot placeholder forever
+ * because the bundle it asks for was not there.
+ *
+ * The filenames are hashed and unknown when this file is written, so they are
+ * read out of index.html rather than listed. That keeps the worker independent
+ * of the build, which is why it was hand-written in the first place.
+ */
+async function precacheEntryAssets() {
+  const response = await fetch('/index.html', { cache: 'reload' });
+  if (!response.ok) return;
+
+  const html = await response.text();
+  const urls = [...html.matchAll(/(?:src|href)="(\/assets\/[^"]+)"/g)].map((m) => m[1]);
+  if (urls.length === 0) return;
+
+  const assets = await caches.open(ASSET_CACHE);
+  await Promise.allSettled(urls.map((url) => assets.add(url)));
+}
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
     (async () => {
@@ -50,6 +78,10 @@ self.addEventListener('install', (event) => {
       // addAll rejects the whole batch if any single entry 404s, which would
       // leave the worker uninstalled and the app with no offline mode at all.
       await Promise.allSettled(SHELL.map((path) => cache.add(path)));
+      await precacheEntryAssets().catch(() => {
+        // Offline at install, or index.html unreadable. The page still works
+        // online, and the next install attempt will pick these up.
+      });
       await self.skipWaiting();
     })()
   );
@@ -66,10 +98,20 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-/** Cache-first: for content whose URL changes whenever the content does. */
+/**
+ * Cache-first: for content whose URL changes whenever the content does.
+ *
+ * ignoreVary because the dev and preview servers answer /assets with
+ * `Vary: Origin`, and cache.match honours Vary by default. A module script tag
+ * sends an Origin header that cache.add() never did, so every lookup missed and
+ * fell through to a network that was not there. The page booted to its
+ * placeholder and stayed there, with the bundle sitting in the cache all along.
+ * A hashed filename already guarantees the bytes, so varying on anything else
+ * is noise.
+ */
 async function cacheFirst(request, cacheName) {
   const cache = await caches.open(cacheName);
-  const hit = await cache.match(request);
+  const hit = await cache.match(request, { ignoreVary: true });
   if (hit) return hit;
 
   const response = await fetch(request);
@@ -78,20 +120,42 @@ async function cacheFirst(request, cacheName) {
 }
 
 /** Network-first: fresh when possible, cached when the network is gone. */
-async function networkFirst(request, cacheName, fallback) {
+async function networkFirst(request, cacheName) {
   const cache = await caches.open(cacheName);
   try {
     const response = await fetch(request);
     if (response.ok) cache.put(request, response.clone());
     return response;
   } catch (error) {
-    const hit = await cache.match(request, { ignoreSearch: false });
+    const hit = await cache.match(request, { ignoreVary: true });
     if (hit) return hit;
-    if (fallback) {
-      const shell = await caches.open(SHELL_CACHE);
-      const shellHit = await shell.match(fallback);
-      if (shellHit) return shellHit;
-    }
+    throw error;
+  }
+}
+
+/**
+ * Navigations, network-first onto a single shared shell.
+ *
+ * The shell is re-cached on every successful navigation, not just at install.
+ * Caching it once was a real bug: install runs one time per browser, so after
+ * any deploy an offline visitor was served the index.html that happened to be
+ * live the first time they opened the app - pointing at hashed assets that no
+ * longer exist. It looked like offline mode working, and it was serving a
+ * build from weeks ago.
+ *
+ * One entry rather than one per route, because an SPA has one document and the
+ * router reads the path once React is up. Caching per URL would grow without
+ * bound and still hand back the same HTML.
+ */
+async function navigationFirst(request) {
+  const cache = await caches.open(SHELL_CACHE);
+  try {
+    const response = await fetch(request);
+    if (response.ok) await cache.put('/index.html', response.clone());
+    return response;
+  } catch (error) {
+    const shell = await cache.match('/index.html', { ignoreVary: true });
+    if (shell) return shell;
     throw error;
   }
 }
@@ -107,7 +171,7 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return;
 
   if (request.mode === 'navigate') {
-    event.respondWith(networkFirst(request, SHELL_CACHE, '/index.html'));
+    event.respondWith(navigationFirst(request));
     return;
   }
 
