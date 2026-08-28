@@ -22,6 +22,7 @@ function parseArgs(argv) {
   const args = { role: 'ADMIN', locale: 'fr' };
   for (let i = 2; i < argv.length; i++) {
     const key = argv[i].replace(/^--/, '');
+    if (key === 'force') { args.force = true; continue; }
     if (['email', 'name', 'password', 'role', 'locale'].includes(key)) args[key] = argv[++i];
   }
   return args;
@@ -52,6 +53,7 @@ Create the first administrator
 
   --role    ADMIN (default) | MAGASINIER | ACHATS | DIRECTION
   --locale  fr (default) | en
+  --force   required to overwrite an account that already exists
 
 The password is hashed with bcrypt before it reaches the database and is never
 stored or logged in clear.
@@ -71,6 +73,32 @@ stored or logged in clear.
   const password = await bcrypt.hash(args.password, 10);
 
   const existing = await prisma.user.findUnique({ where: { email } });
+
+  /**
+   * A typo in the email must not quietly take over somebody's account.
+   *
+   * Updating is a real use - it is how a forgotten administrator password gets
+   * reset - but it also resets the role, re-enables a disabled account and
+   * replaces the password, and it used to do all three without saying so. One
+   * wrong character and the colleague whose address you actually typed is
+   * locked out of their own account and silently promoted.
+   *
+   * So the update path is still there, it just has to be asked for.
+   */
+  if (existing && !args.force) {
+    console.error(`
+  ${email} already exists: ${existing.name}, role ${existing.role}.
+
+  Continuing would replace their password, set their role to ${args.role} and
+  re-enable the account. If that is what you want, say so:
+
+    ... --email ${email} --force
+
+  If you meant to create a new account, check the address for a typo.
+`);
+    process.exitCode = 1;
+    return;
+  }
 
   const user = existing
     ? await prisma.user.update({
