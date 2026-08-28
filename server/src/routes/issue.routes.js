@@ -77,6 +77,9 @@ router.get(
         orderBy: q.orderBy,
         include: {
           createdBy: { select: { id: true, name: true } },
+          // Just the number: the list says whether a facture exists and which
+          // one, and anything more belongs to the document view.
+          invoice: { select: { id: true, number: true } },
           _count: { select: { lines: true } },
         },
       }),

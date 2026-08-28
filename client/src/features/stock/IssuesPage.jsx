@@ -98,6 +98,30 @@ export default function IssuesPage() {
       header: t('common:fields.status'),
       render: (d) => <StatusBadge tone={STATUS_TONE[d.status]}>{t(`stock:status.${d.status}`)}</StatusBadge>,
     },
+    {
+      key: 'delivery',
+      header: t('stock:issue.deliveryColumn'),
+      // Only a validated bon can be delivered, so for a draft or a cancelled
+      // one the question does not arise and a badge would invite it.
+      render: (d) =>
+        d.status !== 'VALIDATED' ? (
+          <span className="text-slate-400">-</span>
+        ) : (
+          <StatusBadge tone={d.deliveredAt ? 'success' : 'warning'}>
+            {d.deliveredAt ? formatDate(d.deliveredAt, lng) : t('stock:issue.notDelivered')}
+          </StatusBadge>
+        ),
+    },
+    {
+      key: 'invoice',
+      header: t('stock:invoice.sectionTitle'),
+      render: (d) =>
+        d.invoice ? (
+          <span className="font-mono text-xs text-slate-700">{d.invoice.number}</span>
+        ) : (
+          <span className="text-slate-400">-</span>
+        ),
+    },
   ];
 
   return (

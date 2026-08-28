@@ -49,7 +49,14 @@ const ROUTES = [
   [/^\/stock\/product/, { product: PRODUCT, totalStock: 120, movements: [] }],
   [/^\/stock/, paged([{ id: 'sl1', productId: 'p1', quantity: 120, state: 'OK', product: PRODUCT }])],
   [/^\/receipts/, paged([{ id: 'r1', number: 'BE-2026-0001', status: 'DRAFT', reason: 'PURCHASE', receiptDate: '2026-08-10T09:00:00Z', supplier: { id: 's1', name: 'Distribution Ivoire SA' }, createdBy: { id: 'u1', name: 'Koffi' }, _count: { lines: 2 } }])],
-  [/^\/issues/, paged([{ id: 'i1', number: 'BS-2026-0001', status: 'VALIDATED', reason: 'SALE', recipient: 'Client X', issueDate: '2026-08-10T09:00:00Z', createdBy: { id: 'u1', name: 'Koffi' }, _count: { lines: 1 } }])],
+  // Three rows, because the delivery and facture columns each branch three
+  // ways: delivered with a facture, validated with neither, and a draft where
+  // the question does not arise at all.
+  [/^\/issues/, paged([
+    { id: 'i1', number: 'BS-2026-0001', status: 'VALIDATED', reason: 'SALE', recipient: 'Client X', issueDate: '2026-08-10T09:00:00Z', deliveredAt: '2026-08-11T09:00:00Z', invoice: { id: 'f1', number: 'FA-2026-0001' }, createdBy: { id: 'u1', name: 'Koffi' }, _count: { lines: 1 } },
+    { id: 'i2', number: 'BS-2026-0002', status: 'VALIDATED', reason: 'SALE', recipient: 'Client Y', issueDate: '2026-08-10T09:00:00Z', deliveredAt: null, invoice: null, createdBy: { id: 'u1', name: 'Koffi' }, _count: { lines: 2 } },
+    { id: 'i3', number: 'BS-2026-0003', status: 'DRAFT', reason: 'SALE', recipient: null, issueDate: '2026-08-10T09:00:00Z', deliveredAt: null, invoice: null, createdBy: { id: 'u1', name: 'Koffi' }, _count: { lines: 1 } },
+  ])],
   [/^\/alerts\/count/, { total: 2, minThreshold: 2, maxThreshold: 0 }],
   [/^\/alerts/, paged([{ id: 'a1', type: 'MIN_THRESHOLD', status: 'OPEN', quantityAtTrigger: 12, thresholdValue: 40, currentQuantity: 12, createdAt: '2026-08-10T09:00:00Z', product: PRODUCT }])],
   [/^\/reports\/dashboard/, {

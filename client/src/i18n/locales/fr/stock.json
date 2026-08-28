@@ -61,7 +61,8 @@
     "sectionTitle": "Bon de sortie",
     "delivered": "Livré le {{date}}",
     "notDelivered": "Non livré",
-    "markDelivered": "Marquer comme livré"
+    "markDelivered": "Marquer comme livré",
+    "deliveryColumn": "Livraison"
   },
   "issueReason": {
     "SALE": "Vente",
