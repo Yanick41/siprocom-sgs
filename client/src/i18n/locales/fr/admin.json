@@ -35,8 +35,19 @@
     "toast": {
       "created": "Fournisseur créé",
       "updated": "Fournisseur mis à jour",
-      "deactivated": "Fournisseur désactivé"
-    }
+      "deactivated": "Fournisseur désactivé",
+      "activated": "Fournisseur réactivé"
+    },
+    "status": {
+      "active": "Actifs",
+      "inactive": "Inactifs",
+      "all": "Tous",
+      "inactiveBadge": "Inactif"
+    },
+    "deactivate": "Désactiver",
+    "activate": "Réactiver",
+    "confirmDeactivate": "Désactiver le fournisseur \"{{name}}\" ? Il disparaîtra des listes de saisie, mais les bons de réception déjà enregistrés le conservent.",
+    "empty": "Aucun fournisseur"
   },
   "users": {
     "title": "Utilisateurs",

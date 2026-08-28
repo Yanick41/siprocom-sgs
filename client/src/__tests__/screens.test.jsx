@@ -39,7 +39,12 @@ const paged = (items) => ({ items, pagination: { page: 1, limit: 25, total: item
 const ROUTES = [
   [/^\/products/, paged([PRODUCT])],
   [/^\/categories/, { items: [{ id: 'c0', name: 'Boissons', nameEn: 'Beverages', parentId: null, _count: { products: 0 }, children: [{ id: 'c1', name: 'Eaux', nameEn: 'Water', parentId: 'c0', _count: { products: 2 }, children: [] }] }] }],
-  [/^\/suppliers/, paged([{ id: 's1', name: 'Distribution Ivoire SA', contact: 'M. Bamba', phone: '+225 07', email: 'a@b.ci', isActive: true, _count: { products: 3 } }])],
+  // Two rows, one retired: the inactive branch renders a badge and a different
+  // action button, and a one-row fixture would never reach either.
+  [/^\/suppliers/, paged([
+    { id: 's1', name: 'Distribution Ivoire SA', contact: 'M. Bamba', phone: '+225 07', email: 'a@b.ci', isActive: true, _count: { products: 3 } },
+    { id: 's2', name: 'Comptoir Abidjanais', contact: null, phone: null, email: null, isActive: false, _count: { products: 0 } },
+  ])],
   [/^\/stock\/movements/, paged([{ id: 'm1', type: 'OUT', quantity: 12, balanceAfter: 108, reason: 'Vente', createdAt: '2026-08-10T09:00:00Z', product: PRODUCT, user: { id: 'u1', name: 'Koffi Mensah' } }])],
   [/^\/stock\/product/, { product: PRODUCT, totalStock: 120, movements: [] }],
   [/^\/stock/, paged([{ id: 'sl1', productId: 'p1', quantity: 120, state: 'OK', product: PRODUCT }])],

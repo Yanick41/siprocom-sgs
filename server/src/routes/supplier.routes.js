@@ -19,13 +19,17 @@ router.use(authenticate);
 const SORTABLE = ['name', 'createdAt'];
 
 // GET /api/suppliers
+// Filters: search, status (active|inactive|all). `status` rather than the
+// `includeInactive=1` flag this used to take, so the parameter reads the same
+// way as it does on /api/products; nothing was calling the old flag.
 router.get(
   '/',
   asyncHandler(async (req, res) => {
     const q = parseListQuery(req.query, { sortable: SORTABLE, defaultSort: 'name' });
+    const { status = 'active' } = req.query;
 
     const where = {
-      ...(req.query.includeInactive === '1' ? {} : { isActive: true }),
+      ...(status === 'all' ? {} : { isActive: status !== 'inactive' }),
       ...(q.search
         ? {
             OR: [
@@ -133,6 +137,33 @@ router.patch(
     await recordAudit({
       userId: req.user.id,
       action: 'DEACTIVATE_SUPPLIER',
+      entity: 'Supplier',
+      entityId: id,
+      before: existing,
+      after: supplier,
+      ipAddress: clientIp(req),
+    });
+
+    res.json(supplier);
+  })
+);
+
+// PATCH /api/suppliers/:id/activate - undoes a deactivation.
+// Without this a supplier switched off by mistake could only be brought back
+// through the database, which is not a repair anyone should have to perform.
+router.patch(
+  '/:id/activate',
+  authorize('ADMIN'),
+  asyncHandler(async (req, res) => {
+    const { id } = idParamSchema.parse(req.params);
+    const existing = await prisma.supplier.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundError('Supplier', id);
+
+    const supplier = await prisma.supplier.update({ where: { id }, data: { isActive: true } });
+
+    await recordAudit({
+      userId: req.user.id,
+      action: 'ACTIVATE_SUPPLIER',
       entity: 'Supplier',
       entityId: id,
       before: existing,

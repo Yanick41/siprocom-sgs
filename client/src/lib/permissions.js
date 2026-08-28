@@ -24,6 +24,9 @@ export const PERMISSIONS = {
   'categories.write': [ROLES.ADMIN],
   'suppliers.view': ALL,
   'suppliers.write': [ROLES.ADMIN, ROLES.ACHATS],
+  // ACHATS creates and edits suppliers but does not retire them, matching the
+  // server guard on /deactivate and /activate and the products split above.
+  'suppliers.deactivate': [ROLES.ADMIN],
 
   // Stock operations (Phase 3-4)
   'stock.view': ALL,
