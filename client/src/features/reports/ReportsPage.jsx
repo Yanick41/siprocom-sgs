@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { BarChart } from '@/components/Chart';
 import { FiDownload, FiFileText } from 'react-icons/fi';
 
 import { reportsApi } from '@/api/resources';
@@ -214,17 +214,16 @@ export default function ReportsPage() {
       {tab === 'summary' && rows.length > 0 && (
         <div className="card p-4">
           <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={rows} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-                <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#64748b' }} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: '#64748b' }} tickLine={false} axisLine={false} />
-                <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e2e8f0' }} />
-                <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Bar dataKey="totalIn" name={t('stock:movementType.IN')} fill={COLOR_IN} radius={[4, 4, 0, 0]} />
-                <Bar dataKey="totalOut" name={t('stock:movementType.OUT')} fill={COLOR_OUT} radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            <BarChart
+              data={rows}
+              xKey="label"
+              formatValue={(v) => formatQuantity(v, lng)}
+              emptyLabel={t('common:states.empty')}
+              series={[
+                { key: 'totalIn', name: t('stock:movementType.IN'), color: COLOR_IN },
+                { key: 'totalOut', name: t('stock:movementType.OUT'), color: COLOR_OUT },
+              ]}
+            />
           </div>
         </div>
       )}

@@ -11,7 +11,7 @@ import { useAuth } from '@/context/AuthContext';
 /**
  * Routes are code-split per screen.
  *
- * Charting (recharts) and the export libraries together weigh more than the
+ * The export libraries (jspdf, and the zip writer behind .xlsx) weigh more than the
  * rest of the application. Bundled eagerly, a magasinier who spends the day on
  * goods issues would download the whole reporting stack to never open it.
  * Each screen now pulls only what it uses.

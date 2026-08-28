@@ -1,10 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import {
-  ResponsiveContainer, LineChart, Line, BarChart, Bar,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-} from 'recharts';
+import { LineChart, HorizontalBarChart } from '@/components/Chart';
 import { FiPackage, FiBell, FiActivity, FiDollarSign, FiArrowRight } from 'react-icons/fi';
 
 import { reportsApi } from '@/api/resources';
@@ -106,47 +103,32 @@ export default function DashboardPage() {
         <section className="card p-4">
           <h2 className="mb-3 font-semibold text-slate-900">{t('reports:chart.movements30d')}</h2>
           <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={curveData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-                <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#64748b' }} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: '#64748b' }} tickLine={false} axisLine={false} />
-                <Tooltip
-                  contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e2e8f0' }}
-                  labelStyle={{ color: '#0f172a', fontWeight: 600 }}
-                />
-                <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Line
-                  type="monotone" dataKey="totalIn" name={t('stock:movementType.IN')}
-                  stroke={COLOR_IN} strokeWidth={2} dot={false}
-                />
-                <Line
-                  type="monotone" dataKey="totalOut" name={t('stock:movementType.OUT')}
-                  stroke={COLOR_OUT} strokeWidth={2} dot={false}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            <LineChart
+              data={curveData}
+              xKey="label"
+              formatValue={(v) => formatQuantity(v, lng)}
+              emptyLabel={t(`common:states.empty`)}
+              series={[
+                { key: 'totalIn', name: t('stock:movementType.IN'), color: COLOR_IN },
+                { key: 'totalOut', name: t('stock:movementType.OUT'), color: COLOR_OUT },
+              ]}
+            />
           </div>
         </section>
 
         <section className="card p-4">
           <h2 className="mb-3 font-semibold text-slate-900">{t('reports:chart.trending')}</h2>
           <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={trendingData} layout="vertical" margin={{ top: 4, right: 16, left: 8, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" horizontal={false} />
-                <XAxis type="number" tick={{ fontSize: 11, fill: '#64748b' }} tickLine={false} axisLine={false} />
-                <YAxis
-                  type="category" dataKey="name" width={70}
-                  tick={{ fontSize: 11, fill: '#64748b' }} tickLine={false} axisLine={false}
-                />
-                <Tooltip
-                  contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e2e8f0' }}
-                  formatter={(value, _name, entry) => [value, entry.payload.full]}
-                />
-                <Bar dataKey="value" name={t('reports:chart.quantityOut')} fill={COLOR_OUT} radius={[0, 4, 4, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            <HorizontalBarChart
+              data={trendingData}
+              labelKey="name"
+              valueKey="value"
+              titleKey="full"
+              color={COLOR_OUT}
+              name={t('reports:chart.quantityOut')}
+              formatValue={(v) => formatQuantity(v, lng)}
+              emptyLabel={t('common:states.empty')}
+            />
           </div>
         </section>
       </div>
