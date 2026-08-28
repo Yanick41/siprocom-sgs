@@ -13,12 +13,6 @@ const qs = (params = {}) => {
 export const authApi = {
   setupStatus: () => api.get('/auth/setup-status'),
   setup: (data) => api.post('/auth/setup', data),
-  /**
-   * Break-glass admin recovery. The secret travels in a header, never in the
-   * URL or the body, so it cannot end up in an access log or in history.
-   */
-  bootstrapAdmin: ({ secret, ...data }) =>
-    api.post('/auth/bootstrap-admin', data, { headers: { 'x-bootstrap-secret': secret } }),
   inspectToken: (token) => api.get(`/auth/token${qs({ token })}`),
   setPassword: (data) => api.post('/auth/set-password', data),
   signupCheck: (email) => api.post('/auth/signup/check', { email }),

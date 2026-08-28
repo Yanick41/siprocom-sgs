@@ -22,18 +22,6 @@ const setupSchema = z.object({
   locale: z.enum(['fr', 'en']).default('fr'),
 });
 
-/**
- * Break-glass admin recovery. Same shape as setup, plus the role, because this
- * is also the way back from "the only ADMIN was demoted by mistake".
- */
-const bootstrapAdminSchema = z.object({
-  name: z.string().trim().min(1).max(150),
-  email: z.string().trim().toLowerCase().email(),
-  password: z.string().min(12, 'PASSWORD_TOO_SHORT').max(200),
-  locale: z.enum(['fr', 'en']).default('fr'),
-  role: z.enum(['ADMIN', 'MAGASINIER', 'ACHATS', 'DIRECTION']).default('ADMIN'),
-});
-
 const tokenQuerySchema = z.object({
   token: z.string().min(1).max(500),
 });
@@ -78,7 +66,6 @@ module.exports = {
   loginSchema,
   updateLocaleSchema,
   setupSchema,
-  bootstrapAdminSchema,
   tokenQuerySchema,
   setPasswordSchema,
   signupRequestSchema,

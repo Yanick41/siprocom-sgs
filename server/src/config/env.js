@@ -139,21 +139,6 @@ const config = {
   // Protects the internal cron endpoints (alert sweep).
   cronSecret: optional('CRON_SECRET', ''),
 
-  /**
-   * Break-glass admin recovery. Empty means the route does not exist.
-   *
-   * POST /api/auth/bootstrap-admin creates or promotes an ADMIN without a
-   * session, which is precisely the thing the rest of this file exists to
-   * prevent. It is therefore off unless someone deliberately sets a secret,
-   * and it is meant to be unset again the moment it has been used.
-   *
-   * It exists because the ordinary recovery paths are circular: a password
-   * reset link must be issued by an ADMIN, and /auth/setup closes for good as
-   * soon as the users table is non-empty. Lose every administrator password
-   * and there is no way back in through the application at all.
-   */
-  adminBootstrapSecret: optional('ADMIN_BOOTSTRAP_SECRET', ''),
-
   defaultLocale: optional('DEFAULT_LOCALE', 'fr'),
 
   // In-process daily sweep. Off by default: on a multi-instance deployment every
@@ -162,8 +147,6 @@ const config = {
   timezone: optional('TZ', 'Africa/Abidjan'),
 };
 
-// Warnings, not failures - the system works without these, just with a feature
-// silently inert, which is worth saying out loud at boot.
 /**
  * A short JWT secret is fatal in production, not a warning.
  *
@@ -184,6 +167,8 @@ if (isProduction && config.jwt.secret.length < 32) {
   );
 }
 
+// Warnings, not failures - the system works without these, just with a feature
+// silently inert, which is worth saying out loud at boot.
 if (isProduction) {
   const warnings = [];
   if (!config.cronSecret) {
