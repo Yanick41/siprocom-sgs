@@ -819,6 +819,7 @@ Use these exact English terms in code; use the French in the FR UI.
 | 8 - Deployment & training | ✅ Complete - Docker, CSV import (tested), README + bilingual user guide | 2026-08-09 | 2026-08-09 |
 | 9 - Single-site simplification | ✅ Complete - 16/16 engine tests, 13/13 UI render tests | 2026-08-17 | 2026-08-17 |
 | 10 - Offline, install, hardening | ✅ Complete - 19/19 UI tests; engine tests now refuse a remote database | 2026-08-28 | 2026-08-28 |
+| 11 - Facture split from bon de sortie | ✅ Complete - migration applied, deliver and invoice verified end to end | 2026-08-28 | 2026-08-28 |
 
 ---
 
@@ -909,6 +910,49 @@ Override with `ALLOW_REMOTE_TEST=yes-write-to-this-database`.
 **Text convention.** No em dashes or en dashes anywhere; `npm run check:dashes`
 and the pre-commit hook enforce it. See
 [docs/CONVENTIONS_TEXTE.md](docs/CONVENTIONS_TEXTE.md).
+
+---
+
+## Phase 11 - Facture separated from bon de sortie (2026-08-28)
+
+One document was doing two jobs: a delivery note that also printed unit prices
+and a grand total. The sheet signed on the loading bay is not the sheet saying
+what is owed, and whoever takes delivery is often not entitled to see what
+SIPROCOM paid.
+
+- **Bon de sortie** is now a delivery note: reference, designation, quantity,
+  and whether it has been handed over. No money on it.
+- **Facture** is its own document with its own `FA-` number from the same
+  gapless counter (BR-10), raised from a validated bon. A draft or a cancelled
+  bon is refused: billing for goods still on the shelf is the mistake worth
+  making impossible.
+- **Delivery is not validation.** Validating deducts stock; `deliveredAt`
+  records that the goods reached the customer, which can be days later.
+
+**The invoice stores no lines and no prices.** Every figure is already frozen
+on `goods_issue_lines.unitPrice`, and a second copy would be free to drift,
+defeating the reason it was frozen. `Invoice` is a numbered, dated wrapper
+around a `GoodsIssue`, one per bon, enforced by a unique `issueId`. Partial and
+consolidated invoicing were not asked for; a nullable one-to-one is far easier
+to widen later than a many-to-one is to narrow.
+
+**Both writes are idempotent.** Delivering twice keeps the first timestamp
+rather than recording when the button was last pressed. The unique index is
+what stops a double-click burning a second FA number, not the lookup: two
+requests both find nothing, and the constraint settles it. The loser is
+answered with the winner's invoice. This is the same discipline as the BR-2
+decrement - the guard belongs in the statement, not around it.
+
+Migration `20260828120000_invoices_and_delivery` is additive: two nullable
+columns and one table, nothing dropped or rewritten.
+
+**Also in this phase.** Suppliers gained an explicit edit button and a delete
+that refuses while any product or receipt references them - the schema would
+not have refused, since `ProductSupplier` cascades and `GoodsReceipt.supplierId`
+is optional and would have been set null, silently detaching purchase history.
+`create-admin.js` now requires `--force` to overwrite an existing account.
+The user guides were corrected: both still documented warehouses and transfers,
+removed in phase 9.
 
 ---
 
