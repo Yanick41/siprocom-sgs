@@ -818,6 +818,7 @@ Use these exact English terms in code; use the French in the FR UI.
 | 7 - Hardening & recette | ✅ Complete - permission matrix verified across all 4 roles | 2026-08-09 | 2026-08-09 |
 | 8 - Deployment & training | ✅ Complete - Docker, CSV import (tested), README + bilingual user guide | 2026-08-09 | 2026-08-09 |
 | 9 - Single-site simplification | ✅ Complete - 16/16 engine tests, 13/13 UI render tests | 2026-08-17 | 2026-08-17 |
+| 10 - Offline, install, hardening | ✅ Complete - 19/19 UI tests; engine tests now refuse a remote database | 2026-08-28 | 2026-08-28 |
 
 ---
 
@@ -858,6 +859,56 @@ code, is what makes it safe.
 - No settings screen.
 - No open registration: an ADMIN invites and chooses the role; the invited person
   then completes their own account at `/signup`.
+
+---
+
+## Phase 10 - Offline mode, installability and hardening (2026-08-28)
+
+**Offline is queue-and-replay, not local truth.** A movement recorded on a
+disconnected device is an intent. The BR-2 conditional decrement cannot be
+evaluated without the database, so the client never predicts an outcome:
+entries are held in IndexedDB and replayed in entry order, and the server
+accepts or refuses each one exactly as it would have at the time. Applying
+stock locally and merging later was considered and refused, because it would
+have meant relaxing BR-2.
+
+- Replay classifies three ways. A 4xx is a refusal on the merits and is parked
+  for a person; a 401 is not, because the session expired while the device was
+  away and that says nothing about the entry; network and 5xx defer.
+- **Idempotency needs no table.** Every model is `@id @default(uuid())`, so the
+  client generates the row id once and reuses it on every attempt, and the
+  primary key does the deduplication. No migration was required.
+- Reports are deliberately not cached offline: a stale valuation shown as
+  current is worse than an honest error.
+
+**Installability is a PWA, not a packaged binary.** A manifest plus the same
+service worker makes Edge and Chrome on Windows offer to install the app: a
+Start-menu entry, a desktop icon, its own window. Electron with an NSIS
+installer was the alternative and was not taken, because it adds a build
+pipeline and an unsigned binary that trips SmartScreen in order to deliver what
+the browser already does. See [docs/INSTALLATION_POSTE.md](docs/INSTALLATION_POSTE.md).
+
+**Security fixes.** Five, the first serious:
+
+1. `express.urlencoded` was mounted and used by nothing. With a SameSite=None
+   cookie, a cross-site form POST is a simple request, so CORS never gets a say
+   and the write lands. Removed.
+2. A JWT_SECRET under 32 characters in production was a console warning. Now
+   fatal at boot.
+3. The cron secret was accepted as a query parameter, putting a credential into
+   access logs and browser history. Headers only now, compared in constant time.
+4. Rate limiting existed only on the auth routes. Now 300/min across the API,
+   with the health probe exempt.
+5. `check-secrets.js` split `.env` on a bare newline, and a Windows `.env` is
+   CRLF, so its decisive pass had been checking nothing. It reported "0 local
+   values checked" while sitting beside a file of live credentials.
+
+**`npm run test:stock` now refuses a remote database**, as the seed already did.
+Override with `ALLOW_REMOTE_TEST=yes-write-to-this-database`.
+
+**Text convention.** No em dashes or en dashes anywhere; `npm run check:dashes`
+and the pre-commit hook enforce it. See
+[docs/CONVENTIONS_TEXTE.md](docs/CONVENTIONS_TEXTE.md).
 
 ---
 
