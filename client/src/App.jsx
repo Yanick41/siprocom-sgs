@@ -15,7 +15,7 @@ import lazyWithRetry from '@/lib/lazyWithRetry';
  * goods issues would download the whole reporting stack to never open it.
  * Each screen now pulls only what it uses.
  *
- * Login stays eager — it is the first thing an unauthenticated visitor needs,
+ * Login stays eager - it is the first thing an unauthenticated visitor needs,
  * and a spinner before the sign-in form would be a poor first impression.
  *
  * lazyWithRetry, not lazy: a chunk can become unreachable after a deploy or a
@@ -61,7 +61,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
-      {/* Redirects to /login as soon as an account exists — the server refuses
+      {/* Redirects to /login as soon as an account exists - the server refuses
           the underlying endpoint regardless, so this is convenience, not the guard. */}
       <Route
         path="/setup"

@@ -4,7 +4,7 @@ const { InsufficientStockError, ConflictError } = require('../lib/errors');
 
 /**
  * The stock engine. Every change to stock_levels and stock_movements in the
- * entire application goes through this module — that single rule is what makes
+ * entire application goes through this module - that single rule is what makes
  * stock integrity provable rather than hopeful.
  *
  * Invariants enforced here:
@@ -15,7 +15,7 @@ const { InsufficientStockError, ConflictError } = require('../lib/errors');
  * Sign convention:
  *   IN          quantity > 0, adds
  *   OUT         quantity > 0, subtracts
- *   ADJUSTMENT  quantity is SIGNED — positive for a surplus found at inventory,
+ *   ADJUSTMENT  quantity is SIGNED - positive for a surplus found at inventory,
  *               negative for shrinkage. This is the one type that carries its
  *               own sign, so the ledger sum stays:
  *                 SUM(CASE WHEN type = 'OUT' THEN -quantity ELSE quantity END)
@@ -92,7 +92,7 @@ async function decrement(tx, productId, quantity, { allowNegative = false } = {}
  * @param {object} params
  * @param {'IN'|'OUT'|'ADJUSTMENT'} params.type
  * @param {number} params.quantity  positive for IN/OUT; signed for ADJUSTMENT
- * @param {string} params.userId    required — there is no anonymous movement (BR-5)
+ * @param {string} params.userId    required - there is no anonymous movement (BR-5)
  */
 async function applyMovement(
   tx,
@@ -152,7 +152,7 @@ async function applyMovement(
 
 /**
  * Applies several movements in order within one transaction.
- * If any line fails, the whole document fails — a half-posted receipt would
+ * If any line fails, the whole document fails - a half-posted receipt would
  * leave the ledger describing goods that were never received.
  */
 async function applyMovements(tx, movements) {
@@ -166,7 +166,7 @@ async function applyMovements(tx, movements) {
 /**
  * Recomputes levels from the ledger and reports any divergence.
  * The materialised StockLevel table is fast to read but only trustworthy if it
- * can be proved against the append-only ledger — this is that proof.
+ * can be proved against the append-only ledger - this is that proof.
  */
 async function reconcile(prisma) {
   const rows = await prisma.$queryRaw`

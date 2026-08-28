@@ -23,7 +23,7 @@ const STATUS_TONE = { DRAFT: 'neutral', VALIDATED: 'success', CANCELLED: 'danger
  *
  * Browsers put the document title and the URL in the printed margins and give
  * no way to remove them. What they do take is whatever title is set at the
- * moment printing starts — so a sheet that would have read "SIPROCOM — SGS"
+ * moment printing starts - so a sheet that would have read "SIPROCOM - SGS"
  * reads "BS-2026-0226" instead, which is the one thing worth having up there.
  * The title is restored straight after; window.print() blocks until the dialog
  * closes.
@@ -90,7 +90,7 @@ export default function IssuesPage() {
       header: t('common:fields.reason'),
       render: (d) => t(`stock:issueReason.${d.reason}`),
     },
-    { key: 'recipient', header: t('stock:issue.recipient'), render: (d) => d.recipient || '—' },
+    { key: 'recipient', header: t('stock:issue.recipient'), render: (d) => d.recipient || '-' },
     { key: 'lines', header: t('stock:document.lineCount'), align: 'right', render: (d) => d._count?.lines ?? 0 },
     {
       key: 'status',

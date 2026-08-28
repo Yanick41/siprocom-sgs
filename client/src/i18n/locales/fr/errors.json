@@ -38,7 +38,7 @@
   "ACCOUNT_ALREADY_ACTIVATED": "Ce compte est déjà activé.",
   "INVALID_CODE": "Code incorrect. Vérifiez les 6 chiffres reçus par email.",
   "CODE_EXPIRED": "Ce code a expiré. Demandez-en un nouveau.",
-  "TOO_MANY_CODE_ATTEMPTS": "Trop de codes erronés. Ce code est désormais invalide — demandez-en un nouveau.",
+  "TOO_MANY_CODE_ATTEMPTS": "Trop de codes erronés. Ce code est désormais invalide - demandez-en un nouveau.",
   "PASSWORD_NEEDS_UPPERCASE": "Le mot de passe doit contenir au moins une majuscule.",
   "PASSWORD_NEEDS_LOWERCASE": "Le mot de passe doit contenir au moins une minuscule.",
   "PASSWORD_NEEDS_DIGIT": "Le mot de passe doit contenir au moins un chiffre.",

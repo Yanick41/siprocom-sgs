@@ -63,7 +63,7 @@ export default function ProductFormModal({ product, categories, onClose, onSaved
     setSubmitError(null);
     mutation.mutate({
       ...values,
-      // Empty optional fields must be null, not "" — the API distinguishes them.
+      // Empty optional fields must be null, not "" - the API distinguishes them.
       maxThreshold: values.maxThreshold === '' ? null : Number(values.maxThreshold),
       unitsPerCarton: values.unitsPerCarton === '' ? null : Number(values.unitsPerCarton),
       // Clearing the factor must clear the price too, or a product that is no
@@ -124,7 +124,7 @@ export default function ProductFormModal({ product, categories, onClose, onSaved
           <FormField label={t('common:fields.category')} name="categoryId" error={errors.categoryId} required>
             {(props) => (
               <select {...props} {...register('categoryId', { required: 'VALIDATION_FAILED' })}>
-                <option value="">—</option>
+                <option value="">-</option>
                 {selectableCategories.map((c) => (
                   <option key={c.id} value={c.id}>
                     {lng === 'en' && c.nameEn ? c.nameEn : c.name}
@@ -142,7 +142,7 @@ export default function ProductFormModal({ product, categories, onClose, onSaved
           >
             {(props) => (
               <select {...props} {...register('container')}>
-                <option value="">—</option>
+                <option value="">-</option>
                 {CONTAINERS.map((c) => (
                   <option key={c} value={c}>
                     {t(`common:containers.${c}`)}
@@ -184,18 +184,18 @@ export default function ProductFormModal({ product, categories, onClose, onSaved
           </FormField>
         </div>
 
-        {/* Carton sales — optional. The unit above stays the base unit that
+        {/* Carton sales - optional. The unit above stays the base unit that
             stock, thresholds and alerts are counted in. */}
         <div className="rounded-lg border border-slate-200 p-4">
           <p className="mb-3 text-sm font-medium text-slate-700">{t('products:form.cartonSection')}</p>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            {/* Which group, and how many base units it holds — the two are
+            {/* Which group, and how many base units it holds - the two are
                 meaningless apart, so they sit together. */}
             <FormField label={t('products:form.groupingUnit')} name="groupingUnit" error={errors.groupingUnit}>
               {(props) => (
                 <select {...props} {...register('groupingUnit')}>
-                  <option value="">—</option>
+                  <option value="">-</option>
                   {GROUPING_UNITS.map((g) => (
                     <option key={g} value={g}>
                       {t(`common:units.${g}`)}

@@ -18,7 +18,7 @@ const REDACT = {
  * pino-pretty" at module load, and since the logger is imported by everything,
  * the whole API failed to boot over a formatting nicety.
  *
- * NODE_ENV alone was not enough to prevent it — the platform did not set it to
+ * NODE_ENV alone was not enough to prevent it - the platform did not set it to
  * production at runtime the way the build environment does. Serverless is
  * therefore detected directly, and the construction is wrapped: no logging
  * preference is worth taking the service down for.
@@ -39,7 +39,7 @@ function createLogger() {
       redact: REDACT,
     });
   } catch {
-    // pino-pretty missing or unresolvable — plain JSON is a fine second choice.
+    // pino-pretty missing or unresolvable - plain JSON is a fine second choice.
     return pino({ level: config.logLevel, redact: REDACT });
   }
 }

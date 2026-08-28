@@ -79,7 +79,7 @@ export function AuthProvider({ children }) {
  * Exported alongside the provider, which costs this file fast refresh: editing
  * it triggers a full reload rather than an HMR patch. Splitting the hook out
  * would touch the fifteen files that import it, for a file that is now stable
- * and rarely edited — not a trade worth making.
+ * and rarely edited - not a trade worth making.
  */
 export function useAuth() {
   const context = useContext(AuthContext);

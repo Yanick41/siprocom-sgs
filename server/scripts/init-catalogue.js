@@ -4,11 +4,11 @@
  * Creates the reference data a new installation needs: `npm run init-catalogue`
  *
  * Safe on a live database, unlike the demo seed. It only inserts what is
- * missing — no deleteMany, no demo accounts, no public password. Re-running it
+ * missing - no deleteMany, no demo accounts, no public password. Re-running it
  * changes nothing, so it is safe after adding a category by hand.
  *
  * Categories are those of an off-licence: wine, spirits, champagne,
- * confectionery, energy drinks. Adjust the list below to the shop's reality —
+ * confectionery, energy drinks. Adjust the list below to the shop's reality -
  * it is a starting point, not a fixed taxonomy.
  */
 

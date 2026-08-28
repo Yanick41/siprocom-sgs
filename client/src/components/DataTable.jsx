@@ -7,13 +7,13 @@ import { FiChevronLeft, FiChevronRight, FiInbox, FiAlertCircle } from 'react-ico
  *
  * columns: [{ key, header, render?, value?, sortable?, align?, className? }]
  *
- *   render(row)  JSX for the cell — badges, icons, formatting
+ *   render(row)  JSX for the cell - badges, icons, formatting
  *   value(row)   the raw value: what Excel and PDF export, and what this table
  *                falls back to when there is no `render`
  *   key          last resort, read straight off the row
  *
  * `value` is understood here rather than only by the exporters. It was not,
- * originally, and three screens rendered `row[key]` instead — which for a
+ * originally, and three screens rendered `row[key]` instead - which for a
  * joined relation is an object, and React throws on an object child. Every
  * cell now resolves through the same function.
  */
@@ -36,7 +36,7 @@ export default function DataTable({
   sort,
   onSortChange,
   // The index is passed through so callers can fall back to it for aggregate
-  // rows that carry no id — report rows grouped by category, for instance.
+  // rows that carry no id - report rows grouped by category, for instance.
   getRowKey = (row) => row.id,
   onRowClick,
   emptyMessage,

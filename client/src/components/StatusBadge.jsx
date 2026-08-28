@@ -8,7 +8,7 @@ const TONES = {
   neutral: 'bg-slate-100 text-slate-600 ring-slate-500/20',
 };
 
-// stockTone lives in @/lib/stockState — keeping this file to a single component
+// stockTone lives in @/lib/stockState - keeping this file to a single component
 // export is what lets fast refresh patch it without a full page reload.
 export default function StatusBadge({ tone = 'neutral', children }) {
   return (

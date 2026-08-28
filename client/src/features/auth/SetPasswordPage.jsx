@@ -10,7 +10,7 @@ import { useErrorMessage } from '@/hooks/useErrorMessage';
 import FormField from '@/components/FormField';
 
 /**
- * Landing page for an emailed link — both the invitation and the reset.
+ * Landing page for an emailed link - both the invitation and the reset.
  *
  * One screen for both because they end in the same act: choose a password. Only
  * the heading differs, and the server says which by reporting the token's type.

@@ -9,7 +9,7 @@ const logger = require('../lib/logger');
  * Runs AFTER the movement transaction commits, not inside it: alerting must
  * never extend the locks held by a stock update, and "after every committed
  * movement" is exactly what the rule asks for. The trade-off is that an alert
- * can lag a movement by milliseconds — acceptable, and the daily sweep is the
+ * can lag a movement by milliseconds - acceptable, and the daily sweep is the
  * backstop.
  *
  * Alerts are idempotent: one OPEN alert per (product, type). Crossing
@@ -82,7 +82,7 @@ async function checkThresholds(productIds) {
 /**
  * Fire-and-forget wrapper for route handlers.
  * A failure here must never turn a successful stock movement into an error
- * response — the movement is already committed and correct.
+ * response - the movement is already committed and correct.
  */
 function checkThresholdsAsync(productIds) {
   checkThresholds(productIds).catch((error) => {
@@ -91,7 +91,7 @@ function checkThresholdsAsync(productIds) {
 }
 
 /**
- * Full catalogue sweep — the backstop behind the per-movement checks.
+ * Full catalogue sweep - the backstop behind the per-movement checks.
  * Catches anything missed while the server was down, and any threshold that was
  * edited on the product rather than crossed by a movement.
  */

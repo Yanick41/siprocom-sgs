@@ -44,7 +44,7 @@ i18n
     returnNull: false,
   });
 
-// Keep <html lang> in sync — matters for screen readers and browser behaviour.
+// Keep <html lang> in sync - matters for screen readers and browser behaviour.
 const syncHtmlLang = (lng) => {
   document.documentElement.setAttribute('lang', lng);
 };

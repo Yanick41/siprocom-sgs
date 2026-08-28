@@ -15,7 +15,7 @@ const router = express.Router();
 
 /**
  * Scheduled backstop sweep. Machine-to-machine, so it carries a shared secret
- * rather than a user session — hence it is declared before `authenticate`.
+ * rather than a user session - hence it is declared before `authenticate`.
  *
  * GET and POST both work: Vercel Cron issues a GET with
  * `Authorization: Bearer $CRON_SECRET`, while a plain curl or another scheduler
@@ -92,7 +92,7 @@ router.get(
   })
 );
 
-// GET /api/alerts/count — drives the topbar badge.
+// GET /api/alerts/count - drives the topbar badge.
 router.get(
   '/count',
   asyncHandler(async (req, res) => {

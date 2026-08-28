@@ -15,7 +15,7 @@ import { unitLabel } from '@/lib/containers';
  * tablet keyboard.
  *
  * Enter moves to the next field, and from the last field of a line to the next
- * line — creating one if needed. That is what makes a ten-line sale a matter of
+ * line - creating one if needed. That is what makes a ten-line sale a matter of
  * typing rather than reaching for the mouse between every value.
  *
  * When `availability` is supplied (issues), each line is checked live against
@@ -35,9 +35,9 @@ export default function DocumentLinesEditor({
 
   const productById = new Map(products.map((p) => [p.id, p]));
 
-  /** "BOI-010 — Eau minérale 1.5L" — reference first, since that is what a
+  /** "BOI-010 - Eau minérale 1.5L" - reference first, since that is what a
    *  shelf label carries and what an operator is most likely to type. */
-  const optionLabel = (product) => `${product.reference} — ${product.designation}`;
+  const optionLabel = (product) => `${product.reference} - ${product.designation}`;
 
   const findByLabel = (label) =>
     products.find((p) => optionLabel(p) === label) ??
@@ -101,7 +101,7 @@ export default function DocumentLinesEditor({
     focusable[current + 1]?.focus();
   };
 
-  // Uses the line's own price, not the product's — an agreed rate must be what
+  // Uses the line's own price, not the product's - an agreed rate must be what
   // the operator sees totalled before saving.
   const grandTotal = lines.reduce(
     (sum, line) => (line.productId ? sum + Number(line.unitPrice || 0) * Number(line.quantity || 0) : sum),
@@ -131,7 +131,7 @@ export default function DocumentLinesEditor({
 
         // Text typed that matches nothing. Without this the line simply stays
         // invalid and the save button stays greyed out, with nothing on screen
-        // explaining why — which is exactly how a typo becomes a lost minute.
+        // explaining why - which is exactly how a typo becomes a lost minute.
         const unmatched = !line.productId && (line.productLabel ?? '').trim().length > 0;
 
         return (
@@ -201,7 +201,7 @@ export default function DocumentLinesEditor({
 
               {/* Editable on issues too: a shop quotes a regular differently
                   from a walk-in, and the figure billed is the one that must
-                  reach the invoice — not the price list. */}
+                  reach the invoice - not the price list. */}
               <div className="w-28">
                   <label htmlFor={`line-price-${index}`} className="label text-xs">
                     {t('stock:invoice.unitPrice')}

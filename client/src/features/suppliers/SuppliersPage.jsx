@@ -30,9 +30,9 @@ export default function SuppliersPage() {
 
   const columns = [
     { key: 'name', header: t('admin:suppliers.name'), render: (s) => <span className="font-medium text-slate-900">{s.name}</span> },
-    { key: 'contact', header: t('admin:suppliers.contact'), render: (s) => s.contact || '—' },
-    { key: 'phone', header: t('admin:suppliers.phone'), render: (s) => s.phone || '—' },
-    { key: 'email', header: t('admin:suppliers.email'), render: (s) => s.email || '—' },
+    { key: 'contact', header: t('admin:suppliers.contact'), render: (s) => s.contact || '-' },
+    { key: 'phone', header: t('admin:suppliers.phone'), render: (s) => s.phone || '-' },
+    { key: 'email', header: t('admin:suppliers.email'), render: (s) => s.email || '-' },
     {
       key: 'products',
       header: t('admin:suppliers.productCount'),

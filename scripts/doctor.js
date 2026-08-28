@@ -3,8 +3,8 @@
 /**
  * Pre-flight check: `npm run doctor`
  *
- * Diagnoses the things that actually stop the project from starting — a busy
- * port, an unreachable database, a missing secret — and says what to do about
+ * Diagnoses the things that actually stop the project from starting - a busy
+ * port, an unreachable database, a missing secret - and says what to do about
  * each one. The alternative is reading a stack trace from whichever of the two
  * servers happened to crash first.
  */
@@ -38,7 +38,7 @@ const fail = (msg, fix) => {
  *
  * Connects rather than trying to bind. Binding is unreliable here: the API
  * listens on :: and Vite on ::1, and on Windows a bind to 127.0.0.1 succeeds
- * against both — so the bind test reported busy ports as free. Both loopback
+ * against both - so the bind test reported busy ports as free. Both loopback
  * stacks are probed because a server on ::1 is invisible from 127.0.0.1.
  */
 const canConnect = (port, host) =>
@@ -68,7 +68,7 @@ function parseEnv(file) {
 }
 
 async function main() {
-  console.log('\n\x1b[1mSIPROCOM SGS — diagnostic\x1b[0m\n');
+  console.log('\n\x1b[1mSIPROCOM SGS - diagnostic\x1b[0m\n');
 
   // ---- Node ---------------------------------------------------------------
   const major = Number(process.versions.node.split('.')[0]);
@@ -112,7 +112,7 @@ async function main() {
     [5280, 'client'],
   ]) {
     if (await portInUse(port)) {
-      warn(`Port ${port} (${name}) is already in use`, 'npm run stop — or close the other terminal');
+      warn(`Port ${port} (${name}) is already in use`, 'npm run stop - or close the other terminal');
     } else {
       ok(`Port ${port} free`, name);
     }
@@ -146,14 +146,14 @@ async function main() {
         } else if (/reach|P1001|ECONNREFUSED/i.test(result.error)) {
           fail('Database unreachable', 'Start PostgreSQL, then re-run this check');
         } else if (/table|relation|P2021/i.test(result.error)) {
-          fail('Tables missing — migrations not applied', 'npm run db:setup');
+          fail('Tables missing - migrations not applied', 'npm run db:setup');
         } else {
           fail(`Database error: ${result.error}`);
         }
       } else {
         ok('Database reachable');
         if (result.users === 0) {
-          warn('No user account exists — you will not be able to sign in', 'npm run db:seed');
+          warn('No user account exists - you will not be able to sign in', 'npm run db:seed');
         } else {
           ok('Demo data present', `${result.users} users · ${result.products} products · ${result.movements} movements`);
         }
@@ -169,7 +169,7 @@ async function main() {
     console.log(`\x1b[31m${failures} problem(s) to fix\x1b[0m before the project will start.\n`);
     process.exitCode = 1;
   } else if (warnings > 0) {
-    console.log(`\x1b[33m${warnings} warning(s)\x1b[0m — \x1b[1mnpm run dev\x1b[0m should still work.\n`);
+    console.log(`\x1b[33m${warnings} warning(s)\x1b[0m - \x1b[1mnpm run dev\x1b[0m should still work.\n`);
   } else {
     console.log('Everything checks out. Start with \x1b[1mnpm run dev\x1b[0m\n');
     console.log('  Client   \x1b[36mhttp://localhost:5280\x1b[0m');

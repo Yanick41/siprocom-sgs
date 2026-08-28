@@ -29,7 +29,7 @@ export default function Modal({ open, onClose, title, children, footer, size = '
 
   /**
    * `xl` exists for the document forms. A goods receipt or issue is a table
-   * being typed — product, quantity, packaging, price, total — and at 2xl the
+   * being typed - product, quantity, packaging, price, total - and at 2xl the
    * product field was narrow enough that a designation scrolled inside it
    * while half the screen sat empty behind the overlay.
    */

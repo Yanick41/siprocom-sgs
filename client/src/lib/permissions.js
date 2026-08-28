@@ -1,7 +1,7 @@
 /**
  * Client-side permission map.
  *
- * This mirrors the server's `authorize(...)` guards for UI purposes only —
+ * This mirrors the server's `authorize(...)` guards for UI purposes only -
  * hiding a button the user cannot use. It is never a security boundary:
  * the server re-checks every request. See IMPLEMENTATION_PLAN.md §8.
  */
@@ -25,14 +25,14 @@ export const PERMISSIONS = {
   'suppliers.view': ALL,
   'suppliers.write': [ROLES.ADMIN, ROLES.ACHATS],
 
-  // Stock operations (Phase 3–4)
+  // Stock operations (Phase 3-4)
   'stock.view': ALL,
   'stock.write': [ROLES.ADMIN, ROLES.MAGASINIER],
   'stock.validate': [ROLES.ADMIN, ROLES.MAGASINIER],
   'stock.cancel': [ROLES.ADMIN],
   'stock.overrideNegative': [ROLES.ADMIN],
 
-  // Alerts & reporting (Phase 5–6)
+  // Alerts & reporting (Phase 5-6)
   'alerts.view': ALL,
   'alerts.acknowledge': [ROLES.ADMIN, ROLES.ACHATS],
   'reports.view': ALL,

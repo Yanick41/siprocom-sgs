@@ -82,7 +82,7 @@ router.get(
  *
  * Derived from the documents themselves rather than kept in a Customer table.
  * A shop sells to walk-ins as often as to regulars, and a table would mean a
- * record for every one of them — while the documents already hold the answer.
+ * record for every one of them - while the documents already hold the answer.
  *
  * Most recent details win: a customer who moved should not be offered the old
  * address. Declared before /:id so "customers" is not read as an id.
@@ -140,7 +140,7 @@ router.post(
     const { lines, ...data } = createIssueSchema.parse(req.body);
 
     // Conversion happens once, here, against the product's current factor and
-    // price — both are then frozen on the line, so a later change to either
+    // price - both are then frozen on the line, so a later change to either
     // cannot rewrite what this document says.
     const products = await prisma.product.findMany({
       where: { id: { in: [...new Set(lines.map((l) => l.productId))] } },
@@ -180,7 +180,7 @@ router.post(
   })
 );
 
-// PATCH /api/issues/:id — drafts only.
+// PATCH /api/issues/:id - drafts only.
 router.patch(
   '/:id',
   authorize('ADMIN', 'MAGASINIER'),
@@ -280,7 +280,7 @@ router.post(
   })
 );
 
-// POST /api/issues/:id/cancel — returns the goods to stock (BR-9).
+// POST /api/issues/:id/cancel - returns the goods to stock (BR-9).
 router.post(
   '/:id/cancel',
   authorize('ADMIN'),

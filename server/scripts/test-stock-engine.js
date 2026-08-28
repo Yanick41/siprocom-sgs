@@ -20,7 +20,7 @@ const { InsufficientStockError } = require('../src/lib/errors');
  * The concurrency tests fire 20 transactions at once against a hosted database.
  * Prisma's 2 s default for acquiring a connection is a local-latency figure:
  * over the network, the queue behind a burst that size exceeds it and the
- * transactions fail to *start* — which this script would score as "the stock
+ * transactions fail to *start* - which this script would score as "the stock
  * guard rejected them" when nothing of the sort happened.
  *
  * Waiting longer makes the test measure the invariant it is named after rather
@@ -110,7 +110,7 @@ async function main() {
    * important invariant in the system, and a red engine test that means "Neon
    * was unreachable for a second" is a test people learn to ignore.
    *
-   * The invariants below — never negative, ledger agrees with the level — hold
+   * The invariants below - never negative, ledger agrees with the level - hold
    * either way, and they are what actually proves the guard.
    */
   const rejectedForOtherReasons = rejected - rejectedForStock;
@@ -120,7 +120,7 @@ async function main() {
     );
     console.log(
       `  NOTE  ${rejectedForOtherReasons} of ${rejected} rejections were not stock-related ` +
-        `(${sample.reason.code || sample.reason.constructor.name}) — most likely the ` +
+        `(${sample.reason.code || sample.reason.constructor.name}) - most likely the ` +
         'database connection, not the engine.'
     );
   }

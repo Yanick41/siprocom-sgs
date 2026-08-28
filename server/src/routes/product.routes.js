@@ -175,7 +175,7 @@ router.patch(
 );
 
 // PATCH /api/products/:id/deactivate
-// Soft delete only — the movement ledger references this product forever (BR-4).
+// Soft delete only - the movement ledger references this product forever (BR-4).
 router.patch(
   '/:id/deactivate',
   authorize('ADMIN'),

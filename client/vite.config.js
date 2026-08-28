@@ -8,7 +8,7 @@ import path from 'node:path';
  * and sharing the default meant whichever started second silently drifted to
  * 5174 and hit the API's CORS allowlist.
  *
- * Override with CLIENT_PORT / API_PORT when a port is taken — no code change.
+ * Override with CLIENT_PORT / API_PORT when a port is taken - no code change.
  */
 const CLIENT_PORT = Number(process.env.CLIENT_PORT) || 5280;
 const API_PORT = Number(process.env.API_PORT) || 4000;

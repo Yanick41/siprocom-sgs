@@ -86,7 +86,7 @@ router.get(
   })
 );
 
-// POST /api/receipts — always created as DRAFT; stock is untouched until validation (BR-1).
+// POST /api/receipts - always created as DRAFT; stock is untouched until validation (BR-1).
 router.post(
   '/',
   authorize('ADMIN', 'MAGASINIER'),
@@ -94,7 +94,7 @@ router.post(
     const { lines, ...data } = createReceiptSchema.parse(req.body);
 
     // Receiving 3 cartons of 12 must add 36 bottles, so the conversion happens
-    // before anything is stored — the same resolution the issue side uses.
+    // before anything is stored - the same resolution the issue side uses.
     const products = await prisma.product.findMany({
       where: { id: { in: [...new Set(lines.map((l) => l.productId))] } },
     });
@@ -133,7 +133,7 @@ router.post(
   })
 );
 
-// PATCH /api/receipts/:id — drafts only.
+// PATCH /api/receipts/:id - drafts only.
 router.patch(
   '/:id',
   authorize('ADMIN', 'MAGASINIER'),
@@ -174,7 +174,7 @@ router.patch(
   })
 );
 
-// POST /api/receipts/:id/validate — the only place a receipt touches stock.
+// POST /api/receipts/:id/validate - the only place a receipt touches stock.
 router.post(
   '/:id/validate',
   authorize('ADMIN', 'MAGASINIER'),
@@ -228,7 +228,7 @@ router.post(
   })
 );
 
-// POST /api/receipts/:id/cancel — posts exact compensating movements (BR-9).
+// POST /api/receipts/:id/cancel - posts exact compensating movements (BR-9).
 router.post(
   '/:id/cancel',
   authorize('ADMIN'),

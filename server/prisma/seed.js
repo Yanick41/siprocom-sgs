@@ -7,7 +7,7 @@
  * features (§4.6) are untestable without history, and discovering that in Phase 6
  * would be far too late.
  *
- * Idempotent — safe to re-run. Run with: npm run db:seed
+ * Idempotent - safe to re-run. Run with: npm run db:seed
  */
 
 const bcrypt = require('bcryptjs');
@@ -18,7 +18,7 @@ const prisma = new PrismaClient();
 const DAYS_OF_HISTORY = 90;
 const DEMO_PASSWORD = 'Siprocom2026!';
 
-// Deterministic PRNG so every seed run produces the same dataset —
+// Deterministic PRNG so every seed run produces the same dataset -
 // reproducible bug reports beat "it worked on my machine".
 let seed = 20260807;
 const random = () => {
@@ -106,7 +106,7 @@ const PRODUCTS = [
  */
 function assertLocalDatabase(url) {
   if (process.env.ALLOW_REMOTE_SEED === 'yes-destroy-this-database') {
-    console.warn('\n  ALLOW_REMOTE_SEED is set — seeding a non-local database on purpose.\n');
+    console.warn('\n  ALLOW_REMOTE_SEED is set - seeding a non-local database on purpose.\n');
     return;
   }
 
@@ -214,7 +214,7 @@ async function main() {
   console.log(`  ${products.length} products`);
 
   // ---- opening stock -----------------------------------------------------
-  // Enters as ADJUSTMENT movements so the ledger is complete from day one —
+  // Enters as ADJUSTMENT movements so the ledger is complete from day one -
   // the same approach the real go-live migration will use (§10 Phase 8).
   const levels = new Map(); // productId -> quantity
   const movements = [];
@@ -244,7 +244,7 @@ async function main() {
     if (isSunday) continue;
 
     for (const product of products) {
-      // OUT — frequency scales with popularity.
+      // OUT - frequency scales with popularity.
       if (random() < product.popularity * 0.55) {
         const current = levels.get(product.id);
         const requested = randomInt(1, Math.max(2, Math.round(product.minThreshold * 0.35)));
@@ -265,7 +265,7 @@ async function main() {
         }
       }
 
-      // IN — replenishment when the level approaches the threshold.
+      // IN - replenishment when the level approaches the threshold.
       const current = levels.get(product.id);
       if (current < product.minThreshold * 1.4 && random() < 0.3) {
         const quantity = randomInt(product.minThreshold, product.minThreshold * 3);

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 
 /**
  * Maps an ApiError code to a translated sentence.
- * The API never sends prose — this is where codes become language.
+ * The API never sends prose - this is where codes become language.
  */
 export function useErrorMessage() {
   const { t } = useTranslation('errors');

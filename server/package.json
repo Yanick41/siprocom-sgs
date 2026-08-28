@@ -1,7 +1,7 @@
 {
   "name": "sgs-server",
   "version": "1.0.0",
-  "description": "SIPROCOM SGS — Stock Management System API",
+  "description": "SIPROCOM SGS - Stock Management System API",
   "main": "index.js",
   "type": "commonjs",
   "license": "UNLICENSED",

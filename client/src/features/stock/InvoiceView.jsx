@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
  * The invoice as it appears on paper.
  *
  * A dedicated print stylesheet rather than a screenshot of the modal: printing
- * the app's chrome — sidebar, buttons, badges — wastes the page and looks
+ * the app's chrome - sidebar, buttons, badges - wastes the page and looks
  * unprofessional handed to a customer. `print:` utilities hide everything else
  * and let this block take the sheet.
  */

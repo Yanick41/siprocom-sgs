@@ -1,6 +1,6 @@
-# SIPROCOM SGS — Guide utilisateur
+# SIPROCOM SGS - Guide utilisateur
 
-*Support de formation — version 1.0*
+*Support de formation - version 1.0*
 
 ---
 
@@ -23,16 +23,16 @@ depuis l'écran Utilisateurs.
 | | Administrateur | Magasinier | Achats | Direction |
 |---|:---:|:---:|:---:|:---:|
 | Consulter le stock | ✅ | ✅ | ✅ | ✅ |
-| Saisir entrées / sorties | ✅ | ✅ | — | — |
-| Valider un bon | ✅ | ✅ | — | — |
-| Annuler un bon validé | ✅ | — | — | — |
-| Ajuster l'inventaire | ✅ | ✅ | — | — |
-| Créer / modifier un produit | ✅ | ✅ | — | — |
-| Gérer les fournisseurs | ✅ | — | ✅ | — |
-| Catégories et entrepôts | ✅ | — | — | — |
-| Prendre en compte une alerte | ✅ | — | ✅ | — |
-| Valorisation du stock | ✅ | — | — | ✅ |
-| Utilisateurs et audit | ✅ | — | — | — |
+| Saisir entrées / sorties | ✅ | ✅ | - | - |
+| Valider un bon | ✅ | ✅ | - | - |
+| Annuler un bon validé | ✅ | - | - | - |
+| Ajuster l'inventaire | ✅ | ✅ | - | - |
+| Créer / modifier un produit | ✅ | ✅ | - | - |
+| Gérer les fournisseurs | ✅ | - | ✅ | - |
+| Catégories et entrepôts | ✅ | - | - | - |
+| Prendre en compte une alerte | ✅ | - | ✅ | - |
+| Valorisation du stock | ✅ | - | - | ✅ |
+| Utilisateurs et audit | ✅ | - | - | - |
 
 Le menu de gauche n'affiche que ce à quoi vous avez droit. Si une rubrique
 n'apparaît pas, c'est normal.
@@ -69,7 +69,7 @@ nom et l'heure.
 
 Sous chaque ligne, le système affiche **la quantité réellement disponible** dans
 cet entrepôt. Si vous demandez plus que le disponible, la ligne passe en rouge
-immédiatement — inutile d'attendre la validation pour le découvrir.
+immédiatement - inutile d'attendre la validation pour le découvrir.
 
 4. **Enregistrer le brouillon**, vérifiez, puis **Valider la sortie**
 
@@ -92,7 +92,7 @@ est tracée nominativement dans le journal d'audit.
 4. Ajoutez les produits, enregistrez, validez
 
 La sortie et l'entrée sont enregistrées ensemble. **La marchandise ne peut jamais
-disparaître entre les deux sites** — soit les deux mouvements passent, soit
+disparaître entre les deux sites** - soit les deux mouvements passent, soit
 aucun.
 
 ---
@@ -105,7 +105,7 @@ aucun.
 2. Choisissez l'entrepôt puis le produit
 3. Le **stock théorique** s'affiche
 4. Saisissez la **quantité comptée** → l'écart apparaît en direct
-5. Saisissez le **motif** — obligatoire, minimum 3 caractères
+5. Saisissez le **motif** - obligatoire, minimum 3 caractères
 6. **Enregistrer l'ajustement**
 
 Le motif est obligatoire parce qu'un écart d'inventaire sans explication rend
@@ -120,7 +120,7 @@ Le menu **Alertes** liste les produits **sous le seuil minimum** ou **en
 surstock**. La pastille rouge dans la barre du haut indique le nombre d'alertes
 en cours, depuis n'importe quel écran.
 
-Les alertes sont générées **automatiquement** après chaque mouvement — aucune
+Les alertes sont générées **automatiquement** après chaque mouvement - aucune
 action manuelle. Une alerte se résout d'elle-même dès que le stock repasse dans
 les seuils.
 
@@ -137,7 +137,7 @@ Menu **Rapports**, quatre onglets :
 
 | Onglet | À quoi ça sert |
 |---|---|
-| **Produits tendance** | Les produits les plus sortis — pour anticiper les réapprovisionnements |
+| **Produits tendance** | Les produits les plus sortis - pour anticiper les réapprovisionnements |
 | **Stock dormant** | Les produits qui ne bougent pas et la valeur immobilisée dessus |
 | **Synthèse par catégorie** | Entrées et sorties par famille de produits |
 | **Valorisation** | Valeur du stock (réservé Administrateur et Direction) |
@@ -158,7 +158,7 @@ Chaque ligne indique **qui**, **quoi**, **quand**, **combien** et le **solde
 après** l'opération.
 
 Ce journal est en ajout seul : il ne peut être ni modifié ni supprimé, par
-personne. Une annulation crée un mouvement inverse — l'historique reste fidèle
+personne. Une annulation crée un mouvement inverse - l'historique reste fidèle
 à ce qui s'est réellement passé.
 
 ---
@@ -175,7 +175,7 @@ mouvements inverses. Le bon d'origine reste visible avec le statut « Annulé »
 
 **Puis-je supprimer un produit ?**
 Non, seulement le désactiver. Ses mouvements passés y font référence
-définitivement — le supprimer effacerait une partie de l'historique.
+définitivement - le supprimer effacerait une partie de l'historique.
 
 **Les chiffres affichés sont-ils fiables ?**
 Un administrateur peut lancer le **contrôle de cohérence** depuis l'écran

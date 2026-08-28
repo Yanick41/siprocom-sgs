@@ -22,7 +22,7 @@ function startScheduler() {
     return null;
   }
 
-  // 06:00 every day — before the warehouse opens, so ACHATS finds the
+  // 06:00 every day - before the warehouse opens, so ACHATS finds the
   // replenishment list already waiting.
   const job = cron.schedule(
     '0 6 * * *',
@@ -37,7 +37,7 @@ function startScheduler() {
     { timezone: config.timezone }
   );
 
-  logger.info('Scheduler started — daily alert sweep at 06:00');
+  logger.info('Scheduler started - daily alert sweep at 06:00');
   return job;
 }
 

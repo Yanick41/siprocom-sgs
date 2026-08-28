@@ -119,7 +119,7 @@ router.patch(
   })
 );
 
-// PATCH /api/suppliers/:id/deactivate — soft delete, keeps historical receipts intact.
+// PATCH /api/suppliers/:id/deactivate - soft delete, keeps historical receipts intact.
 router.patch(
   '/:id/deactivate',
   authorize('ADMIN'),

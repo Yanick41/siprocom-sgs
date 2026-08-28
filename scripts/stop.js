@@ -5,7 +5,7 @@
  *
  * Targets whatever is listening on 4000, 5173 and Vite's fallback range, so a
  * dev server left running in a closed terminal does not block the next start.
- * Only these ports are touched — killing every node process would take out
+ * Only these ports are touched - killing every node process would take out
  * unrelated work.
  */
 
@@ -36,7 +36,7 @@ function pidsOnPort(port) {
     });
     return out.split('\n').filter(Boolean);
   } catch {
-    return []; // no match — the command exits non-zero when nothing is found
+    return []; // no match - the command exits non-zero when nothing is found
   }
 }
 

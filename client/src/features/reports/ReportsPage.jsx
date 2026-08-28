@@ -119,7 +119,7 @@ export default function ReportsPage() {
 
   const columns = COLUMNS[tab];
   const rows = ACTIVE.rows;
-  const periodLabel = `${formatDate(period.from, lng)} — ${formatDate(period.to, lng)}`;
+  const periodLabel = `${formatDate(period.from, lng)} - ${formatDate(period.to, lng)}`;
 
   return (
     <div className="space-y-4">
@@ -175,7 +175,7 @@ export default function ReportsPage() {
       </div>
 
       <div className="card flex flex-wrap items-center gap-3 p-4">
-        {/* Valuation is a snapshot of stock right now — a period would be meaningless. */}
+        {/* Valuation is a snapshot of stock right now - a period would be meaningless. */}
         {tab !== 'valuation' && (
           <>
             <div className="flex items-center gap-2">

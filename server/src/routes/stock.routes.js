@@ -14,7 +14,7 @@ const { adjustStockSchema, idParamSchema } = require('../validators/stock.valida
 const router = express.Router();
 router.use(authenticate);
 
-// GET /api/stock — one level per product, with threshold state.
+// GET /api/stock - one level per product, with threshold state.
 router.get(
   '/',
   asyncHandler(async (req, res) => {
@@ -70,7 +70,7 @@ router.get(
   })
 );
 
-// GET /api/stock/reconcile — proves the materialised levels against the ledger.
+// GET /api/stock/reconcile - proves the materialised levels against the ledger.
 // Declared before /product/:id so "reconcile" is never read as an id.
 router.get(
   '/reconcile',
@@ -80,7 +80,7 @@ router.get(
   })
 );
 
-// GET /api/stock/movements — the journal de stock (§4.4).
+// GET /api/stock/movements - the journal de stock (§4.4).
 router.get(
   '/movements',
   asyncHandler(async (req, res) => {
@@ -114,7 +114,7 @@ router.get(
   })
 );
 
-// GET /api/stock/product/:id — current level plus recent history.
+// GET /api/stock/product/:id - current level plus recent history.
 router.get(
   '/product/:id',
   asyncHandler(async (req, res) => {
@@ -144,7 +144,7 @@ router.get(
   })
 );
 
-// POST /api/stock/adjust — inventory correction. Reason is mandatory (BR-6).
+// POST /api/stock/adjust - inventory correction. Reason is mandatory (BR-6).
 router.post(
   '/adjust',
   authorize('ADMIN', 'MAGASINIER'),

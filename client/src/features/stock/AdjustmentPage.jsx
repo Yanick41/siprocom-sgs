@@ -87,10 +87,10 @@ export default function AdjustmentPage() {
               onChange={(e) => setForm({ ...form, productId: e.target.value })}
               className="input"
             >
-              <option value="">—</option>
+              <option value="">-</option>
               {(productsQuery.data?.items || []).map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.reference} — {lng === 'en' && p.designationEn ? p.designationEn : p.designation}
+                  {p.reference} - {lng === 'en' && p.designationEn ? p.designationEn : p.designation}
                 </option>
               ))}
             </select>
@@ -127,7 +127,7 @@ export default function AdjustmentPage() {
                       : 'text-red-600'
                 }`}
               >
-                {delta === null ? '—' : delta > 0 ? `+${delta}` : delta}
+                {delta === null ? '-' : delta > 0 ? `+${delta}` : delta}
               </p>
             </div>
           </div>

@@ -6,7 +6,7 @@ const DEFAULT_LIMIT = 25;
 /**
  * Parses common list query params into Prisma arguments.
  *
- * Every list endpoint paginates — the <2s NFR does not survive an unbounded
+ * Every list endpoint paginates - the <2s NFR does not survive an unbounded
  * `findMany` once the movement ledger reaches production size.
  *
  * @param {object} query   req.query
@@ -17,7 +17,7 @@ function parseListQuery(query = {}, { sortable = [], defaultSort = 'createdAt' }
   const requestedLimit = Number.parseInt(query.limit, 10) || DEFAULT_LIMIT;
   const limit = Math.min(Math.max(1, requestedLimit), MAX_LIMIT);
 
-  // Only allow sorting on explicitly whitelisted columns — a raw passthrough
+  // Only allow sorting on explicitly whitelisted columns - a raw passthrough
   // would let a caller sort on (and therefore probe) any column.
   const sortField = sortable.includes(query.sort) ? query.sort : defaultSort;
   const sortOrder = query.order === 'asc' ? 'asc' : 'desc';

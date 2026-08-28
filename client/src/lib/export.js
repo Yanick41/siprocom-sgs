@@ -2,7 +2,7 @@
  * Excel and PDF export (§4.6, acceptance criterion 6: "sans perte de données").
  *
  * Both exporters take the same shape as DataTable columns, so a screen exports
- * exactly what it displays — headers included, in the active language.
+ * exactly what it displays - headers included, in the active language.
  *
  * columns: [{ key, header, value?(row), align? }]
  *   `value` returns the RAW value (number stays a number). `render` is not used

@@ -40,7 +40,7 @@ const isProduction = NODE_ENV === 'production' || isServerless;
  *
  * It is the project's production alias (siprocom-sgs.vercel.app), not the
  * per-deployment URL, so it does not change with every push. Preview
- * deployments each get their own hostname and are not covered — deliberately:
+ * deployments each get their own hostname and are not covered - deliberately:
  * an allowlist that accepts any *.vercel.app accepts everyone else's too.
  */
 const vercelProductionOrigin = process.env.VERCEL_PROJECT_PRODUCTION_URL
@@ -51,7 +51,7 @@ const vercelProductionOrigin = process.env.VERCEL_PROJECT_PRODUCTION_URL
  * An empty allowlist is not a failure, so this must never throw.
  *
  * The earlier version required CLIENT_URL in production unless Vercel supplied
- * the domain — which made boot depend on VERCEL_PROJECT_PRODUCTION_URL, a
+ * the domain - which made boot depend on VERCEL_PROJECT_PRODUCTION_URL, a
  * system variable the platform only exposes when that option is enabled. When
  * it was not, the module threw while loading and every request returned
  * FUNCTION_INVOCATION_FAILED: no route ran, so even /api/health could not
@@ -60,7 +60,7 @@ const vercelProductionOrigin = process.env.VERCEL_PROJECT_PRODUCTION_URL
  * The reasoning behind it was wrong anyway. On Vercel the SPA and the API share
  * an origin, so the browser sends no Origin header for the app's own requests
  * and CORS never applies. An empty allowlist blocks cross-origin callers and
- * leaves the deployed application working — the safe default, and the one that
+ * leaves the deployed application working - the safe default, and the one that
  * cannot take the whole service down.
  */
 const configuredClientUrl = optional('CLIENT_URL', '') || vercelProductionOrigin || '';
@@ -77,7 +77,7 @@ const clientUrls = [
  * A localhost origin in production is almost always a copied dev value and
  * hands the allowlist to anything running on the operator's machine. Plain http
  * is equally useless: the auth cookie is Secure, so a browser would never send
- * it. Both are worth refusing to boot over — but only when someone actually set
+ * it. Both are worth refusing to boot over - but only when someone actually set
  * them, which is why the guards run on `configuredClientUrl` rather than on the
  * assembled list.
  */
@@ -89,14 +89,14 @@ const badOrigins = configuredClientUrl
 if (isProduction && badOrigins.some((url) => /localhost|127\.0\.0\.1|\[::1\]/.test(url))) {
   throw new Error(
     `CLIENT_URL contains a localhost origin in production: ${badOrigins.join(', ')}. ` +
-      'Set it to the real front-end domain(s), or leave it unset — the app and ' +
+      'Set it to the real front-end domain(s), or leave it unset - the app and ' +
       'the API share an origin, so CORS is not needed for the app itself.'
   );
 }
 
 if (isProduction && badOrigins.some((url) => url.startsWith('http://'))) {
   throw new Error(
-    'CLIENT_URL must use https in production — the auth cookie is Secure and a ' +
+    'CLIENT_URL must use https in production - the auth cookie is Secure and a ' +
       'browser will not send it over http.'
   );
 }
@@ -147,15 +147,15 @@ const config = {
   timezone: optional('TZ', 'Africa/Abidjan'),
 };
 
-// Warnings, not failures — the system works without these, just with a feature
+// Warnings, not failures - the system works without these, just with a feature
 // silently inert, which is worth saying out loud at boot.
 if (isProduction) {
   const warnings = [];
   if (!config.cronSecret) {
-    warnings.push('CRON_SECRET is empty — POST /api/alerts/sweep will reject every call.');
+    warnings.push('CRON_SECRET is empty - POST /api/alerts/sweep will reject every call.');
   }
   if (config.jwt.secret.length < 32) {
-    warnings.push('JWT_SECRET is shorter than 32 characters — generate a longer one.');
+    warnings.push('JWT_SECRET is shorter than 32 characters - generate a longer one.');
   }
   if (warnings.length) {
     // eslint-disable-next-line no-console -- the logger imports this module

@@ -21,7 +21,7 @@ globalThis.matchMedia ??= () => ({
  *
  * Recharts' ResponsiveContainer renders nothing until an observation arrives,
  * so a stub that never fires makes every chart screen sit at its fallback until
- * the test times out — 23s for the dashboard before this.
+ * the test times out - 23s for the dashboard before this.
  */
 globalThis.ResizeObserver ??= class {
   constructor(callback) {

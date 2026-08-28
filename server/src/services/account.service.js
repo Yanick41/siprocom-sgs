@@ -19,7 +19,7 @@ const { UnauthorizedError, ForbiddenError, NotFoundError, ConflictError } = requ
  * What this costs, stated plainly: the administrator now sees the code, so they
  * *could* activate a colleague's account and post movements under that name.
  * They already control roles and can deactivate anyone, so it is no escalation
- * of power — but attribution (BR-5) is weaker than it was, and that is the
+ * of power - but attribution (BR-5) is weaker than it was, and that is the
  * trade the no-email arrangement makes.
  *
  * What it does not cost: BR-11 still holds. The administrator hands over a
@@ -37,7 +37,7 @@ const MAX_CODE_ATTEMPTS = 5;
  * Longer than the ten minutes an emailed code would get.
  *
  * The threat model changed with the delivery: nothing sits in an inbox waiting
- * to be read, so the short window bought little — while an administrator who
+ * to be read, so the short window bought little - while an administrator who
  * reads out a code and is then pulled away needs it to still work when they
  * come back.
  */
@@ -45,7 +45,7 @@ const CODE_TTL_MINUTES = 60;
 
 /**
  * SHA-256. For the 256-bit link token this is real protection; for six digits
- * it only keeps the value out of plain sight in backups and logs — a million
+ * it only keeps the value out of plain sight in backups and logs - a million
  * combinations is a lookup table an attacker builds in seconds. What actually
  * guards the code is `attempts` plus the expiry.
  */
@@ -56,7 +56,7 @@ const hashValue = (value) => createHash('sha256').update(value).digest('hex');
  *
  * randomInt, not Math.random(): the code is a credential, and a predictable
  * generator would let an attacker skip the guessing entirely. Leading zeros are
- * kept — "007431" is valid, and trimming it would quietly shrink the space.
+ * kept - "007431" is valid, and trimming it would quietly shrink the space.
  */
 const generateCode = () => String(randomInt(0, 1_000_000)).padStart(6, '0');
 
@@ -65,7 +65,7 @@ const generateCode = () => String(randomInt(0, 1_000_000)).padStart(6, '0');
  *
  * Returning the code is the point: there is no inbox to deliver it to, so the
  * administrator reads it off the screen. This is the only moment the value
- * exists in readable form — the database keeps a hash — so a lost code is
+ * exists in readable form - the database keeps a hash - so a lost code is
  * regenerated, never recovered.
  *
  * Supersedes any earlier unused invitation, so exactly one code is ever live.
@@ -113,7 +113,7 @@ async function issueActivationCode(email) {
  * signup form.
  *
  * @throws {NotFoundError} unknown account
- * @throws {ConflictError} the account was never activated — invite it instead
+ * @throws {ConflictError} the account was never activated - invite it instead
  */
 async function issuePasswordResetLink(userId) {
   const user = await prisma.user.findUnique({ where: { id: userId } });

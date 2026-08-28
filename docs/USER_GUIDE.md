@@ -1,6 +1,6 @@
-# SIPROCOM SGS — User guide
+# SIPROCOM SGS - User guide
 
-*Training material — version 1.0*
+*Training material - version 1.0*
 
 ---
 
@@ -13,7 +13,7 @@ The **FR / EN** switch in the top right is available **before** signing in: if
 you do not read French, change the language first. Your choice is saved on your
 account and follows you to any workstation.
 
-**Forgot your password?** Contact an administrator — they reset it from the
+**Forgot your password?** Contact an administrator - they reset it from the
 Users screen.
 
 ---
@@ -23,16 +23,16 @@ Users screen.
 | | Administrator | Storekeeper | Purchasing | Management |
 |---|:---:|:---:|:---:|:---:|
 | View stock | ✅ | ✅ | ✅ | ✅ |
-| Record receipts / issues | ✅ | ✅ | — | — |
-| Validate a document | ✅ | ✅ | — | — |
-| Cancel a validated document | ✅ | — | — | — |
-| Adjust inventory | ✅ | ✅ | — | — |
-| Create / edit a product | ✅ | ✅ | — | — |
-| Manage suppliers | ✅ | — | ✅ | — |
-| Categories and warehouses | ✅ | — | — | — |
-| Acknowledge an alert | ✅ | — | ✅ | — |
-| Stock valuation | ✅ | — | — | ✅ |
-| Users and audit log | ✅ | — | — | — |
+| Record receipts / issues | ✅ | ✅ | - | - |
+| Validate a document | ✅ | ✅ | - | - |
+| Cancel a validated document | ✅ | - | - | - |
+| Adjust inventory | ✅ | ✅ | - | - |
+| Create / edit a product | ✅ | ✅ | - | - |
+| Manage suppliers | ✅ | - | ✅ | - |
+| Categories and warehouses | ✅ | - | - | - |
+| Acknowledge an alert | ✅ | - | ✅ | - |
+| Stock valuation | ✅ | - | - | ✅ |
+| Users and audit log | ✅ | - | - | - |
 
 The left menu only shows what you are allowed to use. A missing section is
 expected, not a fault.
@@ -48,7 +48,7 @@ expected, not a fault.
 3. Add one line per product: product, quantity, buy price
 4. **Save draft**
 
-⚠️ **Stock has not moved yet.** A draft changes nothing — deliberately, so you
+⚠️ **Stock has not moved yet.** A draft changes nothing - deliberately, so you
 can check your entry against the paper delivery note before committing it.
 
 5. Reopen the document, check it, then **Validate receipt**
@@ -67,7 +67,7 @@ time.
 3. Add products and quantities
 
 Under each line the system shows **the quantity actually available** in that
-warehouse. Ask for more than is available and the line turns red straight away —
+warehouse. Ask for more than is available and the line turns red straight away -
 no need to wait for validation to find out.
 
 4. **Save draft**, check it, then **Validate issue**
@@ -91,7 +91,7 @@ recorded by name in the audit log.
 4. Add products, save, validate
 
 The issue and the matching receipt are recorded together. **Goods can never
-disappear between the two sites** — either both movements go through, or
+disappear between the two sites** - either both movements go through, or
 neither does.
 
 ---
@@ -103,8 +103,8 @@ neither does.
 1. **Adjustment** menu
 2. Choose the warehouse, then the product
 3. The **theoretical stock** appears
-4. Enter the **counted quantity** — the difference updates live
-5. Enter the **reason** — required, at least 3 characters
+4. Enter the **counted quantity** - the difference updates live
+5. Enter the **reason** - required, at least 3 characters
 6. **Record adjustment**
 
 The reason is mandatory because an inventory discrepancy with no explanation
@@ -119,7 +119,7 @@ The **Alerts** menu lists products **below the minimum threshold** or
 **overstocked**. The red badge in the top bar shows the number of open alerts
 from any screen.
 
-Alerts are raised **automatically** after every movement — nothing to trigger by
+Alerts are raised **automatically** after every movement - nothing to trigger by
 hand. An alert resolves itself as soon as stock returns within its thresholds.
 
 **Purchasing:** tick ✅ to mark an alert as acknowledged (order placed). It stays
@@ -135,7 +135,7 @@ The list exports to Excel and PDF.
 
 | Tab | What it is for |
 |---|---|
-| **Trending products** | The most issued products — to anticipate replenishment |
+| **Trending products** | The most issued products - to anticipate replenishment |
 | **Dormant stock** | Products that are not moving, and the value tied up in them |
 | **Summary by category** | Inbound and outbound by product family |
 | **Valuation** | Stock value (Administrator and Management only) |
@@ -156,7 +156,7 @@ Each row shows **who**, **what**, **when**, **how many**, and the **balance
 after** the operation.
 
 This journal is append-only: nobody can edit or delete it. A cancellation
-creates a reversing movement — the history stays faithful to what actually
+creates a reversing movement - the history stays faithful to what actually
 happened.
 
 ---
@@ -171,7 +171,7 @@ An administrator can cancel it: the system records the reversing movements
 automatically. The original document stays visible with the "Cancelled" status.
 
 **Can I delete a product?**
-No, only deactivate it. Past movements reference it permanently — deleting it
+No, only deactivate it. Past movements reference it permanently - deleting it
 would erase part of the history.
 
 **Are the displayed figures reliable?**

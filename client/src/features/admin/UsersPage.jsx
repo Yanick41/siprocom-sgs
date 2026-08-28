@@ -37,7 +37,7 @@ export default function UsersPage() {
    *
    * There is no email in this system, so the administrator reads the code out or
    * writes it down. It is stored only as a hash, so the dialog below is the only
-   * place it will ever appear — closing it without noting the value means
+   * place it will ever appear - closing it without noting the value means
    * issuing a new one, which is what the button on each row does.
    */
   const [handout, setHandout] = useState(null);
@@ -76,13 +76,13 @@ export default function UsersPage() {
     {
       key: 'lastLoginAt',
       header: t('admin:users.lastLogin'),
-      render: (u) => (u.lastLoginAt ? formatDateTime(u.lastLoginAt, lng) : '—'),
+      render: (u) => (u.lastLoginAt ? formatDateTime(u.lastLoginAt, lng) : '-'),
     },
     {
       key: 'isActive',
       header: t('common:fields.status'),
       // An invited account that has not been activated is neither active nor
-      // disabled — it is waiting on someone, and that is what the admin needs
+      // disabled - it is waiting on someone, and that is what the admin needs
       // to see before wondering why a colleague cannot log in.
       render: (u) =>
         u.pending ? (
@@ -197,7 +197,7 @@ function CredentialModal({ handout, onClose }) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Clipboard access can be refused — insecure origin, or a permission the
+      // Clipboard access can be refused - insecure origin, or a permission the
       // browser withholds. The value is on screen and selectable, so this is a
       // convenience rather than the only way out.
       toast.error(t('admin:users.copyFailed'));

@@ -5,7 +5,7 @@ const { z } = require('zod');
 /**
  * Kept beside the client list in client/src/lib/containers.js. They were two
  * hardcoded arrays that had to agree, and adding a format to one silently made
- * the server reject it — naming the list at least makes the pairing visible.
+ * the server reject it - naming the list at least makes the pairing visible.
  */
 const CONTAINERS = ['glass_bottle', 'plastic_bottle', 'can', 'carton_pack', 'pouch'];
 

@@ -49,8 +49,8 @@ const NAV_SECTIONS = [
     items: [
       { to: '/users', labelKey: 'nav.users', icon: FiUsers, permission: 'users.manage' },
       { to: '/audit', labelKey: 'nav.auditLog', icon: FiShield, permission: 'audit.view' },
-      // No /settings entry: every parameter the cahier des charges lists —
-      // thresholds, categories, suppliers — is edited on its own screen, so a
+      // No /settings entry: every parameter the cahier des charges lists -
+      // thresholds, categories, suppliers - is edited on its own screen, so a
       // settings page would have nothing left to hold.
     ],
   },

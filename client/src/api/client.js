@@ -14,7 +14,7 @@ const api = axios.create({
 /**
  * Normalises every failure into { code, details, status } so callers and the
  * error-translation helper never have to inspect axios internals.
- * The server sends codes, not sentences — see IMPLEMENTATION_PLAN.md §7 rule 5.
+ * The server sends codes, not sentences - see IMPLEMENTATION_PLAN.md §7 rule 5.
  */
 export class ApiError extends Error {
   constructor(code, details, status) {

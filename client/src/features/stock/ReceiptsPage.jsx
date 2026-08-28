@@ -63,7 +63,7 @@ export default function ReceiptsPage() {
   const columns = [
     { key: 'number', header: t('stock:document.number'), render: (d) => <span className="font-mono text-xs font-medium">{d.number}</span> },
     { key: 'receiptDate', header: t('common:fields.date'), sortable: true, render: (d) => formatDate(d.receiptDate, lng) },
-    { key: 'supplier', header: t('stock:receipt.supplier'), render: (d) => d.supplier?.name || '—' },
+    { key: 'supplier', header: t('stock:receipt.supplier'), render: (d) => d.supplier?.name || '-' },
     { key: 'reason', header: t('common:fields.reason'), render: (d) => t(`stock:receiptReason.${d.reason}`) },
     { key: 'lines', header: t('stock:document.lineCount'), align: 'right', render: (d) => d._count?.lines ?? 0 },
     {
@@ -210,7 +210,7 @@ function ReceiptFormModal({ onClose, onCreated }) {
               onChange={(e) => setForm({ ...form, supplierId: e.target.value })}
               className="input"
             >
-              <option value="">—</option>
+              <option value="">-</option>
               {(suppliersQuery.data?.items || []).map((s) => (
                 <option key={s.id} value={s.id}>{s.name}</option>
               ))}
@@ -320,7 +320,7 @@ function ReceiptDetailModal({ id, onClose, canValidate, canCancel, onValidate, o
             </div>
             <div>
               <dt className="text-slate-500">{t('stock:receipt.supplier')}</dt>
-              <dd className="text-slate-800">{doc.supplier?.name || '—'}</dd>
+              <dd className="text-slate-800">{doc.supplier?.name || '-'}</dd>
             </div>
           </dl>
 

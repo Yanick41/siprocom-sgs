@@ -5,8 +5,8 @@
  *
  *   node scripts/create-admin.js --email a@b.com --name "Nom" --password "…"
  *
- * This exists because the alternative — adding the row by hand in Prisma Studio
- * — means hashing the password in a separate step and pasting it into a form,
+ * This exists because the alternative - adding the row by hand in Prisma Studio
+ * - means hashing the password in a separate step and pasting it into a form,
  * which is exactly how a plaintext password ends up in a database.
  *
  * Safe on a live database: it creates or updates one row and touches nothing
@@ -62,7 +62,7 @@ stored or logged in clear.
   const email = args.email.trim().toLowerCase();
   const problems = checkPassword(args.password);
   if (problems.length) {
-    console.error(`\n  Password rejected — it must be: ${problems.join(', ')}.\n`);
+    console.error(`\n  Password rejected - it must be: ${problems.join(', ')}.\n`);
     process.exitCode = 1;
     return;
   }

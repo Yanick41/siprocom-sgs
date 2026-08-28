@@ -7,7 +7,7 @@ const config = require('../config/env');
 
 const router = express.Router();
 
-// GET /api/health — public liveness + DB readiness probe.
+// GET /api/health - public liveness + DB readiness probe.
 router.get(
   '/',
   asyncHandler(async (req, res) => {

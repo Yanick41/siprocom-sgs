@@ -106,7 +106,7 @@
     "minThreshold": "Seuil min"
   },
   "pagination": {
-    "showing": "{{from}}–{{to}} sur {{total}}",
+    "showing": "{{from}}-{{to}} sur {{total}}",
     "rowsPerPage": "Lignes par page",
     "page": "Page {{page}} sur {{totalPages}}"
   },

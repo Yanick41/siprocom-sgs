@@ -17,7 +17,7 @@ const queryClient = new QueryClient({
       staleTime: 30_000,
       refetchOnWindowFocus: true,
       retry: (failureCount, error) => {
-        // Never retry auth/permission/validation failures — only transient ones.
+        // Never retry auth/permission/validation failures - only transient ones.
         if ([400, 401, 403, 404, 409, 422].includes(error?.status)) return false;
         return failureCount < 2;
       },

@@ -3,7 +3,7 @@
  *
  * Written after three screens shipped broken: their columns declared `value`
  * but DataTable only understood `render`, so each cell fell back to `row[key]`
- * and rendered a joined relation — an object — which React refuses. Route
+ * and rendered a joined relation - an object - which React refuses. Route
  * checks all returned HTTP 200, because an SPA route always does. Only actually
  * mounting the component catches this class of fault.
  *
@@ -117,7 +117,7 @@ function renderScreen(Screen) {
 
 /**
  * Each screen is matched on a value that only exists once the fetched data has
- * been rendered — never on the static heading.
+ * been rendered - never on the static heading.
  *
  * The first version of this suite asserted on headings and passed with the very
  * bug it was written to catch: a heading is present on first paint, so the test
@@ -151,10 +151,10 @@ describe('every screen renders its fetched data', () => {
 
       // Scoped to this render's container, never the global `screen`. Querying
       // document.body let one screen match a marker left behind by the previous
-      // test — Movements "passed" in 48ms on markup Products had rendered.
+      // test - Movements "passed" in 48ms on markup Products had rendered.
       const view = within(container);
 
-      // Settle on either outcome — the fetched value, or a captured crash — so
+      // Settle on either outcome - the fetched value, or a captured crash - so
       // a failure reports the actual error rather than a bare timeout.
       await waitFor(
         () => {
@@ -163,7 +163,7 @@ describe('every screen renders its fetched data', () => {
           expect(crashed || rendered).toBeTruthy();
         },
         // Generous on purpose. waitFor resolves as soon as the condition holds,
-        // so a high ceiling costs nothing on a healthy run — but this suite runs
+        // so a high ceiling costs nothing on a healthy run - but this suite runs
         // straight after the production build in `npm run check`, and one test
         // failed there on contention alone. A flaky suite is worse than a slow
         // one: it teaches you to ignore red.

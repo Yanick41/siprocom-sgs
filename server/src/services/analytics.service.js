@@ -6,14 +6,14 @@ const prisma = require('../lib/prisma');
  * Reporting and trend analysis (§4.6).
  *
  * All of it reads the movement ledger, which is indexed on
- * (productId, createdAt) and (createdAt) — no separate analytics store is
+ * (productId, createdAt) and (createdAt) - no separate analytics store is
  * warranted at this data volume.
  */
 
 const daysBetween = (from, to) => Math.max(1, Math.round((to - from) / 86_400_000));
 
 /**
- * Products with the highest outbound volume over a period — the "produits
+ * Products with the highest outbound volume over a period - the "produits
  * tendance" of the cahier des charges. Ranked by quantity issued, not by the
  * number of documents: one pallet leaving matters more than ten single units.
  */
@@ -43,7 +43,7 @@ async function getTrending({ from, to, limit = 10, categoryId = null }) {
 
 /**
  * Products with little or no outbound movement over the period, and the stock
- * still sitting on them — the money tied up in slow inventory.
+ * still sitting on them - the money tied up in slow inventory.
  * LEFT JOIN, not a filtered aggregate: products with zero movements are exactly
  * the ones being looked for, and an inner join would hide them.
  */

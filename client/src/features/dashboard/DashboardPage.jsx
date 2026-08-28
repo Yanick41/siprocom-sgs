@@ -14,7 +14,7 @@ import { formatCurrency, formatQuantity, formatDate, formatDateTime } from '@/li
 import StatusBadge from '@/components/StatusBadge';
 
 // Two hues that stay distinguishable in greyscale and for the most common
-// colour-vision deficiencies — receipts and issues are read side by side.
+// colour-vision deficiencies - receipts and issues are read side by side.
 const COLOR_IN = '#0f766e';
 const COLOR_OUT = '#b45309';
 
@@ -71,7 +71,7 @@ export default function DashboardPage() {
       <header>
         <h1 className="text-xl font-bold text-slate-900">{t('common:nav.dashboard')}</h1>
         <p className="text-sm text-slate-500">
-          {user?.name} — {t(`auth:roles.${user?.role}`)}
+          {user?.name} - {t(`auth:roles.${user?.role}`)}
         </p>
       </header>
 
@@ -90,7 +90,7 @@ export default function DashboardPage() {
           value={kpis.movementsToday}
           to="/movements"
         />
-        {/* Stock value is financial data — ADMIN and DIRECTION only (§3). */}
+        {/* Stock value is financial data - ADMIN and DIRECTION only (§3). */}
         {can('reports.valuation') ? (
           <StatCard icon={FiDollarSign} label={t('reports:kpi.stockValue')} value={formatCurrency(kpis.stockValue, lng)} />
         ) : (
@@ -193,7 +193,7 @@ export default function DashboardPage() {
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-slate-800">{label(movement.product)}</p>
                   <p className="text-xs text-slate-500">
-                    {formatDateTime(movement.createdAt, lng)} — {movement.user?.name}
+                    {formatDateTime(movement.createdAt, lng)} - {movement.user?.name}
                   </p>
                 </div>
                 <span
