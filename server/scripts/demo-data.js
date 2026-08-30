@@ -7,7 +7,7 @@
  *   node scripts/demo-data.js --clear    # remove only what this script created
  *
  * Distinct from `prisma/seed.js`, which wipes every table and creates accounts
- * whose password is published in the README — fine for a scratch database,
+ * whose password is published in the README - fine for a scratch database,
  * wrong for one that already holds the real administrator. This script adds and
  * never deletes users, so it is safe against the working database.
  *
@@ -22,7 +22,7 @@ const prisma = new PrismaClient();
 
 const DAYS_OF_HISTORY = 90;
 
-/** Deterministic PRNG — a re-run produces the same figures, so a bug report is
+/** Deterministic PRNG - a re-run produces the same figures, so a bug report is
  *  reproducible rather than "it looked different yesterday". */
 let seed = 20260817;
 const random = () => {
@@ -51,7 +51,7 @@ const SUPPLIERS = [
 // subCategory, reference, designation, unit, min, max, buy, sell, popularity,
 // unitsPerCarton, cartonBuyPrice, cartonSellPrice
 //
-// Popularity (0–1) drives how often the product moves, which is what makes the
+// Popularity (0-1) drives how often the product moves, which is what makes the
 // trending ranking meaningful and the dormant-stock report non-empty.
 const PRODUCTS = [
   ['Sodas et jus', 'DEMO-BOI-001', 'Coca-Cola 33cl', 'bouteille', 120, 1200, 200, 300, 0.95, 24, 4300, 6600],
@@ -166,7 +166,7 @@ async function main() {
 
   // ---- opening stock + 90 days of movements ------------------------------
   // Opening balances enter as ADJUSTMENT so the ledger is complete from the
-  // first row — the same approach a real go-live migration uses (§10 Phase 8).
+  // first row - the same approach a real go-live migration uses (§10 Phase 8).
   const levels = new Map();
   const movements = [];
 
@@ -191,7 +191,7 @@ async function main() {
     if (date.getDay() === 0) continue; // closed on Sundays
 
     for (const product of products) {
-      // OUT — frequency scales with popularity.
+      // OUT - frequency scales with popularity.
       if (random() < product.popularity * 0.55) {
         const current = levels.get(product.id);
         const requested = randomInt(1, Math.max(2, Math.round(product.minThreshold * 0.3)));
@@ -212,7 +212,7 @@ async function main() {
         }
       }
 
-      // IN — replenishment as the level approaches the threshold.
+      // IN - replenishment as the level approaches the threshold.
       const current = levels.get(product.id);
       if (current < product.minThreshold * 1.4 && random() < 0.3) {
         const quantity = randomInt(product.minThreshold, product.minThreshold * 2);

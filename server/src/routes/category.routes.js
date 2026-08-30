@@ -63,7 +63,7 @@ router.post(
     if (data.parentId) {
       const parent = await prisma.category.findUnique({ where: { id: data.parentId } });
       if (!parent) throw new NotFoundError('Category', data.parentId);
-      // The cahier des charges specifies categories and sub-categories — one
+      // The cahier des charges specifies categories and sub-categories - one
       // level of nesting. Deeper trees would break the reporting group-bys.
       if (parent.parentId) throw new ConflictError('MAX_CATEGORY_DEPTH_EXCEEDED');
     }
@@ -130,7 +130,7 @@ router.delete(
     });
     if (!category) throw new NotFoundError('Category', id);
 
-    // Categories have no isActive flag, so deletion is real — refuse it while
+    // Categories have no isActive flag, so deletion is real - refuse it while
     // anything still points here rather than orphaning products.
     if (category._count.products > 0) {
       throw new ConflictError('CATEGORY_HAS_PRODUCTS', { count: category._count.products });

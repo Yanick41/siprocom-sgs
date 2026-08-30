@@ -16,7 +16,7 @@ const CODE_LENGTH = 6;
  *
  * Reachable only by someone an administrator has already invited: the server
  * refuses a code for an address it holds no pending invitation for. The screen
- * is a completion flow wearing a signup flow's clothes, deliberately — the
+ * is a completion flow wearing a signup flow's clothes, deliberately - the
  * person fills in their own name and chooses their own password, and nobody
  * ever types a colleague's secret for them (BR-11).
  *

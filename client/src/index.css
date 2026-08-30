@@ -11,7 +11,7 @@
    *
    * "Vert citron" cannot be taken literally as a surface colour: pure lime
    * (#BFFF00) scores 1.20:1 against white text, and even lime-500 only
-   * reaches 1.98:1 — the AA floor is 4.5:1, and this is an application read
+   * reaches 1.98:1 - the AA floor is 4.5:1, and this is an application read
    * on tablets in a warehouse rather than at a desk. The citron is therefore
    * split in two. Deep lime carries text; the bright note lives where nothing
    * sits on top of it.
@@ -22,16 +22,16 @@
   /* White text on this: 7.08:1. Buttons, table headers, the active nav item. */
   --color-sgs-primary: #3f6212;
 
-  /* Hover and pressed. 8.73:1 — darker, so the change reads as depth. */
+  /* Hover and pressed. 8.73:1 - darker, so the change reads as depth. */
   --color-sgs-primary-dark: #365314;
 
-  /* Text and icons ON WHITE — the opposite constraint to the surface above,
+  /* Text and icons ON WHITE - the opposite constraint to the surface above,
      which is why it is a separate token. 4.99:1, and better than the blue it
      replaces: the old accent sat at 4.41:1, just under the line. */
   --color-sgs-accent: #4d7c0f;
 
   /* The actual citron, and the one place it is legible: the rail on the active
-     nav item. 5.79:1 against the deep lime beside it, 1.51:1 on white — so it
+     nav item. 5.79:1 against the deep lime beside it, 1.51:1 on white - so it
      marks position against a dark ground, and never carries text. */
   --color-sgs-citron: #a3e635;
 
@@ -56,7 +56,7 @@
     font-family: var(--font-sans);
   }
 
-  /* Visible focus everywhere — accessibility requirement (§5 Ergonomie). */
+  /* Visible focus everywhere - accessibility requirement (§5 Ergonomie). */
   :focus-visible {
     @apply outline-2 outline-offset-2 outline-sgs-accent;
   }
@@ -106,7 +106,7 @@
 
 /* ---------------------------------------------------------------- printing */
 /*
- * Printing an invoice must produce the invoice alone — not the sidebar, the
+ * Printing an invoice must produce the invoice alone - not the sidebar, the
  * topbar, the modal chrome or the buttons around it.
  *
  * The previous attempt hid `body > *` and then re-showed every ancestor of the
@@ -117,7 +117,7 @@
  *
  * visibility, not display: hiding an element does not collapse the layout tree,
  * so a descendant can turn itself back on. An invisible element also paints
- * nothing — the modal backdrop included — so no background needs overriding.
+ * nothing - the modal backdrop included - so no background needs overriding.
  */
 @media print {
   html,
@@ -159,7 +159,7 @@
     /* The header band and the total row pick their own print colours in the
        markup: a pale lime wash under deep-lime text, rather than the solid
        block of toner the on-screen band would ask an office printer for.
-       That pairing is deliberate — Chrome leaves "Background graphics"
+       That pairing is deliberate - Chrome leaves "Background graphics"
        unchecked by default, so the wash may never arrive, and dark text on
        white still reads at 7.08:1 when it does not. Browsers drop backgrounds
        unless told otherwise; the two lines below say otherwise. */

@@ -4,7 +4,7 @@ import { Component } from 'react';
  * Catches render errors anywhere below it.
  *
  * Without this, any throw during render unmounts the whole tree and leaves a
- * blank white page — the single hardest failure to diagnose, because it looks
+ * blank white page - the single hardest failure to diagnose, because it looks
  * identical to a server that never started, a wrong port, or a stale cache.
  *
  * Deliberately not translated: i18n itself is one of the things that can fail
@@ -19,7 +19,7 @@ export default class ErrorBoundary extends Component {
   }
 
   componentDidCatch(error, info) {
-    // Keep the component stack in the console — it is what actually locates the bug.
+    // Keep the component stack in the console - it is what actually locates the bug.
     console.error('[SGS] Render error:', error, info?.componentStack);
   }
 

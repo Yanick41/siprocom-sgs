@@ -37,7 +37,7 @@ const signupRequestSchema = z.object({
 
 /**
  * Step 2 carries step 1 with it. Nothing is stored between the screens, so the
- * account is only ever written once — an abandoned signup leaves no trace, and
+ * account is only ever written once - an abandoned signup leaves no trace, and
  * there is no half-built row to reconcile later.
  *
  * The password rule matches the design brief: at least 8 characters with an

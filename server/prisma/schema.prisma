@@ -1,4 +1,4 @@
-// SIPROCOM SGS — data model
+// SIPROCOM SGS - data model
 // Reference: IMPLEMENTATION_PLAN.md §5. Business rules enforced on top: §6.
 
 generator client {
@@ -48,7 +48,7 @@ enum DocStatus {
 /// Why goods came in.
 ///
 /// ADJUSTMENT left with the stock-adjustment screen, which posts a
-/// MovementType.ADJUSTMENT directly and never creates a receipt — the value
+/// MovementType.ADJUSTMENT directly and never creates a receipt - the value
 /// existed here without a single caller.
 enum EntryReason {
   PURCHASE
@@ -83,7 +83,7 @@ model User {
   name  String
   email String @unique
 
-  /// bcrypt hash — never returned by the API.
+  /// bcrypt hash - never returned by the API.
   ///
   /// Null between an administrator creating the account and the invited person
   /// following their emailed link. Nobody types a colleague's password on their
@@ -93,7 +93,7 @@ model User {
 
   role        Role      @default(MAGASINIER)
   isActive    Boolean   @default(true)
-  locale      String    @default("fr") // "fr" | "en" — follows the user across devices
+  locale      String    @default("fr") // "fr" | "en" - follows the user across devices
   lastLoginAt DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -105,6 +105,8 @@ model User {
   validatedReceipts GoodsReceipt[]  @relation("ReceiptValidatedBy")
   createdIssues     GoodsIssue[]    @relation("IssueCreatedBy")
   validatedIssues   GoodsIssue[]    @relation("IssueValidatedBy")
+  deliveredIssues   GoodsIssue[]    @relation("IssueDeliveredBy")
+  createdInvoices   Invoice[]       @relation("InvoiceCreatedBy")
 
   @@index([role])
   @@map("users")
@@ -120,7 +122,7 @@ enum AccountTokenType {
 /// One mechanism, two uses: an invitation lets a new colleague choose their
 /// first password, a reset lets an existing one replace a forgotten password.
 /// Both end on the same screen doing the same thing, so they are the same row
-/// with a different `type` — the alternative was two tables that would have
+/// with a different `type` - the alternative was two tables that would have
 /// drifted apart.
 ///
 /// Only the SHA-256 of the emailed token is stored: a leaked database backup
@@ -137,7 +139,7 @@ model AccountToken {
   /// Hashing buys less here than for the 256-bit link token: a million
   /// possibilities is a lookup table an attacker builds in seconds, so a leaked
   /// database gives up live codes either way. What protects this is `attempts`
-  /// below plus a ten-minute expiry — the hash only keeps the code out of plain
+  /// below plus a ten-minute expiry - the hash only keeps the code out of plain
   /// sight in backups and logs.
   codeHash  String?
 
@@ -193,7 +195,7 @@ model Supplier {
 
 // SIPROCOM runs a single site, so there is no Warehouse model: stock is simply
 // "the stock". The company's own name and address live where they are actually
-// used — the printed document header — rather than in a table with one row that
+// used - the printed document header - rather than in a table with one row that
 // every query would have to join.
 
 model Product {
@@ -203,14 +205,14 @@ model Product {
   designationEn String?
   categoryId    String
 
-  /// The BASE unit — bottle, kilo, piece. Stock levels, thresholds, alerts and
+  /// The BASE unit - bottle, kilo, piece. Stock levels, thresholds, alerts and
   /// the movement ledger are all expressed in this unit and nothing else.
   unit String @default("unit")
 
   /// Physical container, independent of both the category and the counting
   /// unit: a Boisson énergétique exists as a can and as a carton of cans, and a
   /// water as glass or plastic. Kept separate from  because that one is
-  /// what stock is counted in — this one only describes the packaging.
+  /// what stock is counted in - this one only describes the packaging.
   container String?
 
   /// Which grouping the factor below refers to: carton, crate, pack. Null when
@@ -271,7 +273,7 @@ model ProductSupplier {
 
 // ---------------------------------------------------------------- stock core
 
-/// Materialised stock level — the "Stock (vue calculée)" of the cahier des charges §6.
+/// Materialised stock level - the "Stock (vue calculée)" of the cahier des charges §6.
 /// Kept as a real table so reads stay fast; updated atomically inside the same
 /// transaction as the movement that causes it (BR-2).
 /// Invariant: quantity == SUM(signed movements) for the same product.
@@ -298,12 +300,12 @@ model StockMovement {
   id           String       @id @default(uuid())
   type         MovementType
   productId    String
-  /// IN and OUT are always positive — `type` carries the sign.
+  /// IN and OUT are always positive - `type` carries the sign.
   /// ADJUSTMENT is SIGNED: positive for a surplus found at inventory, negative
   /// for shrinkage. The ledger sum is therefore always:
   ///   SUM(CASE WHEN type = 'OUT' THEN -quantity ELSE quantity END)
   quantity     Int
-  balanceAfter Int // stock snapshot after this movement — makes audits trivial
+  balanceAfter Int // stock snapshot after this movement - makes audits trivial
   unitCost     Decimal?     @db.Decimal(12, 2)
   lotNumber    String?
   reason       String?
@@ -358,7 +360,7 @@ model GoodsReceiptLine {
   quantity     Int
   packaging    Packaging @default(UNIT)
   /// What actually moves in stock, in base units: 3 cartons of 12 -> 36.
-  /// Stored rather than recomputed — changing unitsPerCarton later must not
+  /// Stored rather than recomputed - changing unitsPerCarton later must not
   /// rewrite the history of documents already posted.
   baseQuantity Int       @default(0)
   /// Price for one  unit at the time of the receipt.
@@ -388,6 +390,11 @@ model GoodsIssue {
   issueDate        DateTime    @default(now())
   validatedAt      DateTime?
   validatedById    String?
+  /// Handover to the customer, which is not the same event as validation.
+  /// Validating deducts stock; delivering says the goods reached the person
+  /// named on the bon. Null means "not yet delivered".
+  deliveredAt      DateTime?
+  deliveredById    String?
   notes            String?
   createdById      String
   createdAt        DateTime    @default(now())
@@ -395,10 +402,38 @@ model GoodsIssue {
 
   createdBy   User             @relation("IssueCreatedBy", fields: [createdById], references: [id])
   validatedBy User?            @relation("IssueValidatedBy", fields: [validatedById], references: [id])
+  deliveredBy User?            @relation("IssueDeliveredBy", fields: [deliveredById], references: [id])
   lines       GoodsIssueLine[]
+  invoice     Invoice?
 
   @@index([status, issueDate])
   @@map("goods_issues")
+}
+
+/// The commercial half of a sale, numbered and dated separately from the bon
+/// de sortie that moved the goods.
+///
+/// It holds no lines and no prices of its own. Every figure is already frozen
+/// on GoodsIssueLine.unitPrice, and copying it here would let the two drift:
+/// an invoice reprinted next year must show what was billed, and there is only
+/// one place that can honestly come from.
+///
+/// One invoice per bon de sortie, enforced by the unique issueId. Partial and
+/// consolidated invoicing were not asked for, and a nullable one-to-one is far
+/// easier to widen later than a many-to-one is to narrow.
+model Invoice {
+  id          String    @id @default(uuid())
+  number      String    @unique // FA-2026-0001
+  issueId     String    @unique
+  notes       String?
+  createdById String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  issue     GoodsIssue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  createdBy User       @relation("InvoiceCreatedBy", fields: [createdById], references: [id])
+
+  @@map("invoices")
 }
 
 model GoodsIssueLine {

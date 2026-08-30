@@ -14,7 +14,7 @@ const { adjustStockSchema, idParamSchema } = require('../validators/stock.valida
 const router = express.Router();
 router.use(authenticate);
 
-// GET /api/stock — one level per product, with threshold state.
+// GET /api/stock - one level per product, with threshold state.
 router.get(
   '/',
   asyncHandler(async (req, res) => {
@@ -70,7 +70,7 @@ router.get(
   })
 );
 
-// GET /api/stock/reconcile — proves the materialised levels against the ledger.
+// GET /api/stock/reconcile - proves the materialised levels against the ledger.
 // Declared before /product/:id so "reconcile" is never read as an id.
 router.get(
   '/reconcile',
@@ -80,7 +80,7 @@ router.get(
   })
 );
 
-// GET /api/stock/movements — the journal de stock (§4.4).
+// GET /api/stock/movements - the journal de stock (§4.4).
 router.get(
   '/movements',
   asyncHandler(async (req, res) => {
@@ -114,7 +114,7 @@ router.get(
   })
 );
 
-// GET /api/stock/product/:id — current level plus recent history.
+// GET /api/stock/product/:id - current level plus recent history.
 router.get(
   '/product/:id',
   asyncHandler(async (req, res) => {
@@ -144,17 +144,34 @@ router.get(
   })
 );
 
-// POST /api/stock/adjust — inventory correction. Reason is mandatory (BR-6).
+// POST /api/stock/adjust - inventory correction. Reason is mandatory (BR-6).
 router.post(
   '/adjust',
   authorize('ADMIN', 'MAGASINIER'),
   asyncHandler(async (req, res) => {
-    const { productId, countedQuantity, reason, allowNegative = false } = adjustStockSchema.parse(
-      req.body
-    );
+    const { id, productId, countedQuantity, reason, allowNegative = false } =
+      adjustStockSchema.parse(req.body);
 
     if (allowNegative && req.user.role !== 'ADMIN') {
       throw new ForbiddenError('NEGATIVE_OVERRIDE_REQUIRES_ADMIN');
+    }
+
+    // A replay of a correction already posted. The ledger is append-only, so
+    // re-running it would leave two ADJUSTMENT rows and a level that no longer
+    // matches the count that was taken. The stored movement carries everything
+    // the original response did: quantity is the delta, and the level before
+    // the correction is balanceAfter minus that delta.
+    if (id) {
+      const already = await prisma.stockMovement.findUnique({ where: { id } });
+      if (already) {
+        return res.json({
+          theoretical: already.balanceAfter - already.quantity,
+          counted: already.balanceAfter,
+          delta: already.quantity,
+          balanceAfter: already.balanceAfter,
+          movement: already,
+        });
+      }
     }
 
     const result = await prisma.$transaction(async (tx) => {
@@ -169,6 +186,7 @@ router.post(
 
       // Signed ADJUSTMENT: positive for a surplus found, negative for shrinkage.
       const { movement, balanceAfter } = await applyMovement(tx, {
+        id,
         type: 'ADJUSTMENT',
         productId,
         quantity: delta,

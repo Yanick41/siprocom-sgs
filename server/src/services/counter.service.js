@@ -13,11 +13,12 @@
 const PREFIXES = {
   RECEIPT: 'BE', // bon d'entrée
   ISSUE: 'BS', // bon de sortie
+  INVOICE: 'FA', // facture
 };
 
 /**
  * @param {import('@prisma/client').Prisma.TransactionClient} tx
- * @param {'RECEIPT'|'ISSUE'} kind
+ * @param {'RECEIPT'|'ISSUE'|'INVOICE'} kind
  * @returns {Promise<string>} e.g. "BE-2026-0001"
  */
 async function allocateNumber(tx, kind) {

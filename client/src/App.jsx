@@ -6,16 +6,17 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import AppLayout from '@/layouts/AppLayout';
 import LoginPage from '@/features/auth/LoginPage';
 import lazyWithRetry from '@/lib/lazyWithRetry';
+import { useAuth } from '@/context/AuthContext';
 
 /**
  * Routes are code-split per screen.
  *
- * Charting (recharts) and the export libraries together weigh more than the
+ * The export libraries (jspdf, and the zip writer behind .xlsx) weigh more than the
  * rest of the application. Bundled eagerly, a magasinier who spends the day on
  * goods issues would download the whole reporting stack to never open it.
  * Each screen now pulls only what it uses.
  *
- * Login stays eager — it is the first thing an unauthenticated visitor needs,
+ * Login stays eager - it is the first thing an unauthenticated visitor needs,
  * and a spinner before the sign-in form would be a poor first impression.
  *
  * lazyWithRetry, not lazy: a chunk can become unreachable after a deploy or a
@@ -38,6 +39,8 @@ const AlertsPage = lazyWithRetry(() => import('@/features/alerts/AlertsPage'), '
 const ReportsPage = lazyWithRetry(() => import('@/features/reports/ReportsPage'), 'reports');
 const UsersPage = lazyWithRetry(() => import('@/features/admin/UsersPage'), 'users');
 const AuditLogPage = lazyWithRetry(() => import('@/features/admin/AuditLogPage'), 'audit');
+const SyncQueuePage = lazyWithRetry(() => import('@/features/system/SyncQueuePage'), 'sync');
+const InstallPage = lazyWithRetry(() => import('@/features/system/InstallPage'), 'install');
 
 function ScreenFallback() {
   const { t } = useTranslation();
@@ -57,11 +60,44 @@ const guarded = (permission, Screen) => (
   </ProtectedRoute>
 );
 
+/**
+ * What the bare link opens.
+ *
+ * Someone sent the address for the first time gets the install page: that is
+ * the whole point of handing out a link, and a login form tells a new
+ * colleague nothing about how to get the app onto their phone.
+ *
+ * Two exceptions, both of which would otherwise be daily irritations. Anyone
+ * already signed in goes straight to their dashboard rather than being asked
+ * to install what they are evidently using. And a launch from an installed
+ * icon skips it too, because opening your own app to "install this app" is
+ * absurd. The manifest points start_url at /dashboard as well, so an installed
+ * launch does not even reach here.
+ */
+function RootRoute() {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  const standalone =
+    typeof window !== 'undefined' &&
+    (window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true);
+
+  // Deciding before /auth/me settles would flash the install page at someone
+  // who is signed in, on every single load.
+  if (isLoading) return <ScreenFallback />;
+  if (isAuthenticated || standalone) return <Navigate to="/dashboard" replace />;
+
+  return (
+    <Suspense fallback={<ScreenFallback />}>
+      <InstallPage />
+    </Suspense>
+  );
+}
+
 export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
-      {/* Redirects to /login as soon as an account exists — the server refuses
+      {/* Redirects to /login as soon as an account exists - the server refuses
           the underlying endpoint regardless, so this is convenience, not the guard. */}
       <Route
         path="/setup"
@@ -96,6 +132,16 @@ export default function App() {
           </Suspense>
         }
       />
+      {/* Public: the person being onboarded has no account yet, so putting
+          this behind the login they cannot pass would defeat it. */}
+      <Route
+        path="/install"
+        element={
+          <Suspense fallback={<ScreenFallback />}>
+            <InstallPage />
+          </Suspense>
+        }
+      />
 
       <Route
         element={
@@ -117,6 +163,8 @@ export default function App() {
         <Route path="/issues" element={guarded('stock.view', IssuesPage)} />
         <Route path="/stock" element={guarded('stock.view', StockLevelsPage)} />
         <Route path="/movements" element={guarded('stock.view', MovementsPage)} />
+        {/* Anyone who can record stock can see what of theirs has not been sent. */}
+        <Route path="/sync" element={guarded('stock.view', SyncQueuePage)} />
         <Route path="/adjustments" element={guarded('stock.write', AdjustmentPage)} />
 
         <Route path="/products" element={guarded('products.view', ProductsPage)} />
@@ -130,7 +178,7 @@ export default function App() {
         <Route path="/audit" element={guarded('audit.view', AuditLogPage)} />
       </Route>
 
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/" element={<RootRoute />} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );

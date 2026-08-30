@@ -7,7 +7,7 @@
  * load, and an empty string renders as a blank label that no one notices until
  * a user asks what the field is for.
  *
- * Kept rather than deleted — if a second language is ever added, the comparison
+ * Kept rather than deleted - if a second language is ever added, the comparison
  * comes back here.
  */
 
@@ -42,7 +42,7 @@ for (const file of fs.readdirSync(LOCALES).filter((f) => f.endsWith('.json'))) {
   try {
     parsed = JSON.parse(fs.readFileSync(full, 'utf8'));
   } catch (error) {
-    problems.push(`${file}: invalid JSON — ${error.message.split('\n')[0]}`);
+    problems.push(`${file}: invalid JSON - ${error.message.split('\n')[0]}`);
     continue;
   }
 

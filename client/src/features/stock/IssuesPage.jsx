@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { FiPlus, FiCheck, FiX, FiPrinter, FiFileText } from 'react-icons/fi';
+import { FiPlus, FiCheck, FiX, FiPrinter, FiFileText, FiTruck } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
 import { issuesApi, productsApi, stockApi } from '@/api/resources';
@@ -13,6 +13,7 @@ import StatusBadge from '@/components/StatusBadge';
 import { useErrorMessage } from '@/hooks/useErrorMessage';
 import { formatDate, formatQuantity } from '@/lib/format';
 import DocumentLinesEditor from './DocumentLinesEditor';
+import { submitOrQueue } from '@/lib/offline/submit';
 import InvoiceView from './InvoiceView';
 import { buildInvoice, downloadInvoicePdf } from './invoice';
 
@@ -23,7 +24,7 @@ const STATUS_TONE = { DRAFT: 'neutral', VALIDATED: 'success', CANCELLED: 'danger
  *
  * Browsers put the document title and the URL in the printed margins and give
  * no way to remove them. What they do take is whatever title is set at the
- * moment printing starts — so a sheet that would have read "SIPROCOM — SGS"
+ * moment printing starts - so a sheet that would have read "SIPROCOM - SGS"
  * reads "BS-2026-0226" instead, which is the one thing worth having up there.
  * The title is restored straight after; window.print() blocks until the dialog
  * closes.
@@ -45,7 +46,7 @@ export default function IssuesPage() {
   const translateError = useErrorMessage();
   const { can, user } = useAuth();
 
-  const [filters, setFilters] = useState({ status: '', page: 1 });
+  const [filters, setFilters] = useState({ status: '', delivery: '', page: 1 });
   const [creating, setCreating] = useState(false);
   const [viewing, setViewing] = useState(null);
 
@@ -90,12 +91,36 @@ export default function IssuesPage() {
       header: t('common:fields.reason'),
       render: (d) => t(`stock:issueReason.${d.reason}`),
     },
-    { key: 'recipient', header: t('stock:issue.recipient'), render: (d) => d.recipient || '—' },
+    { key: 'recipient', header: t('stock:issue.recipient'), render: (d) => d.recipient || '-' },
     { key: 'lines', header: t('stock:document.lineCount'), align: 'right', render: (d) => d._count?.lines ?? 0 },
     {
       key: 'status',
       header: t('common:fields.status'),
       render: (d) => <StatusBadge tone={STATUS_TONE[d.status]}>{t(`stock:status.${d.status}`)}</StatusBadge>,
+    },
+    {
+      key: 'delivery',
+      header: t('stock:issue.deliveryColumn'),
+      // Only a validated bon can be delivered, so for a draft or a cancelled
+      // one the question does not arise and a badge would invite it.
+      render: (d) =>
+        d.status !== 'VALIDATED' ? (
+          <span className="text-slate-400">-</span>
+        ) : (
+          <StatusBadge tone={d.deliveredAt ? 'success' : 'warning'}>
+            {d.deliveredAt ? formatDate(d.deliveredAt, lng) : t('stock:issue.notDelivered')}
+          </StatusBadge>
+        ),
+    },
+    {
+      key: 'invoice',
+      header: t('stock:invoice.sectionTitle'),
+      render: (d) =>
+        d.invoice ? (
+          <span className="font-mono text-xs text-slate-700">{d.invoice.number}</span>
+        ) : (
+          <span className="text-slate-400">-</span>
+        ),
     },
   ];
 
@@ -114,12 +139,12 @@ export default function IssuesPage() {
         </PermissionGate>
       </div>
 
-      <div className="card flex flex-wrap gap-2 p-3">
+      <div className="card flex flex-wrap items-center gap-2 p-3">
         {['', 'DRAFT', 'VALIDATED', 'CANCELLED'].map((status) => (
           <button
             key={status || 'all'}
             type="button"
-            onClick={() => setFilters({ status, page: 1 })}
+            onClick={() => setFilters((f) => ({ ...f, status, page: 1 }))}
             className={`min-h-11 rounded-lg px-3 text-sm font-medium ${
               filters.status === status ? 'bg-sgs-primary text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
@@ -127,6 +152,21 @@ export default function IssuesPage() {
             {status ? t(`stock:status.${status}`) : t('common:filters.all', { defaultValue: 'Tous' })}
           </button>
         ))}
+
+        <span className="mx-1 hidden h-6 w-px bg-slate-200 sm:block" aria-hidden="true" />
+
+        {/* Answers "what is still to be delivered?" across the whole list, not
+            just the page in front of you. */}
+        <select
+          value={filters.delivery}
+          onChange={(e) => setFilters((f) => ({ ...f, delivery: e.target.value, page: 1 }))}
+          aria-label={t('stock:issue.deliveryColumn')}
+          className="input w-auto min-w-40"
+        >
+          <option value="">{t('stock:issue.deliveryAll')}</option>
+          <option value="pending">{t('stock:issue.deliveryPending')}</option>
+          <option value="done">{t('stock:issue.deliveryDone')}</option>
+        </select>
       </div>
 
       <DataTable
@@ -143,10 +183,10 @@ export default function IssuesPage() {
       {creating && (
         <IssueFormModal
           onClose={() => setCreating(false)}
-          onCreated={() => {
+          onCreated={(queued) => {
             setCreating(false);
             refresh();
-            toast.success(t('stock:issue.toast.created'));
+            toast.success(queued ? t('common:offline.queued') : t('stock:issue.toast.created'));
           }}
         />
       )}
@@ -157,6 +197,8 @@ export default function IssuesPage() {
           onClose={() => setViewing(null)}
           canValidate={can('stock.validate')}
           canCancel={can('stock.cancel')}
+          canDeliver={can('stock.deliver')}
+          canInvoice={can('stock.invoice')}
           isAdmin={user?.role === 'ADMIN'}
           onValidate={(allowNegative) => validateMutation.mutate({ id: viewing, allowNegative })}
           onCancel={(reason) => cancelMutation.mutate({ id: viewing, reason })}
@@ -217,8 +259,14 @@ function IssueFormModal({ onClose, onCreated }) {
   );
 
   const mutation = useMutation({
-    mutationFn: issuesApi.create,
-    onSuccess: onCreated,
+    mutationFn: (values) =>
+      submitOrQueue({
+        label: t('stock:issue.createTitle'),
+        url: '/issues',
+        body: values,
+        send: issuesApi.create,
+      }),
+    onSuccess: ({ queued }) => onCreated(queued),
     onError: setSubmitError,
   });
 
@@ -347,10 +395,13 @@ function IssueFormModal({ onClose, onCreated }) {
   );
 }
 
-function IssueDetailModal({ id, onClose, canValidate, canCancel, isAdmin, onValidate, onCancel, isPending }) {
+function IssueDetailModal({ id, onClose, canValidate, canCancel, canDeliver, canInvoice, isAdmin, onValidate, onCancel, isPending }) {
   const { t, i18n } = useTranslation(['stock', 'common']);
   const lng = i18n.resolvedLanguage;
   const [allowNegative, setAllowNegative] = useState(false);
+
+  const queryClient = useQueryClient();
+  const translateError = useErrorMessage();
 
   const query = useQuery({ queryKey: ['issues', id], queryFn: () => issuesApi.get(id) });
   const doc = query.data;
@@ -360,6 +411,31 @@ function IssueDetailModal({ id, onClose, canValidate, canCancel, isAdmin, onVali
   // Built once and shared by the on-screen view and the PDF, so the two cannot
   // show different figures.
   const invoice = doc?.status === 'VALIDATED' ? buildInvoice(doc, { t, lng }) : null;
+
+  const refreshDoc = (updated) => {
+    queryClient.setQueryData(['issues', id], updated);
+    // The list shows neither of these yet, but it will the moment a column is
+    // added, and a stale list beside a fresh modal is a bug waiting to happen.
+    queryClient.invalidateQueries({ queryKey: ['issues'] });
+  };
+
+  const deliverMutation = useMutation({
+    mutationFn: () => issuesApi.deliver(id),
+    onSuccess: (updated) => {
+      refreshDoc(updated);
+      toast.success(t('stock:issue.toast.delivered'));
+    },
+    onError: (error) => toast.error(translateError(error)),
+  });
+
+  const invoiceMutation = useMutation({
+    mutationFn: () => issuesApi.createInvoice(id),
+    onSuccess: (updated) => {
+      refreshDoc(updated);
+      toast.success(t('stock:invoice.toast.created', { number: updated.invoice?.number }));
+    },
+    onError: (error) => toast.error(translateError(error)),
+  });
 
   return (
     <Modal
@@ -373,9 +449,10 @@ function IssueDetailModal({ id, onClose, canValidate, canCancel, isAdmin, onVali
             <button type="button" onClick={onClose} className="btn-secondary">
               {t('common:actions.close')}
             </button>
-            {/* An invoice only exists for goods that actually left: a draft has
-                moved nothing and must not be handed to a customer. */}
-            {doc.status === 'VALIDATED' && invoice && (
+            {/* Print and PDF belong to the facture, so they appear only once
+                one has been raised. Before that there is no priced document to
+                hand anybody, and offering the buttons implied there was. */}
+            {doc.invoice && invoice && (
               <>
                 <button type="button" onClick={() => printInvoice(invoice.number)} className="btn-secondary">
                   <FiPrinter className="size-4" />
@@ -441,46 +518,115 @@ function IssueDetailModal({ id, onClose, canValidate, canCancel, isAdmin, onVali
             </div>
           </dl>
 
-          <div className="overflow-x-auto rounded-lg border border-slate-200">
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50">
-                <tr>
-                  <th className="px-3 py-2 text-left font-semibold text-slate-600">{t('common:fields.designation')}</th>
-                  <th className="px-3 py-2 text-right font-semibold text-slate-600">{t('common:fields.quantity')}</th>
-                  {doc.status === 'DRAFT' && (
-                    <th className="px-3 py-2 text-right font-semibold text-slate-600">{t('stock:issue.available')}</th>
+          {/* ---- Bon de sortie -------------------------------------------
+              Reference, designation, quantity and whether it has been handed
+              over. No money: this is the sheet that travels with the goods. */}
+          <section className="overflow-hidden rounded-lg border border-slate-200">
+            <header className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-slate-50 px-4 py-3">
+              <h3 className="font-semibold text-slate-900">{t('stock:issue.sectionTitle')}</h3>
+
+              {doc.status === 'VALIDATED' && (
+                <div className="flex items-center gap-2">
+                  <StatusBadge tone={doc.deliveredAt ? 'success' : 'warning'}>
+                    {doc.deliveredAt
+                      ? t('stock:issue.delivered', { date: formatDate(doc.deliveredAt, lng) })
+                      : t('stock:issue.notDelivered')}
+                  </StatusBadge>
+                  {!doc.deliveredAt && canDeliver && (
+                    <button
+                      type="button"
+                      onClick={() => deliverMutation.mutate()}
+                      disabled={deliverMutation.isPending}
+                      className="btn-secondary"
+                    >
+                      <FiTruck className="size-4" />
+                      {t('stock:issue.markDelivered')}
+                    </button>
                   )}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {doc.lines.map((line) => (
-                  <tr key={line.id} className={line.sufficient === false ? 'bg-red-50' : ''}>
-                    <td className="px-3 py-2 text-slate-700">
-                      <span className="font-mono text-xs text-slate-400">{line.product.reference}</span>{' '}
-                      {lng === 'en' && line.product.designationEn ? line.product.designationEn : line.product.designation}
-                    </td>
-                    <td className="px-3 py-2 text-right text-slate-800">{formatQuantity(line.quantity, lng)}</td>
+                </div>
+              )}
+            </header>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-white">
+                  <tr className="border-b border-slate-200">
+                    <th className="px-3 py-2 text-left font-semibold text-slate-600">{t('common:fields.reference')}</th>
+                    <th className="px-3 py-2 text-left font-semibold text-slate-600">{t('common:fields.designation')}</th>
+                    <th className="px-3 py-2 text-right font-semibold text-slate-600">{t('common:fields.quantity')}</th>
                     {doc.status === 'DRAFT' && (
-                      <td
-                        className={`px-3 py-2 text-right ${
-                          line.sufficient === false ? 'font-medium text-sgs-danger' : 'text-slate-500'
-                        }`}
-                      >
-                        {formatQuantity(line.available ?? 0, lng)}
-                      </td>
+                      <th className="px-3 py-2 text-right font-semibold text-slate-600">{t('stock:issue.available')}</th>
                     )}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Shown rather than hidden behind the print dialog, so the figures
-              can be checked before the sheet is handed over. */}
-          {invoice && (
-            <div className="rounded-lg border border-slate-200">
-              <InvoiceView invoice={invoice} />
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {doc.lines.map((line) => (
+                    <tr key={line.id} className={line.sufficient === false ? 'bg-red-50' : ''}>
+                      <td className="px-3 py-2 font-mono text-xs text-slate-500">{line.product.reference}</td>
+                      <td className="px-3 py-2 text-slate-700">
+                        {lng === 'en' && line.product.designationEn
+                          ? line.product.designationEn
+                          : line.product.designation}
+                      </td>
+                      <td className="px-3 py-2 text-right text-slate-800">{formatQuantity(line.quantity, lng)}</td>
+                      {doc.status === 'DRAFT' && (
+                        <td
+                          className={`px-3 py-2 text-right ${
+                            line.sufficient === false ? 'font-medium text-sgs-danger' : 'text-slate-500'
+                          }`}
+                        >
+                          {formatQuantity(line.available ?? 0, lng)}
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
+          </section>
+
+          {/* ---- Facture ------------------------------------------------
+              A separate document, under the bon that produced it. The bon says
+              what left the warehouse; this says what is owed for it. Keeping
+              prices off the bon is the point: a delivery note is signed by
+              whoever receives the goods, and that is often not the person
+              entitled to see the margin. */}
+          {doc.status === 'VALIDATED' && (
+            <section className="rounded-lg border border-slate-200">
+              <header className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-slate-50 px-4 py-3">
+                <div>
+                  <h3 className="font-semibold text-slate-900">{t('stock:invoice.sectionTitle')}</h3>
+                  <p className="text-xs text-slate-500">
+                    {doc.invoice
+                      ? t('stock:invoice.raisedOn', {
+                          number: doc.invoice.number,
+                          date: formatDate(doc.invoice.createdAt, lng),
+                        })
+                      : t('stock:invoice.notRaised')}
+                  </p>
+                </div>
+
+                {!doc.invoice && canInvoice && (
+                  <button
+                    type="button"
+                    onClick={() => invoiceMutation.mutate()}
+                    disabled={invoiceMutation.isPending}
+                    className="btn-primary"
+                  >
+                    <FiFileText className="size-4" />
+                    {t('stock:invoice.generate')}
+                  </button>
+                )}
+              </header>
+
+              {doc.invoice ? (
+                <InvoiceView invoice={invoice} />
+              ) : (
+                <p className="px-4 py-8 text-center text-sm text-slate-500">
+                  {t('stock:invoice.emptyHint')}
+                </p>
+              )}
+            </section>
           )}
 
           {/* BR-3: the override is deliberate, admin-only, and audited. */}

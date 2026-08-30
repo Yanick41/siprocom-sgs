@@ -2,7 +2,7 @@
  * Excel and PDF export (§4.6, acceptance criterion 6: "sans perte de données").
  *
  * Both exporters take the same shape as DataTable columns, so a screen exports
- * exactly what it displays — headers included, in the active language.
+ * exactly what it displays - headers included, in the active language.
  *
  * columns: [{ key, header, value?(row), align? }]
  *   `value` returns the RAW value (number stays a number). `render` is not used
@@ -23,28 +23,35 @@ const cellValue = (row, column) => {
 
 const stamp = () => new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
 
+/** Hands a Blob to the browser as a download, then releases the object URL. */
+function saveBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  // Revoked on the next tick: revoking synchronously races the download in
+  // Safari, which has not finished reading the URL when click() returns.
+  setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
 export async function exportToExcel({ columns, rows, filename, sheetName = 'Export' }) {
-  const XLSX = await import('xlsx');
+  const { buildWorkbook } = await import('@/lib/xlsx');
 
-  const data = rows.map((row) => {
-    const record = {};
-    for (const column of columns) record[column.header] = cellValue(row, column);
-    return record;
-  });
-
-  const sheet = XLSX.utils.json_to_sheet(data, { header: columns.map((c) => c.header) });
+  const header = columns.map((column) => column.header);
+  const body = rows.map((row) => columns.map((column) => cellValue(row, column)));
 
   // Width the columns to their content so nothing renders as "####".
-  sheet['!cols'] = columns.map((column) => ({
-    wch: Math.min(
+  const widths = columns.map((column) =>
+    Math.min(
       40,
       Math.max(column.header.length + 2, ...rows.map((r) => String(cellValue(r, column)).length + 2), 10)
-    ),
-  }));
+    )
+  );
 
-  const book = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(book, sheet, sheetName.slice(0, 31)); // Excel caps sheet names at 31
-  XLSX.writeFile(book, `${filename}-${stamp()}.xlsx`);
+  saveBlob(buildWorkbook([header, ...body], { sheetName, widths }), `${filename}-${stamp()}.xlsx`);
 }
 
 export async function exportToPdf({

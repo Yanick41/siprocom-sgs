@@ -1,6 +1,7 @@
 'use strict';
 
 const express = require('express');
+const { timingSafeEqual } = require('node:crypto');
 const prisma = require('../lib/prisma');
 const config = require('../config/env');
 const { NotFoundError, UnauthorizedError } = require('../lib/errors');
@@ -15,7 +16,7 @@ const router = express.Router();
 
 /**
  * Scheduled backstop sweep. Machine-to-machine, so it carries a shared secret
- * rather than a user session — hence it is declared before `authenticate`.
+ * rather than a user session - hence it is declared before `authenticate`.
  *
  * GET and POST both work: Vercel Cron issues a GET with
  * `Authorization: Bearer $CRON_SECRET`, while a plain curl or another scheduler
@@ -25,11 +26,30 @@ const router = express.Router();
  * An empty CRON_SECRET rejects everything: an unauthenticated endpoint that
  * walks the whole catalogue is not something to leave open by accident.
  */
+/**
+ * Constant-time comparison, so the response time carries no information about
+ * how much of the secret was right. timingSafeEqual throws on a length
+ * mismatch, so the lengths are checked first and the compare is only reached
+ * for two equal-length buffers.
+ */
+const secretMatches = (provided) => {
+  if (!config.cronSecret || !provided) return false;
+  const a = Buffer.from(String(provided));
+  const b = Buffer.from(config.cronSecret);
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(a, b);
+};
+
 const sweepHandler = asyncHandler(async (req, res) => {
   const bearer = (req.get('authorization') || '').replace(/^Bearer\s+/i, '');
-  const provided = req.get('x-cron-secret') || bearer || req.query.secret;
 
-  if (!config.cronSecret || provided !== config.cronSecret) {
+  // Headers only. `?secret=` used to be accepted as well, which wrote the
+  // shared secret into the access log of every proxy on the path, into browser
+  // history if anyone ever opened it by hand, and into the Referer of anything
+  // the response linked to. A credential does not belong in a URL.
+  const provided = req.get('x-cron-secret') || bearer;
+
+  if (!secretMatches(provided)) {
     throw new UnauthorizedError('INVALID_CRON_SECRET');
   }
 
@@ -92,7 +112,7 @@ router.get(
   })
 );
 
-// GET /api/alerts/count — drives the topbar badge.
+// GET /api/alerts/count - drives the topbar badge.
 router.get(
   '/count',
   asyncHandler(async (req, res) => {

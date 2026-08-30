@@ -104,7 +104,7 @@ async function importProducts(file, { dryRun }) {
     }
 
     try {
-      // Categories are created on demand — a go-live file rarely matches an
+      // Categories are created on demand - a go-live file rarely matches an
       // empty category table, and failing the whole import over a missing
       // category would be unhelpful.
       let category = await prisma.category.findFirst({ where: { name: row.category || 'Divers' } });
@@ -249,7 +249,7 @@ async function main() {
 
   if (!args.products && !args.stock) {
     console.log(`
-SIPROCOM SGS — data import
+SIPROCOM SGS - data import
 
   node scripts/import-data.js --products products.csv [--dry-run]
   node scripts/import-data.js --stock stock.csv --user admin@siprocom.com
@@ -260,7 +260,7 @@ writing anything.
     return;
   }
 
-  if (args.dryRun) console.log('\n*** DRY RUN — nothing will be written ***');
+  if (args.dryRun) console.log('\n*** DRY RUN - nothing will be written ***');
 
   if (args.products) {
     const report = await importProducts(args.products, args);

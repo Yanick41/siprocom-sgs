@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 
 /**
  * Gates a route behind authentication and, optionally, a permission.
- * This is UX, not security — the API authorises every request independently.
+ * This is UX, not security - the API authorises every request independently.
  */
 export default function ProtectedRoute({ children, permission }) {
   const { isAuthenticated, isLoading, can } = useAuth();

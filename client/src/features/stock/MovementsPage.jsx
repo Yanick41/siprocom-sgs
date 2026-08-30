@@ -12,7 +12,7 @@ import { exportToExcel, exportToPdf } from '@/lib/export';
 const TYPE_ICON = { IN: FiArrowDown, OUT: FiArrowUp, ADJUSTMENT: FiSliders };
 const TYPE_COLOR = { IN: 'text-emerald-600', OUT: 'text-red-600', ADJUSTMENT: 'text-amber-600' };
 
-/** The journal de stock (§4.4) — append-only, so this screen is read-only by design. */
+/** The journal de stock (§4.4) - append-only, so this screen is read-only by design. */
 export default function MovementsPage() {
   const { t, i18n } = useTranslation(['stock', 'common']);
   const lng = i18n.resolvedLanguage;

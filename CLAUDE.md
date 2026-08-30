@@ -1,4 +1,4 @@
-# SIPROCOM SGS — Development Conventions
+# SIPROCOM SGS - Development Conventions
 
 ## Read first
 
@@ -10,19 +10,19 @@ Requirement source: `Cahier_des_charges_SIPROCOM_SGS.pdf` v1.0.
 
 ## Project shape
 
-- `client/` — React 19 + Vite 8 + Tailwind 4 SPA
-- `server/` — Express 5 + Prisma 6 + PostgreSQL REST API
+- `client/` - React 19 + Vite 8 + Tailwind 4 SPA
+- `server/` - Express 5 + Prisma 6 + PostgreSQL REST API
 
 ## Scope, in one line
 
 A dedicated application for **SIPROCOM alone, on one site**. There is no tenant, no
-warehouse and no transfer — stock is "this product". Do not reintroduce any of the three
+warehouse and no transfer - stock is "this product". Do not reintroduce any of the three
 without an explicit decision recorded in the plan.
 
 ## Hard rules
 
 1. **No hardcoded user-facing strings.** Every label goes through `t()`. The UI is French
-   only — `client/src/i18n/locales/fr/*`, and `SUPPORTED_LANGUAGES` holds one entry.
+   only - `client/src/i18n/locales/fr/*`, and `SUPPORTED_LANGUAGES` holds one entry.
    Server-side email templates are the one exception and carry fr/en.
 2. **Stock mutations live only in `server/src/services/stock.service.js`.** No route,
    controller, or other service writes to `stock_levels` or `stock_movements` directly.
@@ -31,21 +31,21 @@ without an explicit decision recorded in the plan.
 4. **`stock_movements` is append-only.** No UPDATE, no DELETE. Corrections are new
    compensating movements.
 5. **Every movement records `userId` and `createdAt`.** No anonymous movements.
-6. **API errors return codes, not sentences** — `{ error: { code, details } }`. The client
+6. **API errors return codes, not sentences** - `{ error: { code, details } }`. The client
    maps codes to `errors:*` translation keys.
 7. **Validate every request body with zod** before it reaches a service.
 8. **Soft-delete only** (`isActive`) for referenced records.
 9. **Money uses `Decimal`**, never `Float`. Formatting via `Intl.NumberFormat`.
-10. **Dates and numbers are formatted with `Intl.*`** using the active locale — never
+10. **Dates and numbers are formatted with `Intl.*`** using the active locale - never
     manual string building.
 11. **Signup is invitation-only.** `/signup` is a public *screen*, not an open door:
     the server issues a code only for an address an ADMIN already invited, and the
-    ADMIN fixes the role. Never relax that check — the application holds SIPROCOM's
+    ADMIN fixes the role. Never relax that check - the application holds SIPROCOM's
     purchase prices, margins and suppliers.
 12. **Nobody sets another person's password.** An ADMIN invites and hands over a
     one-time code; the invited person chooses their own password (BR-11).
     `user.password` is nullable and null means "not yet activated". `/login`
-    **says so plainly** (`ACCOUNT_NOT_ACTIVATED`) and links to `/signup` — it used
+    **says so plainly** (`ACCOUNT_NOT_ACTIVATED`) and links to `/signup` - it used
     to hide the state behind INVALID_CREDENTIALS to avoid enumeration, which cost
     hours of confusion and bought nothing: there is no public signup, company
     addresses are guessable, and knowing an account is pending grants no access.
@@ -54,6 +54,14 @@ without an explicit decision recorded in the plan.
     ADMIN on screen and passed on by hand. Do not add a mail dependency back without
     an explicit decision: it was removed because a misconfigured provider locked
     people out silently, and one site does not need it.
+14. **No em dashes (U+2014), no en dashes (U+2013).** ASCII `-` everywhere: in code,
+    comments, commit messages, French UI strings and documentation alike. A spaced
+    parenthetical becomes ` - `, same spacing, different character.
+    `npm run check:dashes` enforces this and the pre-commit hook runs it on staged
+    files. The rule is absolute on purpose: an exception ("only in prose", "only in
+    French") needs a judgement call at every commit, and a guard that argues is a
+    guard that gets bypassed. See [docs/CONVENTIONS_TEXTE.md](docs/CONVENTIONS_TEXTE.md),
+    which is the one file exempt from the check because it has to show the glyphs.
 
 ## Layering
 
@@ -61,7 +69,7 @@ without an explicit decision recorded in the plan.
 
 ## Roles
 
-`ADMIN` · `MAGASINIER` · `ACHATS` · `DIRECTION` — see the API table in the plan for the
+`ADMIN` · `MAGASINIER` · `ACHATS` · `DIRECTION` - see the API table in the plan for the
 per-endpoint matrix.
 
 ## Commands
@@ -69,7 +77,7 @@ per-endpoint matrix.
 ```bash
 # server
 npm run dev              # nodemon
-npm run test:stock       # 16 engine checks — BR-2, BR-10, ledger/level agreement
+npm run test:stock       # 16 engine checks - BR-2, BR-10, ledger/level agreement
 npm run create-admin -- --email … --name "…" --password "…"
 npx prisma migrate deploy   # apply migrations (migrate dev needs a TTY)
 npx prisma studio

@@ -6,7 +6,7 @@ import { useErrorMessage } from '@/hooks/useErrorMessage';
 import { formatDateTime } from '@/lib/format';
 
 /**
- * Phase 0 verification screen: proves the full vertical slice works —
+ * Phase 0 verification screen: proves the full vertical slice works -
  * Vite build, Tailwind theme, i18n (FR/EN), React Query, axios, Express, Prisma, Postgres.
  * Replaced by the real dashboard in Phase 6.
  */
@@ -35,7 +35,7 @@ export default function SystemStatusPage() {
 
       <section className="card p-6">
         <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-500">
-          Phase 0 — Foundations
+          Phase 0 - Foundations
         </h2>
 
         {isLoading ? (
@@ -48,7 +48,7 @@ export default function SystemStatusPage() {
               ok={dbOk}
               value={dbOk ? 'PostgreSQL connected' : data?.hint || translateError(error)}
             />
-            <StatusRow label="Environment" ok value={data?.env ?? '—'} neutral />
+            <StatusRow label="Environment" ok value={data?.env ?? '-'} neutral />
             <StatusRow
               label="Locale"
               ok
@@ -72,7 +72,7 @@ export default function SystemStatusPage() {
       </section>
 
       <p className="mt-6 text-center text-xs text-slate-400">
-        {t('common:footer.version', { version: '0.1.0' })} — see IMPLEMENTATION_PLAN.md
+        {t('common:footer.version', { version: '0.1.0' })} - see IMPLEMENTATION_PLAN.md
       </p>
     </main>
   );

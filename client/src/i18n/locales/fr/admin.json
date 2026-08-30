@@ -35,8 +35,21 @@
     "toast": {
       "created": "Fournisseur créé",
       "updated": "Fournisseur mis à jour",
-      "deactivated": "Fournisseur désactivé"
-    }
+      "deactivated": "Fournisseur désactivé",
+      "activated": "Fournisseur réactivé",
+      "deleted": "Fournisseur supprimé"
+    },
+    "status": {
+      "active": "Actifs",
+      "inactive": "Inactifs",
+      "all": "Tous",
+      "inactiveBadge": "Inactif"
+    },
+    "deactivate": "Désactiver",
+    "activate": "Réactiver",
+    "confirmDeactivate": "Désactiver le fournisseur \"{{name}}\" ? Il disparaîtra des listes de saisie, mais les bons de réception déjà enregistrés le conservent.",
+    "empty": "Aucun fournisseur",
+    "confirmDelete": "Supprimer définitivement le fournisseur \"{{name}}\" ? Cette action est irréversible. Elle n'est possible que si aucun produit ni bon de réception ne le référence."
   },
   "users": {
     "title": "Utilisateurs",
@@ -69,7 +82,7 @@
     "resetBody": "Transmettez ce lien à {{name}}. Il permet de choisir un nouveau mot de passe et expire dans 2 heures.",
     "copy": "Copier",
     "copied": "Copié",
-    "copyFailed": "Copie impossible — sélectionnez la valeur à la main.",
+    "copyFailed": "Copie impossible - sélectionnez la valeur à la main.",
     "handoutWarning": "Cette valeur ne s'affichera qu'une seule fois. Notez-la avant de fermer : elle n'est pas conservée en clair, il faudra en générer une nouvelle."
   },
   "audit": {

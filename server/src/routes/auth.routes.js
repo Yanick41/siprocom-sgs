@@ -38,7 +38,7 @@ const router = express.Router();
  * Tells the caller how long the wait is, instead of "a few minutes".
  *
  * Without a figure the screen cannot say anything useful, and a user who does
- * not know whether to wait 30 seconds or 15 minutes simply keeps retrying —
+ * not know whether to wait 30 seconds or 15 minutes simply keeps retrying -
  * which extends the very window they are waiting on.
  */
 const tooManyRequests = (req, res) => {
@@ -67,7 +67,7 @@ const tooManyRequests = (req, res) => {
  * Per (IP, account) the mistakes stay with the person who made them.
  *
  * The window is short on purpose. Once the budget is spent even the correct
- * password is refused until it resets — that is how any rate limiter works, and
+ * password is refused until it resets - that is how any rate limiter works, and
  * it is the part users actually feel. Ten tries buys enough room for someone
  * who cannot remember which password they chose, and five minutes is a bounded,
  * stated wait rather than a quarter of an hour of guessing why.
@@ -91,7 +91,7 @@ const loginLimiter = rateLimit({
 
 /**
  * Backstop for the hole the key above opens: an attacker can rotate the email
- * and get a fresh budget each time. Deliberately generous — a whole office
+ * and get a fresh budget each time. Deliberately generous - a whole office
  * failing fifty logins in fifteen minutes is a support problem, not traffic to
  * block, while anyone enumerating accounts passes it in seconds.
  */
@@ -107,7 +107,7 @@ const loginIpLimiter = rateLimit({
 /**
  * The two endpoints that carry a token rather than an address.
  *
- * There is no account to key on — the body holds a token, not an email — so
+ * There is no account to key on - the body holds a token, not an email - so
  * this one is per IP and therefore shared by the whole office. It is set
  * generously for that reason: onboarding several colleagues in one afternoon
  * means a handful of requests each, and the screen re-checks the link on every
@@ -139,7 +139,7 @@ const signupLimiter = rateLimit({
 });
 
 const cookieOptions = () => ({
-  httpOnly: true, // unreadable from JS — the point of not using localStorage
+  httpOnly: true, // unreadable from JS - the point of not using localStorage
   secure: config.isProduction,
   sameSite: config.isProduction ? 'none' : 'lax', // 'none' when API and client are on different domains
   maxAge: 8 * 60 * 60 * 1000,
@@ -156,17 +156,17 @@ const publicUser = (user) => ({
 
 
 /**
- * First-run setup (§4.7 — accounts are created by an administrator; this is how
+ * First-run setup (§4.7 - accounts are created by an administrator; this is how
  * the very first one comes into existence on an empty database).
  *
  * Open only while the users table is empty. That window is the whole security
  * model, so it is closed with a conditional INSERT rather than a count-then-
  * create: under Read Committed, two requests arriving together would both read
  * zero and both create an administrator. The same discipline as the stock
- * decrement — the guard belongs in the statement, not around it.
+ * decrement - the guard belongs in the statement, not around it.
  */
 
-// GET /api/auth/setup-status — drives the login screen's "create an account" link.
+// GET /api/auth/setup-status - drives the login screen's "create an account" link.
 router.get(
   '/setup-status',
   asyncHandler(async (req, res) => {
@@ -224,7 +224,7 @@ router.post(
  * The screen and the endpoint are the same; only the email differs.
  */
 
-// GET /api/auth/token?token=… — is this link still good?
+// GET /api/auth/token?token=… - is this link still good?
 // Lets the screen say "expired" instead of showing a form that fails on submit.
 router.get(
   '/token',
@@ -251,7 +251,7 @@ router.post(
       ipAddress: clientIp(req),
     });
 
-    // A disabled account can hold a valid link — an administrator may have
+    // A disabled account can hold a valid link - an administrator may have
     // deactivated it after inviting. Setting the password is allowed; signing
     // in is not, and login gives the same answer.
     if (!user.isActive) throw new ForbiddenError('ACCOUNT_DISABLED');
@@ -272,12 +272,12 @@ router.post(
  *
  * The administrator opens the door by inviting an address and choosing a role;
  * the person then fills in their own name and password here and confirms a
- * six-digit code. Two endpoints, because the screen is two steps — but nothing
+ * six-digit code. Two endpoints, because the screen is two steps - but nothing
  * is written until the code is proved, so an abandoned signup leaves no
  * half-built account behind.
  */
 
-// POST /api/auth/signup/check — step 1 submitted: is there an invitation?
+// POST /api/auth/signup/check - step 1 submitted: is there an invitation?
 //
 // It sends nothing. The code was handed to the administrator when they
 // invited; this only tells the screen whether to move on, so nobody fills in
@@ -297,7 +297,7 @@ router.post(
   })
 );
 
-// POST /api/auth/signup/complete — step 2 submitted, activate the account.
+// POST /api/auth/signup/complete - step 2 submitted, activate the account.
 router.post(
   '/signup/complete',
   signupLimiter,
@@ -362,7 +362,7 @@ router.post(
      *
      * What the secrecy bought is close to nothing in this system. There is no
      * public signup, so nobody can create accounts; the addresses are company
-     * ones and guessable — the placeholder on the login form spells the format
+     * ones and guessable - the placeholder on the login form spells the format
      * out; and knowing an account is pending grants nothing, because only an
      * administrator can issue the code that activates it.
      *
@@ -418,7 +418,7 @@ router.get(
   })
 );
 
-// PATCH /api/auth/me/locale — persists the language choice across devices.
+// PATCH /api/auth/me/locale - persists the language choice across devices.
 router.patch(
   '/me/locale',
   authenticate,

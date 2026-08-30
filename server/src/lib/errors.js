@@ -2,7 +2,7 @@
 
 /**
  * Application errors carry a stable machine-readable `code`, never a
- * human sentence — the client maps codes to translated messages so the API
+ * human sentence - the client maps codes to translated messages so the API
  * stays locale-agnostic. See IMPLEMENTATION_PLAN.md §7 rule 5.
  */
 class AppError extends Error {

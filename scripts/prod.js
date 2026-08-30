@@ -9,7 +9,7 @@
  *
  * Development stays pointed at the local database because that is where test
  * data belongs. Reaching production is therefore something you type on purpose,
- * for one command, rather than a state `.env` is left in — which is how a seed
+ * for one command, rather than a state `.env` is left in - which is how a seed
  * ends up wiping the real database.
  *
  * Credentials come from server/.env.neon.local, which is gitignored.
@@ -50,7 +50,7 @@ for (const line of fs.readFileSync(CREDENTIALS, 'utf8').split('\n')) {
 }
 
 // dotenv does not override variables already present, so these win over
-// server/.env — which is exactly the point.
+// server/.env - which is exactly the point.
 let host = 'unknown';
 try {
   host = new URL(env.DATABASE_URL).hostname;
@@ -58,7 +58,7 @@ try {
   /* reported below by the command itself */
 }
 
-console.log(`\n  \x1b[33mProduction\x1b[0m — ${host}\n  $ ${command.join(' ')}\n`);
+console.log(`\n  \x1b[33mProduction\x1b[0m - ${host}\n  $ ${command.join(' ')}\n`);
 
 const result = spawnSync(command[0], command.slice(1), {
   cwd: SERVER,

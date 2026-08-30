@@ -4,6 +4,7 @@ const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const { rateLimit } = require('express-rate-limit');
 
 const config = require('./config/env');
 const logger = require('./lib/logger');
@@ -58,8 +59,51 @@ app.use(
 );
 
 app.use(express.json({ limit: '1mb' }));
-app.use(express.urlencoded({ extended: true }));
+
+/**
+ * express.urlencoded is deliberately absent, and this is a CSRF control rather
+ * than tidying.
+ *
+ * The auth cookie is SameSite=None in production, because the client and the
+ * API may sit on different domains. The browser therefore sends it on
+ * cross-site requests. CORS does not help here: a form POST with
+ * application/x-www-form-urlencoded is a "simple request", so it is dispatched
+ * with no preflight, and the allowlist only stops the attacker reading the
+ * reply - not the write from happening.
+ *
+ * With only the JSON parser mounted, such a body never parses, req.body stays
+ * empty and zod rejects it before any service runs. A cross-site request
+ * carrying application/json does get preflighted, and there the allowlist bites.
+ *
+ * Nothing in this API has ever accepted a form: the client sends JSON. Mounting
+ * the parser cost nothing visible and opened the one door CORS cannot close.
+ */
+
 app.use(cookieParser());
+
+/**
+ * Blanket ceiling on the whole API.
+ *
+ * The auth routes have their own, much tighter limits; this is the backstop for
+ * everything behind a valid session. The report endpoints run several
+ * aggregates over the movement ledger, and one stolen cookie or one runaway
+ * script should not be able to drive the database into the ground.
+ *
+ * Generous on purpose: a magasinier working quickly through receipts fires a
+ * lot of small requests, and a limiter that trips on ordinary work gets raised
+ * until it means nothing.
+ */
+app.use(
+  '/api',
+  rateLimit({
+    windowMs: 60 * 1000,
+    limit: 300,
+    standardHeaders: 'draft-7',
+    legacyHeaders: false,
+    // Health checks must answer even while something else is being throttled.
+    skip: (req) => req.path.startsWith('/health'),
+  })
+);
 
 // ---- routes -------------------------------------------------------------
 app.use('/api/health', healthRoutes);

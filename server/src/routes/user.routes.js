@@ -40,8 +40,8 @@ const idParamSchema = z.object({ id: z.string().uuid() });
 
 /**
  * The hash must never leave the server, not even to an admin. `pending` takes
- * its place: it is what the screen needs — has this person activated their
- * account yet — without disclosing anything about the secret itself.
+ * its place: it is what the screen needs - has this person activated their
+ * account yet - without disclosing anything about the secret itself.
  */
 const publicUser = ({ password, ...user }) => ({ ...user, pending: password === null });
 
@@ -70,7 +70,7 @@ router.get(
 );
 
 /**
- * POST /api/users — invites a colleague.
+ * POST /api/users - invites a colleague.
  *
  * The account is created without a password and the response carries a
  * one-time activation code. There is no email in this system: SIPROCOM is one
@@ -110,7 +110,7 @@ router.post(
 );
 
 /**
- * POST /api/users/:id/activation-code — a fresh code for a pending account.
+ * POST /api/users/:id/activation-code - a fresh code for a pending account.
  *
  * Replaces "resend the invitation": there is nothing to resend, so this mints a
  * new code and invalidates the last one. Used when the first code expired, was
@@ -139,12 +139,12 @@ router.post(
 );
 
 /**
- * POST /api/users/:id/password-reset-link — for a colleague who is locked out.
+ * POST /api/users/:id/password-reset-link - for a colleague who is locked out.
  *
  * Self-service recovery went with the email. The administrator produces a
  * one-time link instead and passes it on; the person still chooses their own
  * password, so BR-11 holds. A link rather than a code because the account
- * already exists — they land straight on "choose a new password".
+ * already exists - they land straight on "choose a new password".
  */
 router.post(
   '/:id/password-reset-link',
@@ -192,7 +192,7 @@ router.patch(
 
     // No password field here any more: an administrator cannot set someone
     // else's password. If a colleague is locked out they request a reset, or
-    // the admin resends an invitation — either way the secret stays theirs.
+    // the admin resends an invitation - either way the secret stays theirs.
     let user;
     try {
       user = await prisma.user.update({ where: { id }, data });

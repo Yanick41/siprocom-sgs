@@ -1,7 +1,7 @@
 /**
  * Client-side permission map.
  *
- * This mirrors the server's `authorize(...)` guards for UI purposes only —
+ * This mirrors the server's `authorize(...)` guards for UI purposes only -
  * hiding a button the user cannot use. It is never a security boundary:
  * the server re-checks every request. See IMPLEMENTATION_PLAN.md §8.
  */
@@ -24,15 +24,24 @@ export const PERMISSIONS = {
   'categories.write': [ROLES.ADMIN],
   'suppliers.view': ALL,
   'suppliers.write': [ROLES.ADMIN, ROLES.ACHATS],
+  // ACHATS creates and edits suppliers but does not retire them, matching the
+  // server guard on /deactivate and /activate and the products split above.
+  'suppliers.deactivate': [ROLES.ADMIN],
+  // Permanent removal, and only ever for a supplier nothing references.
+  'suppliers.delete': [ROLES.ADMIN],
 
-  // Stock operations (Phase 3–4)
+  // Stock operations (Phase 3-4)
   'stock.view': ALL,
   'stock.write': [ROLES.ADMIN, ROLES.MAGASINIER],
   'stock.validate': [ROLES.ADMIN, ROLES.MAGASINIER],
+  // Recording a handover is the magasinier job; raising the facture is a
+  // commercial act, so ACHATS can do it and MAGASINIER can too.
+  'stock.deliver': [ROLES.ADMIN, ROLES.MAGASINIER],
+  'stock.invoice': [ROLES.ADMIN, ROLES.MAGASINIER, ROLES.ACHATS],
   'stock.cancel': [ROLES.ADMIN],
   'stock.overrideNegative': [ROLES.ADMIN],
 
-  // Alerts & reporting (Phase 5–6)
+  // Alerts & reporting (Phase 5-6)
   'alerts.view': ALL,
   'alerts.acknowledge': [ROLES.ADMIN, ROLES.ACHATS],
   'reports.view': ALL,

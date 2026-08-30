@@ -1,4 +1,4 @@
-# SIPROCOM SGS — Runbook de déploiement
+# SIPROCOM SGS - Runbook de déploiement
 
 > **Aucune étape de ce document n'a été exécutée.** Elles demandent tes
 > identifiants (Neon, Vercel) et engagent des ressources facturables. Tout ce
@@ -6,24 +6,24 @@
 
 ---
 
-## 1. Variables d'environnement — qui fournit quoi
+## 1. Variables d'environnement - qui fournit quoi
 
 ### Serveur (API)
 
 | Variable | Qui la fournit | Valeur en production |
 |---|---|---|
-| `DATABASE_URL` | **Toi** — Neon | Chaîne **pooled** (`…-pooler.…`) |
-| `DIRECT_URL` | **Toi** — Neon | Chaîne **directe** (sans `-pooler`) |
-| `JWT_SECRET` | **Toi** — à générer | 96 caractères hex, **différent du dev** |
-| `CLIENT_URL` | **Toi** | `https://sgs.siprocom.com` — **jamais localhost** |
-| `CRON_SECRET` | **Toi** — à générer | 48 caractères hex |
-| `RESEND_API_KEY` | **Toi** — resend.com | Facultatif ; vide = pas d'email |
+| `DATABASE_URL` | **Toi** - Neon | Chaîne **pooled** (`…-pooler.…`) |
+| `DIRECT_URL` | **Toi** - Neon | Chaîne **directe** (sans `-pooler`) |
+| `JWT_SECRET` | **Toi** - à générer | 96 caractères hex, **différent du dev** |
+| `CLIENT_URL` | **Toi** | `https://sgs.siprocom.com` - **jamais localhost** |
+| `CRON_SECRET` | **Toi** - à générer | 48 caractères hex |
+| `RESEND_API_KEY` | **Toi** - resend.com | Facultatif ; vide = pas d'email |
 | `MAIL_FROM` | **Toi** | Domaine vérifié chez Resend |
 | `ENABLE_SCHEDULER` | **Toi** | `false` sur Vercel, `true` sur serveur unique |
 | `NODE_ENV` | *Plateforme* | Injecté automatiquement |
 | `PORT` | *Plateforme* | Injecté automatiquement |
 | `TZ` | **Toi** | `Africa/Abidjan` |
-| `JWT_EXPIRES_IN` · `JWT_COOKIE_NAME` · `BCRYPT_ROUNDS` · `LOG_LEVEL` · `DEFAULT_LOCALE` | — | Laisser les valeurs par défaut |
+| `JWT_EXPIRES_IN` · `JWT_COOKIE_NAME` · `BCRYPT_ROUNDS` · `LOG_LEVEL` · `DEFAULT_LOCALE` | - | Laisser les valeurs par défaut |
 
 **Génère les secrets maintenant, ils ne doivent exister nulle part ailleurs :**
 
@@ -36,14 +36,14 @@ node -e "console.log('CRON_SECRET  =', require('crypto').randomBytes(24).toStrin
 > dans ton dossier de développement et a circulé dans cette conversation.
 >
 > Le serveur **refuse de démarrer** en production si `CLIENT_URL` contient
-> `localhost` ou commence par `http://` — le cookie d'authentification est
+> `localhost` ou commence par `http://` - le cookie d'authentification est
 > `Secure`, donc en http le navigateur ne l'enverrait jamais.
 
 ### Client
 
 | Variable | Valeur |
 |---|---|
-| `VITE_API_URL` | `/api` — le client et l'API partagent l'origine |
+| `VITE_API_URL` | `/api` - le client et l'API partagent l'origine |
 
 ---
 
@@ -51,7 +51,7 @@ node -e "console.log('CRON_SECRET  =', require('crypto').randomBytes(24).toStrin
 
 **À faire dans le dashboard Neon :**
 
-1. Créer un projet — région **Europe (Frankfurt)** ou la plus proche d'Abidjan
+1. Créer un projet - région **Europe (Frankfurt)** ou la plus proche d'Abidjan
 2. Créer la base `siprocom_sgs`
 3. Copier les **deux** chaînes de connexion depuis *Connection Details* :
    - **Pooled** (contient `-pooler`) → `DATABASE_URL`
@@ -101,7 +101,7 @@ quotidien à 06:00.
 **Étapes manuelles :**
 
 1. **Importer le dépôt** sur vercel.com → *Add New Project*
-2. **Ne pas modifier** les commandes de build — `vercel.json` les définit
+2. **Ne pas modifier** les commandes de build - `vercel.json` les définit
 3. **Settings → Environment Variables**, portée *Production* :
    toutes les variables marquées **Toi** au §1
 4. **Deploy**
@@ -116,7 +116,7 @@ quotidien à 06:00.
 `x-cron-secret`. Garde `ENABLE_SCHEDULER=false` : chaque instance serverless
 lancerait sinon le même balayage.
 
-### Alternative — serveur interne SIPROCOM
+### Alternative - serveur interne SIPROCOM
 
 ```bash
 cp .env.docker.example .env     # renseigner POSTGRES_PASSWORD et JWT_SECRET
@@ -131,11 +131,11 @@ Ici `ENABLE_SCHEDULER=true` : une seule instance, le cron intégré suffit.
 
 ---
 
-### Contraintes de `vercel.json` — à ne pas modifier sans savoir
+### Contraintes de `vercel.json` - à ne pas modifier sans savoir
 
 **Aucun commentaire.** JSON n'en accepte pas, et Vercel valide le fichier contre
-un schéma strict : toute propriété inconnue — y compris une clé `"//"` utilisée
-comme commentaire — fait **rejeter le déploiement avant sa création**. L'onglet
+un schéma strict : toute propriété inconnue - y compris une clé `"//"` utilisée
+comme commentaire - fait **rejeter le déploiement avant sa création**. L'onglet
 Deployments reste alors vide, sans même afficher un échec. C'est l'erreur
 « should NOT have additional property ».
 
@@ -145,7 +145,7 @@ se déploie parfaitement et chaque `/api/*` renvoie 404.
 
 **`includeFiles` ne nomme que le moteur Prisma.** Vercel trace les `require`
 statiques seul, et `server/node_modules` pèse 476 Mo contre une limite de 250 Mo
-par fonction — un glob large échoue au packaging. Mais le moteur est chargé
+par fonction - un glob large échoue au packaging. Mais le moteur est chargé
 *dynamiquement* par Prisma : sans cette ligne, le build réussit et chaque
 requête meurt sur « Query engine library not found ».
 
@@ -153,7 +153,7 @@ requête meurt sur « Query engine library not found ».
 
 ## 4. Checklist post-déploiement
 
-Dans l'ordre — chaque test suppose le précédent réussi.
+Dans l'ordre - chaque test suppose le précédent réussi.
 
 ### Infrastructure
 
@@ -214,7 +214,7 @@ Dans l'ordre — chaque test suppose le précédent réussi.
 - [ ] Domaine vérifié chez Resend, sinon la livraison échoue en silence
 - [ ] Un email de test arrive et **ne tombe pas en spam** (SPF/DKIM)
 
-### Sauvegarde — avant la mise en service réelle
+### Sauvegarde - avant la mise en service réelle
 
 - [ ] Une sauvegarde a été prise
 - [ ] **Une restauration a été testée sur une base vierge.** Une sauvegarde
@@ -227,7 +227,7 @@ Dans l'ordre — chaque test suppose le précédent réussi.
 | Point | Pourquoi |
 |---|---|
 | Rendu visuel, ergonomie tactile | Pas de navigateur à ma disposition |
-| Exports Excel/PDF sur clic réel | Idem — seul l'aller-retour des données est testé |
+| Exports Excel/PDF sur clic réel | Idem - seul l'aller-retour des données est testé |
 | Build des images Docker | Docker n'est pas installé |
 | Déploiement Vercel | Demande tes identifiants |
 | Envoi d'email | Aucune clé Resend |

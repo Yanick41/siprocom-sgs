@@ -3,7 +3,7 @@
 /**
  * Vercel serverless entry point.
  *
- * Vercel only turns files inside `api/` into functions — a path named under the
+ * Vercel only turns files inside `api/` into functions - a path named under the
  * `functions` key in vercel.json is configured, not created. Without this file
  * every /api/* request 404s while the front-end deploys perfectly.
  *
@@ -15,7 +15,7 @@
  *
  * The message is deliberate: a boot failure here is a missing environment
  * variable or an absent Prisma engine, not user input, so naming it leaks
- * nothing an operator does not already need to know. Values are never echoed —
+ * nothing an operator does not already need to know. Values are never echoed -
  * only the failure itself.
  */
 let app;

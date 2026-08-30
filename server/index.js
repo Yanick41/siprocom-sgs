@@ -13,7 +13,7 @@ if (!process.env.VERCEL) {
     /**
      * A dev server pointed at a remote database is invisible until something
      * writes. .env gets switched to production for a migration and left there,
-     * and the next test movement lands in real data — that is how the demo seed
+     * and the next test movement lands in real data - that is how the demo seed
      * wiped this project's Neon database once already.
      */
     if (!config.isProduction) {
@@ -36,7 +36,7 @@ if (!process.env.VERCEL) {
   const scheduler = startScheduler();
 
   const shutdown = (signal) => {
-    logger.info(`${signal} received — shutting down`);
+    logger.info(`${signal} received - shutting down`);
     scheduler?.stop();
     server.close(() => process.exit(0));
     // Don't hang forever on lingering keep-alive sockets.

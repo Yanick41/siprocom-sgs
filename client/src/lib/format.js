@@ -1,6 +1,6 @@
 /**
  * All user-visible dates, numbers and money go through these helpers.
- * Never hand-build "dd/mm/yyyy" or call toFixed() for display —
+ * Never hand-build "dd/mm/yyyy" or call toFixed() for display -
  * see IMPLEMENTATION_PLAN.md §7 rule 8.
  */
 
@@ -11,7 +11,7 @@ export const CURRENCY_DECIMALS = 0;
 const localeTag = (lng) => (lng === 'en' ? 'en-GB' : 'fr-FR');
 
 export const formatNumber = (value, lng, options = {}) => {
-  if (value === null || value === undefined || Number.isNaN(Number(value))) return '—';
+  if (value === null || value === undefined || Number.isNaN(Number(value))) return '-';
   return new Intl.NumberFormat(localeTag(lng), options).format(Number(value));
 };
 
@@ -33,7 +33,7 @@ export const formatCurrency = (value, lng) =>
  * F A", which is how an invoice reaches a customer looking broken.
  *
  * Applied at the PDF boundary rather than in the formatters, because on
- * screen those characters are exactly right — they are what stops a number
+ * screen those characters are exactly right - they are what stops a number
  * wrapping across a line.
  */
 export const pdfText = (value) =>
@@ -43,7 +43,7 @@ export const formatQuantity = (value, lng) =>
   formatNumber(value, lng, { maximumFractionDigits: 0 });
 
 export const formatDate = (value, lng) => {
-  if (!value) return '—';
+  if (!value) return '-';
   return new Intl.DateTimeFormat(localeTag(lng), {
     day: '2-digit',
     month: '2-digit',
@@ -52,7 +52,7 @@ export const formatDate = (value, lng) => {
 };
 
 export const formatDateTime = (value, lng) => {
-  if (!value) return '—';
+  if (!value) return '-';
   return new Intl.DateTimeFormat(localeTag(lng), {
     day: '2-digit',
     month: '2-digit',

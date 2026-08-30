@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
@@ -9,6 +9,8 @@ import {
 
 import { useAuth } from '@/context/AuthContext';
 import { alertsApi } from '@/api/resources';
+import OfflineIndicator from '@/components/OfflineIndicator';
+import { preloadScreens } from '@/lib/lazyWithRetry';
 
 /**
  * Navigation is declared once with the permission each entry needs; the sidebar
@@ -49,8 +51,8 @@ const NAV_SECTIONS = [
     items: [
       { to: '/users', labelKey: 'nav.users', icon: FiUsers, permission: 'users.manage' },
       { to: '/audit', labelKey: 'nav.auditLog', icon: FiShield, permission: 'audit.view' },
-      // No /settings entry: every parameter the cahier des charges lists —
-      // thresholds, categories, suppliers — is edited on its own screen, so a
+      // No /settings entry: every parameter the cahier des charges lists -
+      // thresholds, categories, suppliers - is edited on its own screen, so a
       // settings page would have nothing left to hold.
     ],
   },
@@ -58,6 +60,26 @@ const NAV_SECTIONS = [
 
 export default function AppLayout() {
   const { t } = useTranslation(['common', 'auth', 'alerts']);
+
+  /**
+   * Pull the remaining screens into cache, once, after sign-in.
+   *
+   * It used to run on every page load, including the login screen, where it
+   * fetched close to a megabyte of screens - recharts among them - while
+   * somebody was typing a password. Nobody signed out benefits from a warm
+   * offline cache; the person who does is the one already inside.
+   */
+  useEffect(() => {
+    const warm = () => preloadScreens();
+    const id =
+      'requestIdleCallback' in window
+        ? window.requestIdleCallback(warm, { timeout: 15_000 })
+        : setTimeout(warm, 5_000);
+    return () => {
+      if ('cancelIdleCallback' in window) window.cancelIdleCallback(id);
+      else clearTimeout(id);
+    };
+  }, []);
   const { user, logout, can } = useAuth();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -139,6 +161,7 @@ export default function AppLayout() {
           </div>
 
           <div className="flex items-center gap-3">
+            <OfflineIndicator />
             {can('alerts.view') && (
               <Link
                 to="/alerts"

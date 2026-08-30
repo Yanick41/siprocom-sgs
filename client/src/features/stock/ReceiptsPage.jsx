@@ -13,6 +13,7 @@ import StatusBadge from '@/components/StatusBadge';
 import { useErrorMessage } from '@/hooks/useErrorMessage';
 import { formatDate, formatCurrency, formatQuantity } from '@/lib/format';
 import DocumentLinesEditor from './DocumentLinesEditor';
+import { submitOrQueue } from '@/lib/offline/submit';
 
 const STATUS_TONE = { DRAFT: 'neutral', VALIDATED: 'success', CANCELLED: 'danger' };
 
@@ -63,7 +64,7 @@ export default function ReceiptsPage() {
   const columns = [
     { key: 'number', header: t('stock:document.number'), render: (d) => <span className="font-mono text-xs font-medium">{d.number}</span> },
     { key: 'receiptDate', header: t('common:fields.date'), sortable: true, render: (d) => formatDate(d.receiptDate, lng) },
-    { key: 'supplier', header: t('stock:receipt.supplier'), render: (d) => d.supplier?.name || '—' },
+    { key: 'supplier', header: t('stock:receipt.supplier'), render: (d) => d.supplier?.name || '-' },
     { key: 'reason', header: t('common:fields.reason'), render: (d) => t(`stock:receiptReason.${d.reason}`) },
     { key: 'lines', header: t('stock:document.lineCount'), align: 'right', render: (d) => d._count?.lines ?? 0 },
     {
@@ -117,10 +118,10 @@ export default function ReceiptsPage() {
       {creating && (
         <ReceiptFormModal
           onClose={() => setCreating(false)}
-          onCreated={() => {
+          onCreated={(queued) => {
             setCreating(false);
             refresh();
-            toast.success(t('stock:receipt.toast.created'));
+            toast.success(queued ? t('common:offline.queued') : t('stock:receipt.toast.created'));
           }}
         />
       )}
@@ -154,7 +155,17 @@ function ReceiptFormModal({ onClose, onCreated }) {
     queryFn: () => productsApi.list({ limit: 200, sort: 'designation', order: 'asc' }),
   });
 
-  const mutation = useMutation({ mutationFn: receiptsApi.create, onSuccess: onCreated, onError: setSubmitError });
+  const mutation = useMutation({
+    mutationFn: (values) =>
+      submitOrQueue({
+        label: t('stock:receipt.createTitle'),
+        url: '/receipts',
+        body: values,
+        send: receiptsApi.create,
+      }),
+    onSuccess: ({ queued }) => onCreated(queued),
+    onError: setSubmitError,
+  });
 
   const validLines = lines.filter((l) => l.productId && Number(l.quantity) > 0);
   const total = validLines.reduce((sum, l) => sum + Number(l.quantity) * Number(l.unitPrice || 0), 0);
@@ -210,7 +221,7 @@ function ReceiptFormModal({ onClose, onCreated }) {
               onChange={(e) => setForm({ ...form, supplierId: e.target.value })}
               className="input"
             >
-              <option value="">—</option>
+              <option value="">-</option>
               {(suppliersQuery.data?.items || []).map((s) => (
                 <option key={s.id} value={s.id}>{s.name}</option>
               ))}
@@ -320,7 +331,7 @@ function ReceiptDetailModal({ id, onClose, canValidate, canCancel, onValidate, o
             </div>
             <div>
               <dt className="text-slate-500">{t('stock:receipt.supplier')}</dt>
-              <dd className="text-slate-800">{doc.supplier?.name || '—'}</dd>
+              <dd className="text-slate-800">{doc.supplier?.name || '-'}</dd>
             </div>
           </dl>
 

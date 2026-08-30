@@ -37,10 +37,10 @@ export default function AuditLogPage() {
     {
       key: 'user',
       header: t('admin:audit.user'),
-      value: (l) => l.user?.name || '—',
+      value: (l) => l.user?.name || '-',
       render: (l) => (
         <div>
-          <p className="font-medium text-slate-800">{l.user?.name || '—'}</p>
+          <p className="font-medium text-slate-800">{l.user?.name || '-'}</p>
           <p className="text-xs text-slate-500">{l.user ? t(`auth:roles.${l.user.role}`) : ''}</p>
         </div>
       ),

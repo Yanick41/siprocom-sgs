@@ -6,8 +6,8 @@ const { ConflictError, ValidationError } = require('../lib/errors');
  * Converts what an operator types into the base units stock is kept in.
  *
  * The whole carton feature lives here. `stock.service.js` never learns that
- * cartons exist: it receives base units and its invariants — the conditional
- * decrement, the ledger sum, the thresholds — are untouched. That is the point.
+ * cartons exist: it receives base units and its invariants - the conditional
+ * decrement, the ledger sum, the thresholds - are untouched. That is the point.
  * A conversion applied in two places is a conversion that will disagree with
  * itself.
  */

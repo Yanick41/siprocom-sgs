@@ -8,7 +8,7 @@ const logger = require('./logger');
  * Single Prisma instance.
  *
  * Reused via globalThis so that (a) nodemon restarts don't leak connections and
- * (b) warm serverless invocations share one pool — exhausting Postgres
+ * (b) warm serverless invocations share one pool - exhausting Postgres
  * connections is the classic way to blow the <2s response NFR.
  */
 const createClient = () =>

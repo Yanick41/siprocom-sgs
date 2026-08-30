@@ -16,7 +16,13 @@ const receiptLineSchema = z.object({
   lotNumber: z.string().trim().max(60).optional().nullable(),
 });
 
+/**
+ * `id` is optional and client-supplied. An offline device generates it once and
+ * reuses it on every replay, so a retry collides on the primary key instead of
+ * writing the document a second time. See lib/idempotency.js.
+ */
 const createReceiptSchema = z.object({
+  id: uuid.optional(),
   supplierId: uuid.optional().nullable(),
   reason: z.enum(['PURCHASE', 'RETURN_CUSTOMER']).default('PURCHASE'),
   purchaseOrderRef: z.string().trim().max(60).optional().nullable(),
@@ -25,7 +31,9 @@ const createReceiptSchema = z.object({
   lines: z.array(receiptLineSchema).min(1, 'EMPTY_DOCUMENT'),
 });
 
-const updateReceiptSchema = createReceiptSchema.partial();
+// `id` is omitted, not just made optional: a PATCH body carrying one would
+// otherwise be spread into the update and try to repoint the primary key.
+const updateReceiptSchema = createReceiptSchema.omit({ id: true }).partial();
 
 const issueLineSchema = z.object({
   productId: uuid,
@@ -40,6 +48,8 @@ const issueReason = z.enum(['SALE', 'RETURN_SUPPLIER']);
 // The two cross-field refinements that used to live here guarded transfers
 // between sites. With one site there is no destination to validate.
 const createIssueSchema = z.object({
+  /** Client-supplied on an offline replay. See createReceiptSchema above. */
+  id: uuid.optional(),
   reason: issueReason.default('SALE'),
   recipient: z.string().trim().max(150).optional().nullable(),
   recipientPhone: z.string().trim().max(40).optional().nullable(),
@@ -61,6 +71,12 @@ const updateIssueSchema = z.object({
 
 /** BR-6: a stock adjustment without a stated reason is never accepted. */
 const adjustStockSchema = z.object({
+  /**
+   * Client-supplied id for the ADJUSTMENT movement this will write. Same
+   * purpose as on the document schemas: it makes a replayed correction land
+   * once rather than once per attempt.
+   */
+  id: uuid.optional(),
   productId: uuid,
   countedQuantity: z.coerce.number().int().min(0),
   reason: z.string().trim().min(3, 'REASON_REQUIRED').max(300),

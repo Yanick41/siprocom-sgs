@@ -20,7 +20,7 @@ const { InsufficientStockError } = require('../src/lib/errors');
  * The concurrency tests fire 20 transactions at once against a hosted database.
  * Prisma's 2 s default for acquiring a connection is a local-latency figure:
  * over the network, the queue behind a burst that size exceeds it and the
- * transactions fail to *start* — which this script would score as "the stock
+ * transactions fail to *start* - which this script would score as "the stock
  * guard rejected them" when nothing of the sort happened.
  *
  * Waiting longer makes the test measure the invariant it is named after rather
@@ -110,7 +110,7 @@ async function main() {
    * important invariant in the system, and a red engine test that means "Neon
    * was unreachable for a second" is a test people learn to ignore.
    *
-   * The invariants below — never negative, ledger agrees with the level — hold
+   * The invariants below - never negative, ledger agrees with the level - hold
    * either way, and they are what actually proves the guard.
    */
   const rejectedForOtherReasons = rejected - rejectedForStock;
@@ -120,7 +120,7 @@ async function main() {
     );
     console.log(
       `  NOTE  ${rejectedForOtherReasons} of ${rejected} rejections were not stock-related ` +
-        `(${sample.reason.code || sample.reason.constructor.name}) — most likely the ` +
+        `(${sample.reason.code || sample.reason.constructor.name}) - most likely the ` +
         'database connection, not the engine.'
     );
   }
@@ -240,6 +240,55 @@ async function main() {
 
   console.log(`\n  ${passed} passed, ${failed} failed\n`);
   process.exitCode = failed === 0 ? 0 : 1;
+}
+
+/**
+ * Refuses to run against anything that is not a local database.
+ *
+ * This script writes real products, real documents and real rows into the
+ * append-only ledger, then deletes them again. The teardown is thorough, but it
+ * is a teardown, not a safety net: a crash between the concurrency burst and
+ * cleanup() leaves ADJUSTMENT and OUT movements in a ledger that BR-4 says must
+ * never be deleted, and the only honest repair is a compensating movement.
+ *
+ * seed.js has carried this guard since someone pointed .env at Neon for a
+ * migration and left it there. The same .env drives this script, and it fires
+ * 20 concurrent transactions rather than one careful insert.
+ *
+ * Override deliberately with ALLOW_REMOTE_TEST=yes-write-to-this-database.
+ */
+function assertLocalDatabase() {
+  if (process.env.ALLOW_REMOTE_TEST === 'yes-write-to-this-database') {
+    console.warn('\n  ALLOW_REMOTE_TEST is set - testing against a non-local database on purpose.\n');
+    return;
+  }
+
+  let host;
+  try {
+    host = new URL(process.env.DATABASE_URL).hostname;
+  } catch {
+    throw new Error('DATABASE_URL is unreadable');
+  }
+
+  if (['localhost', '127.0.0.1', '::1', 'db', 'postgres'].includes(host)) return;
+
+  throw new Error(
+    `Refusing to run the stock engine tests against a remote database (${host}).\n\n` +
+      '  This script writes products, documents and ledger movements, then removes\n' +
+      '  them. A crash mid-run leaves rows in an append-only ledger that cannot be\n' +
+      '  deleted by the rules this very script exists to prove.\n\n' +
+      '  Point DATABASE_URL at a local database, or override on purpose with:\n' +
+      '    ALLOW_REMOTE_TEST=yes-write-to-this-database npm run test:stock\n'
+  );
+}
+
+// Printed, not thrown: a refusal to touch the wrong database is a message to a
+// person, and a stack trace buries it under frames from the module loader.
+try {
+  assertLocalDatabase();
+} catch (error) {
+  console.error(`\n  ${error.message}`);
+  process.exit(1);
 }
 
 main()

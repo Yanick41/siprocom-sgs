@@ -5,7 +5,7 @@ import { unitLabel } from '@/lib/containers';
  * Builds the printable form of a goods issue, once, for both outputs.
  *
  * The PDF and the on-screen print view read from the same object, so a column
- * added to one cannot quietly go missing from the other — the two would drift
+ * added to one cannot quietly go missing from the other - the two would drift
  * apart within a release otherwise.
  *
  * Every figure comes from the stored line: `unitPrice` was frozen when the
@@ -30,7 +30,7 @@ export function buildInvoice(issue, { t, lng = 'fr' }) {
     return {
       designation: designation(line),
       reference: line.product.reference,
-      // Quantity as sold, with its packaging — "2 cartons", not "24 bottles".
+      // Quantity as sold, with its packaging - "2 cartons", not "24 bottles".
       // The base quantity is what left the shelf and belongs on the stock
       // journal, not on a customer's invoice.
       quantity: `${line.quantity} ${lineUnit(line)}`.trim(),
@@ -45,9 +45,14 @@ export function buildInvoice(issue, { t, lng = 'fr' }) {
   const grandTotal = rows.reduce((sum, row) => sum + row.total, 0);
 
   return {
-    number: issue.number,
-    date: formatDate(issue.issueDate, lng),
-    recipient: issue.recipient || '—',
+    // The facture carries its own number and its own date. It falls back to
+    // the bon's only when no invoice has been raised yet, which is the preview
+    // shown before someone presses "generate".
+    number: issue.invoice?.number ?? issue.number,
+    issueNumber: issue.number,
+    exists: Boolean(issue.invoice),
+    date: formatDate(issue.invoice?.createdAt ?? issue.issueDate, lng),
+    recipient: issue.recipient || '-',
     recipientPhone: issue.recipientPhone || '',
     recipientAddress: issue.recipientAddress || '',
     status: issue.status,

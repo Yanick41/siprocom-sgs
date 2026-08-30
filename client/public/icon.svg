@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="SIPROCOM SGS">
+  <!--
+    Installed-app icon. Lime on white is the system palette (see index.css);
+    the glyph is three stacked crates, which reads at 32px where a monogram
+    turns to mush.
+  -->
+  <rect width="512" height="512" rx="112" fill="#3f6212"/>
+
+  <!-- Top crate, offset: the stack reads as depth rather than as a flat grid. -->
+  <rect x="150" y="120" width="212" height="76" rx="14" fill="#ecfccb"/>
+  <rect x="176" y="146" width="46" height="24" rx="8" fill="#3f6212"/>
+
+  <!-- Middle crate, widest: the one being counted. -->
+  <rect x="118" y="218" width="276" height="76" rx="14" fill="#a3e635"/>
+  <rect x="144" y="244" width="46" height="24" rx="8" fill="#3f6212"/>
+
+  <!-- Bottom crate. -->
+  <rect x="150" y="316" width="212" height="76" rx="14" fill="#ecfccb"/>
+  <rect x="176" y="342" width="46" height="24" rx="8" fill="#3f6212"/>
+</svg>

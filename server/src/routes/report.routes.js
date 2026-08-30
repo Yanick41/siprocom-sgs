@@ -72,7 +72,7 @@ router.get(
   })
 );
 
-// GET /api/reports/valuation — financial data, restricted (§3 roles).
+// GET /api/reports/valuation - financial data, restricted (§3 roles).
 router.get(
   '/valuation',
   authorize('ADMIN', 'DIRECTION'),

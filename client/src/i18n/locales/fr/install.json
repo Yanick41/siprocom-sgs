@@ -1,0 +1,19 @@
+{
+  "alreadyInstalled": "L'application est déjà installée sur cet appareil.",
+  "desktop": {
+    "button": "Windows",
+    "hint": "L'installation se fait depuis Microsoft Edge ou Google Chrome. Ouvrez cette page dans l'un des deux, puis touchez ce bouton."
+  },
+  "android": {
+    "button": "Android",
+    "hint": "Ouvrez cette page dans Chrome sur votre téléphone, puis touchez ce bouton."
+  },
+  "ios": {
+    "button": "iPhone",
+    "hint": "Sur iPhone, Safari ne sait pas installer tout seul : bouton Partager, puis « Sur l'écran d'accueil »."
+  },
+  "brand": "SIPROCOM SGS",
+  "eyebrow": "SIPROCOM · Gestion de stock",
+  "headline": "Installez le SGS sur votre appareil.",
+  "noBinary": "Aucun fichier à télécharger. L'installation se fait depuis le navigateur, et l'application se met à jour toute seule."
+}

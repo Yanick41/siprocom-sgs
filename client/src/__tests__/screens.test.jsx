@@ -3,7 +3,7 @@
  *
  * Written after three screens shipped broken: their columns declared `value`
  * but DataTable only understood `render`, so each cell fell back to `row[key]`
- * and rendered a joined relation — an object — which React refuses. Route
+ * and rendered a joined relation - an object - which React refuses. Route
  * checks all returned HTTP 200, because an SPA route always does. Only actually
  * mounting the component catches this class of fault.
  *
@@ -39,12 +39,24 @@ const paged = (items) => ({ items, pagination: { page: 1, limit: 25, total: item
 const ROUTES = [
   [/^\/products/, paged([PRODUCT])],
   [/^\/categories/, { items: [{ id: 'c0', name: 'Boissons', nameEn: 'Beverages', parentId: null, _count: { products: 0 }, children: [{ id: 'c1', name: 'Eaux', nameEn: 'Water', parentId: 'c0', _count: { products: 2 }, children: [] }] }] }],
-  [/^\/suppliers/, paged([{ id: 's1', name: 'Distribution Ivoire SA', contact: 'M. Bamba', phone: '+225 07', email: 'a@b.ci', isActive: true, _count: { products: 3 } }])],
+  // Two rows, one retired: the inactive branch renders a badge and a different
+  // action button, and a one-row fixture would never reach either.
+  [/^\/suppliers/, paged([
+    { id: 's1', name: 'Distribution Ivoire SA', contact: 'M. Bamba', phone: '+225 07', email: 'a@b.ci', isActive: true, _count: { products: 3 } },
+    { id: 's2', name: 'Comptoir Abidjanais', contact: null, phone: null, email: null, isActive: false, _count: { products: 0 } },
+  ])],
   [/^\/stock\/movements/, paged([{ id: 'm1', type: 'OUT', quantity: 12, balanceAfter: 108, reason: 'Vente', createdAt: '2026-08-10T09:00:00Z', product: PRODUCT, user: { id: 'u1', name: 'Koffi Mensah' } }])],
   [/^\/stock\/product/, { product: PRODUCT, totalStock: 120, movements: [] }],
   [/^\/stock/, paged([{ id: 'sl1', productId: 'p1', quantity: 120, state: 'OK', product: PRODUCT }])],
   [/^\/receipts/, paged([{ id: 'r1', number: 'BE-2026-0001', status: 'DRAFT', reason: 'PURCHASE', receiptDate: '2026-08-10T09:00:00Z', supplier: { id: 's1', name: 'Distribution Ivoire SA' }, createdBy: { id: 'u1', name: 'Koffi' }, _count: { lines: 2 } }])],
-  [/^\/issues/, paged([{ id: 'i1', number: 'BS-2026-0001', status: 'VALIDATED', reason: 'SALE', recipient: 'Client X', issueDate: '2026-08-10T09:00:00Z', createdBy: { id: 'u1', name: 'Koffi' }, _count: { lines: 1 } }])],
+  // Three rows, because the delivery and facture columns each branch three
+  // ways: delivered with a facture, validated with neither, and a draft where
+  // the question does not arise at all.
+  [/^\/issues/, paged([
+    { id: 'i1', number: 'BS-2026-0001', status: 'VALIDATED', reason: 'SALE', recipient: 'Client X', issueDate: '2026-08-10T09:00:00Z', deliveredAt: '2026-08-11T09:00:00Z', invoice: { id: 'f1', number: 'FA-2026-0001' }, createdBy: { id: 'u1', name: 'Koffi' }, _count: { lines: 1 } },
+    { id: 'i2', number: 'BS-2026-0002', status: 'VALIDATED', reason: 'SALE', recipient: 'Client Y', issueDate: '2026-08-10T09:00:00Z', deliveredAt: null, invoice: null, createdBy: { id: 'u1', name: 'Koffi' }, _count: { lines: 2 } },
+    { id: 'i3', number: 'BS-2026-0003', status: 'DRAFT', reason: 'SALE', recipient: null, issueDate: '2026-08-10T09:00:00Z', deliveredAt: null, invoice: null, createdBy: { id: 'u1', name: 'Koffi' }, _count: { lines: 1 } },
+  ])],
   [/^\/alerts\/count/, { total: 2, minThreshold: 2, maxThreshold: 0 }],
   [/^\/alerts/, paged([{ id: 'a1', type: 'MIN_THRESHOLD', status: 'OPEN', quantityAtTrigger: 12, thresholdValue: 40, currentQuantity: 12, createdAt: '2026-08-10T09:00:00Z', product: PRODUCT }])],
   [/^\/reports\/dashboard/, {
@@ -117,7 +129,7 @@ function renderScreen(Screen) {
 
 /**
  * Each screen is matched on a value that only exists once the fetched data has
- * been rendered — never on the static heading.
+ * been rendered - never on the static heading.
  *
  * The first version of this suite asserted on headings and passed with the very
  * bug it was written to catch: a heading is present on first paint, so the test
@@ -151,10 +163,10 @@ describe('every screen renders its fetched data', () => {
 
       // Scoped to this render's container, never the global `screen`. Querying
       // document.body let one screen match a marker left behind by the previous
-      // test — Movements "passed" in 48ms on markup Products had rendered.
+      // test - Movements "passed" in 48ms on markup Products had rendered.
       const view = within(container);
 
-      // Settle on either outcome — the fetched value, or a captured crash — so
+      // Settle on either outcome - the fetched value, or a captured crash - so
       // a failure reports the actual error rather than a bare timeout.
       await waitFor(
         () => {
@@ -163,7 +175,7 @@ describe('every screen renders its fetched data', () => {
           expect(crashed || rendered).toBeTruthy();
         },
         // Generous on purpose. waitFor resolves as soon as the condition holds,
-        // so a high ceiling costs nothing on a healthy run — but this suite runs
+        // so a high ceiling costs nothing on a healthy run - but this suite runs
         // straight after the production build in `npm run check`, and one test
         // failed there on contention alone. A flaky suite is worse than a slow
         // one: it teaches you to ignore red.

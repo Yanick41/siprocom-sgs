@@ -9,7 +9,7 @@ const { parseListQuery, paginated } = require('../utils/pagination');
 const router = express.Router();
 router.use(authenticate, authorize('ADMIN'));
 
-// GET /api/audit-logs — read-only by design; the trail is never edited.
+// GET /api/audit-logs - read-only by design; the trail is never edited.
 router.get(
   '/',
   asyncHandler(async (req, res) => {
@@ -40,7 +40,7 @@ router.get(
   })
 );
 
-// GET /api/audit-logs/actions — distinct values, to populate the filter.
+// GET /api/audit-logs/actions - distinct values, to populate the filter.
 router.get(
   '/actions',
   asyncHandler(async (req, res) => {

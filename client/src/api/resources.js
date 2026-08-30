@@ -46,6 +46,8 @@ export const suppliersApi = {
   create: (data) => api.post('/suppliers', data),
   update: ({ id, ...data }) => api.patch(`/suppliers/${id}`, data),
   deactivate: (id) => api.patch(`/suppliers/${id}/deactivate`),
+  activate: (id) => api.patch(`/suppliers/${id}/activate`),
+  remove: (id) => api.delete(`/suppliers/${id}`),
 };
 
 export const stockApi = {
@@ -74,6 +76,8 @@ export const issuesApi = {
   validate: ({ id, allowNegative = false }) =>
     api.post(`/issues/${id}/validate`, { allowNegative }),
   cancel: ({ id, reason }) => api.post(`/issues/${id}/cancel`, { reason }),
+  deliver: (id) => api.post(`/issues/${id}/deliver`),
+  createInvoice: (id) => api.post(`/issues/${id}/invoice`),
 };
 
 export const alertsApi = {

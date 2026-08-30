@@ -3,15 +3,16 @@ import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { useQuery } from '@tanstack/react-query';
-import { FiEye, FiEyeOff, FiAlertCircle } from 'react-icons/fi';
+import { FiEye, FiEyeOff, FiAlertCircle, FiArrowLeft } from 'react-icons/fi';
 
 import { authApi } from '@/api/resources';
 import { useAuth } from '@/context/AuthContext';
 import { useErrorMessage } from '@/hooks/useErrorMessage';
 import FormField from '@/components/FormField';
+import PublicHeader, { HeaderAction } from '@/components/PublicHeader';
 
 export default function LoginPage() {
-  const { t } = useTranslation(['auth', 'common', 'errors']);
+  const { t } = useTranslation(['auth', 'common', 'errors', 'install']);
   const { login, isLoggingIn, isAuthenticated, isLoading } = useAuth();
   const translateError = useErrorMessage();
   const navigate = useNavigate();
@@ -54,17 +55,42 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-100 p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-white">
+      <style>{`
+        @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+        @media (prefers-reduced-motion: reduce) { [class*="animate-"] { animation: none !important; } }
+      `}</style>
 
-        <div className="card p-6 sm:p-8">
-          <header className="mb-6 text-center">
-            <h1 className="text-2xl font-bold text-sgs-primary">{t('common:app.name')}</h1>
-            <p className="mt-1 text-sm text-slate-500">{t('common:app.subtitle')}</p>
-          </header>
+      {/* Identical bar to the landing page, so arriving here reads as the same
+          page changing rather than a jump to somewhere else. */}
+      <PublicHeader
+        action={
+          <HeaderAction to="/" icon={FiArrowLeft} label={t('auth:login.backToLanding')} tone="ghost" />
+        }
+      />
 
-          <h2 className="mb-1 text-lg font-semibold text-slate-900">{t('auth:login.title')}</h2>
-          <p className="mb-6 text-sm text-slate-500">{t('auth:login.subtitle')}</p>
+      <main className="grid min-h-[calc(100vh-4rem)] lg:grid-cols-2">
+        {/* The lime field carries over from the landing hero. On a phone it
+            would cost a screenful before the form, so it is desktop only. */}
+        <section className="hidden flex-col justify-center bg-sgs-primary px-12 py-16 lg:flex">
+          <p className="font-mono text-xs uppercase tracking-[0.2em] text-sgs-citron">
+            {t('install:eyebrow')}
+          </p>
+          <p className="mt-4 max-w-sm text-3xl font-extrabold leading-tight tracking-tight text-white">
+            {t('auth:login.pitch')}
+          </p>
+          <div className="mt-8 h-1 w-24 rounded-full bg-sgs-citron/70" />
+        </section>
+
+        <section className="flex items-center justify-center px-5 py-12 sm:px-8">
+          <div className="motion-safe:animate-[rise_400ms_ease-out_backwards] w-full max-w-sm">
+            <p className="font-mono text-xs uppercase tracking-[0.2em] text-sgs-accent lg:hidden">
+              {t('install:eyebrow')}
+            </p>
+            <h1 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 lg:mt-0">
+              {t('auth:login.title')}
+            </h1>
+            <p className="mb-8 mt-2 text-slate-500">{t('auth:login.subtitle')}</p>
 
           {submitError?.code === 'ACCOUNT_NOT_ACTIVATED' ? (
             <div
@@ -143,11 +169,20 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-slate-500">
-            {t('auth:login.forgotPassword')}
-          </p>
-        </div>
-      </div>
-    </main>
+            <p className="mt-8 border-t border-slate-200 pt-6 text-sm text-slate-500">
+              {t('auth:login.forgotPassword')}
+            </p>
+
+            {/* The one page everyone already reaches, so the one place the
+                install link is actually found. */}
+            <p className="mt-3 text-sm">
+              <Link to="/install" className="font-medium text-sgs-accent hover:underline">
+                {t('auth:login.installApp')}
+              </Link>
+            </p>
+          </div>
+        </section>
+      </main>
+    </div>
   );
 }

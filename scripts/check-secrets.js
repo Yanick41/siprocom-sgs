@@ -10,7 +10,7 @@
  * what is actually staged.
  *
  * Two passes:
- *   1. Generic patterns — tokens, private keys, connection strings with a
+ *   1. Generic patterns - tokens, private keys, connection strings with a
  *      password in them.
  *   2. The literal values sitting in this machine's env files. That is the
  *      decisive check: it cannot be fooled by an unusual format, and it catches
@@ -34,15 +34,23 @@ const PATTERNS = [
   [/\bJWT_SECRET\s*=\s*["']?[A-Fa-f0-9]{32,}/, 'JWT secret with a real value'],
 ];
 
-/** Documented placeholders must not fail the check they exist to illustrate. */
-const PLACEHOLDER = /(user:pass|CHANGEME|<[^>]+>|xxx|example\.com|YOUR_|\.\.\.|…)/i;
+/**
+ * Documented placeholders must not fail the check they exist to illustrate.
+ *
+ * `${VAR}` is in the list because docker-compose.yml builds its DATABASE_URL by
+ * interpolation, and the connection-string pattern matched it on the first
+ * commit that happened to touch the file. Nothing was leaking: the password is
+ * `${POSTGRES_PASSWORD}`, resolved from the environment at run time. A shell or
+ * compose interpolation is exactly as much a placeholder as `<YOUR_KEY>`.
+ */
+const PLACEHOLDER = /(user:pass|CHANGEME|<[^>]+>|\$\{[^}]*\}|xxx|example\.com|YOUR_|\.\.\.|…)/i;
 
 /**
  * Values that live in .env but are not secrets, and legitimately appear in
  * source as defaults: loopback URLs, timezones, log levels, durations.
  *
  * Without this the check flagged `http://localhost:5280` written as a dev
- * fallback in config/env.js — technically a match on a .env value, and
+ * fallback in config/env.js - technically a match on a .env value, and
  * completely harmless. A guard that cries wolf gets bypassed with --no-verify,
  * which costs more than the false positive it was protecting against.
  */
@@ -52,7 +60,7 @@ const NOT_A_SECRET =
 /**
  * Every env file on this machine, discovered rather than listed.
  *
- * A fixed list missed .env.production.local the moment it was created — the
+ * A fixed list missed .env.production.local the moment it was created - the
  * file holding the newest and most sensitive secrets was the one not scanned.
  * Anything named .env* now counts, except the committed examples.
  */
@@ -77,7 +85,12 @@ function localSecrets() {
   for (const full of envFiles()) {
     if (!fs.existsSync(full)) continue;
 
-    for (const line of fs.readFileSync(full, 'utf8').split('\n')) {
+    // Split on \r?\n, not \n. A .env written by a Windows editor is CRLF, and
+    // JS `.` never matches \r, so the KEY=VALUE regex below failed on every
+    // line but the last one in the file. This pass, the decisive one, was
+    // silently checking nothing on Windows: it reported "0 local values
+    // checked" while sitting next to a .env full of live credentials.
+    for (const line of fs.readFileSync(full, 'utf8').split(/\r?\n/)) {
       const match = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.+)$/);
       if (!match) continue;
 
@@ -132,7 +145,7 @@ for (const file of stagedFiles()) {
     continue; // binary
   }
 
-  content.split('\n').forEach((line, index) => {
+  content.split(/\r?\n/).forEach((line, index) => {
     if (PLACEHOLDER.test(line)) return;
 
     for (const [pattern, label] of PATTERNS) {
@@ -151,9 +164,9 @@ if (findings.length === 0) {
   process.exit(0);
 }
 
-console.error('\n  \x1b[31mCommit blocked — a secret is staged:\x1b[0m\n');
+console.error('\n  \x1b[31mCommit blocked - a secret is staged:\x1b[0m\n');
 for (const f of [...new Map(findings.map((f) => [`${f.file}:${f.line}`, f])).values()]) {
-  console.error(`    ${f.file}:${f.line}  —  ${f.label}`);
+  console.error(`    ${f.file}:${f.line}  -  ${f.label}`);
 }
 console.error(`
   Remove it, or add the file to .gitignore and unstage it:

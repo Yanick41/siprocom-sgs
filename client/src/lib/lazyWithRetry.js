@@ -3,7 +3,7 @@ import { lazy } from 'react';
 /**
  * `React.lazy` that survives a chunk becoming unreachable.
  *
- * "Failed to fetch dynamically imported module" is not a code bug — the module
+ * "Failed to fetch dynamically imported module" is not a code bug - the module
  * URL the open page holds simply no longer exists. It happens routinely:
  *
  *   dev   Vite re-optimises dependencies and rewrites the module graph while a
@@ -13,7 +13,7 @@ import { lazy } from 'react';
  *         that leaves tabs open all day, this is a matter of when, not if.
  *
  * Recovery, in order:
- *   1. Retry once — a transient network blip needs nothing more.
+ *   1. Retry once - a transient network blip needs nothing more.
  *   2. Reload the page, which fetches the current index.html and its new chunk
  *      names.
  *
@@ -24,7 +24,7 @@ import { lazy } from 'react';
 /**
  * The guard is keyed per chunk and expires, rather than being one flag for the
  * whole session. A single global flag meant that after any one recovery, every
- * later chunk failure — a different screen, minutes apart, a different cause —
+ * later chunk failure - a different screen, minutes apart, a different cause -
  * went straight to the error boundary instead of recovering.
  */
 const RELOAD_KEY = (name) => `sgs:chunk-reload:${name}`;
@@ -35,7 +35,54 @@ function reloadedRecently(name) {
   return Boolean(at) && Date.now() - at < RELOAD_WINDOW_MS;
 }
 
+/**
+ * Every screen importer, so the offline warm-up can reach them.
+ *
+ * Route chunks are fetched the first time a screen is opened, which is fine
+ * online and useless offline: a device that has only ever visited the login
+ * page has none of them, and going offline leaves every route showing "failed
+ * to fetch dynamically imported module". Pulling them in once, while the
+ * network is still there, is what makes offline mode cover the whole app
+ * rather than the one screen someone happened to open.
+ */
+const importers = new Set();
+
+/**
+ * Fetches every screen chunk so the service worker can cache them.
+ *
+ * Deliberately after load and one at a time: this is bandwidth spent on
+ * screens the user has not asked for, and it must never compete with the
+ * request they are actually waiting on.
+ */
+export async function preloadScreens() {
+  if (typeof navigator === 'undefined' || navigator.onLine === false) return;
+
+  /**
+   * Never on a metered or slow connection.
+   *
+   * This is close to a megabyte of screens nobody has asked for. On the office
+   * wifi that is free; on a phone on mobile data in Abidjan it is somebody's
+   * bundle, spent so the app might work offline later. Save-Data is an explicit
+   * request not to do this, and 2g means the fetch would compete with the
+   * screen they are actually waiting for.
+   */
+  const link = navigator.connection;
+  if (link?.saveData) return;
+  if (link?.effectiveType && /(^|-)2g$/.test(link.effectiveType)) return;
+
+  for (const importer of importers) {
+    try {
+      await importer();
+    } catch {
+      // A chunk that will not load is the running app's problem when someone
+      // navigates to it, not the warm-up's. lazyWithRetry handles it there.
+    }
+  }
+}
+
 export default function lazyWithRetry(importer, name = 'screen') {
+  importers.add(importer);
+
   return lazy(async () => {
     try {
       const module = await importer();
@@ -52,7 +99,7 @@ export default function lazyWithRetry(importer, name = 'screen') {
         if (!reloadedRecently(name)) {
           window.sessionStorage?.setItem(RELOAD_KEY(name), String(Date.now()));
           window.location.reload();
-          // Never settles — the reload replaces this document.
+          // Never settles - the reload replaces this document.
           return new Promise(() => {});
         }
 

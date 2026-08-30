@@ -1,4 +1,4 @@
-# SIPROCOM SGS — self-hosted deployment.
+# SIPROCOM SGS - self-hosted deployment.
 #
 # Covers the "serveur interne SIPROCOM" option in §8. The cloud option needs no
 # compose file: point DATABASE_URL at the managed database and deploy the two
@@ -10,7 +10,7 @@
 #
 # The database is NOT published on the host by default. Uncomment the ports
 # block below only if you need to reach PostgreSQL from outside the compose
-# network — an exposed 5432 is one weak password away from a data breach.
+# network - an exposed 5432 is one weak password away from a data breach.
 
 services:
   db:
@@ -39,7 +39,7 @@ services:
     restart: unless-stopped
     depends_on:
       db:
-        # Waits for readiness, not just for the container to exist — the API
+        # Waits for readiness, not just for the container to exist - the API
         # crashes on boot if it cannot reach the database.
         condition: service_healthy
     environment:

@@ -1,7 +1,7 @@
 {
   "title": "Alertes de stock",
   "subtitle": "Produits sous le seuil minimum ou en surstock",
-  "empty": "Aucune alerte — tous les niveaux sont dans les seuils",
+  "empty": "Aucune alerte - tous les niveaux sont dans les seuils",
   "allTypes": "Tous les types",
   "currentQuantity": "Stock actuel",
   "threshold": "Seuil",

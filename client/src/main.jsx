@@ -9,6 +9,8 @@ import './index.css';
 import App from './App.jsx';
 import { AuthProvider } from './context/AuthContext';
 import ErrorBoundary from './components/ErrorBoundary';
+import { registerServiceWorker } from './lib/offline/register';
+import { startSync } from './lib/offline/sync';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -17,7 +19,7 @@ const queryClient = new QueryClient({
       staleTime: 30_000,
       refetchOnWindowFocus: true,
       retry: (failureCount, error) => {
-        // Never retry auth/permission/validation failures — only transient ones.
+        // Never retry auth/permission/validation failures - only transient ones.
         if ([400, 401, 403, 404, 409, 422].includes(error?.status)) return false;
         return failureCount < 2;
       },
@@ -25,6 +27,12 @@ const queryClient = new QueryClient({
     mutations: { retry: false },
   },
 });
+
+// Both are side effects on the window and neither belongs to a component: a
+// queue that only drained while some screen was mounted would stop draining
+// the moment someone navigated away from it.
+registerServiceWorker();
+startSync();
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

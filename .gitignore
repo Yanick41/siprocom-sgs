@@ -4,7 +4,7 @@ node_modules/
 .pnp.js
 
 # ---------------------------------------------------------------------------
-# Secrets — nothing below may ever reach a remote.
+# Secrets - nothing below may ever reach a remote.
 #
 # Broad on purpose: `.env` alone would not have covered `.env.neon.local`, and
 # the pattern that is missing is always the one that leaks. `.gitignore` only
@@ -56,7 +56,7 @@ coverage/
 playwright-report/
 test-results/
 
-# Database dumps — a backup is a full copy of the production data
+# Database dumps - a backup is a full copy of the production data
 backups/
 *.sql.gz
 *.dump
@@ -64,3 +64,6 @@ backups/
 # Scratch
 tmp/
 *.tmp
+
+# Playwright MCP scratch snapshots from browser-driven checks.
+.playwright-mcp/

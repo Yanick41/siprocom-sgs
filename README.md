@@ -1,4 +1,4 @@
-# SIPROCOM SGS — Système de Gestion de Stock
+# SIPROCOM SGS - Système de Gestion de Stock
 
 Application web de gestion des entrées, sorties et niveaux de stock, avec suivi
 des produits en tendance et alertes de seuil.
@@ -20,7 +20,7 @@ modèle de données, les règles métier et la matrice des droits.
 | **Inventaire** | Ajustement manuel avec motif obligatoire, contrôle de cohérence |
 | **Stock** | Niveaux temps réel par produit / entrepôt / global, journal complet |
 | **Alertes** | Seuil minimum et surstock, automatiques, liste consolidée exportable |
-| **Rapports** | Produits tendance, stock dormant, synthèses, valorisation — export Excel et PDF |
+| **Rapports** | Produits tendance, stock dormant, synthèses, valorisation - export Excel et PDF |
 | **Sécurité** | 4 rôles, mots de passe hachés, journal d'audit des actions sensibles |
 | **Bilingue** | Français (défaut) et anglais, y compris avant connexion |
 
@@ -32,7 +32,7 @@ modèle de données, les règles métier et la matrice des droits.
 |---|---|---|
 | Client | React 19 + Vite + Tailwind 4 | Rapide à charger sur tablette, découpage par écran |
 | Serveur | Express 5 + Prisma 6 | API REST simple, requêtes typées |
-| Base | PostgreSQL 17 | Transactions ACID — indispensable pour l'intégrité du stock |
+| Base | PostgreSQL 17 | Transactions ACID - indispensable pour l'intégrité du stock |
 | Auth | JWT en cookie httpOnly | Illisible par JavaScript, contrairement au localStorage |
 
 ---
@@ -42,16 +42,16 @@ modèle de données, les règles métier et la matrice des droits.
 **Prérequis :** Node.js 20+, PostgreSQL 17 démarré.
 
 ```bash
-# 1. Une seule fois — installe tout, applique les migrations, charge la démo
+# 1. Une seule fois - installe tout, applique les migrations, charge la démo
 cp server/.env.example server/.env    # renseigner DATABASE_URL et JWT_SECRET
 npm install
 npm run setup
 
-# 2. À chaque fois — lance l'API et le client ensemble
+# 2. À chaque fois - lance l'API et le client ensemble
 npm run dev
 ```
 
-Ouvrez **http://localhost:5280** — l'API tourne sur `:4000`, le client la joint
+Ouvrez **http://localhost:5280** - l'API tourne sur `:4000`, le client la joint
 via un proxy sur la même origine.
 
 > **Un problème au démarrage ?** `npm run doctor` vérifie Node, les dépendances,
@@ -71,7 +71,7 @@ via un proxy sur la même origine.
 | `npm test` | Vérification du moteur de stock (16 tests) |
 | `npm run check` | Traductions + build + tests |
 
-**Comptes de démonstration** — mot de passe `Siprocom2026!` :
+**Comptes de démonstration** - mot de passe `Siprocom2026!` :
 
 | Rôle | Email |
 |---|---|
@@ -101,7 +101,7 @@ npm run i18n:check          # vérifie que FR et EN sont synchronisés
 
 ## Déploiement
 
-### Option A — serveur interne (Docker)
+### Option A - serveur interne (Docker)
 
 ```bash
 cp .env.docker.example .env    # renseigner POSTGRES_PASSWORD et JWT_SECRET
@@ -112,7 +112,7 @@ docker compose exec api npx prisma migrate deploy
 Client sur `:8080`, API sur `:4000`. Le port PostgreSQL n'est volontairement
 pas publié sur l'hôte.
 
-### Option B — hébergement cloud
+### Option B - hébergement cloud
 
 Base managée (Neon, Supabase, RDS), API et client déployés séparément.
 Mettre `ENABLE_SCHEDULER=false` et déclencher `POST /api/alerts/sweep`
@@ -131,7 +131,7 @@ node scripts/import-data.js --stock stock-initial.csv --user admin@siprocom.com
 Les stocks initiaux entrent comme mouvements d'ajustement, jamais en écriture
 directe : le grand livre est ainsi complet dès le premier jour et le contrôle de
 cohérence passe immédiatement après la mise en production. Le script est
-idempotent — le relancer ne double aucun stock.
+idempotent - le relancer ne double aucun stock.
 
 ---
 
@@ -156,7 +156,7 @@ magasiniers qui vendent la dernière unité au même instant : un seul passe. Un
 `SELECT` puis `UPDATE` les aurait laissés passer tous les deux.
 
 **3. `stock_movements` est en ajout seul.** Aucune modification, aucune
-suppression. Une annulation crée des mouvements compensatoires — l'historique
+suppression. Une annulation crée des mouvements compensatoires - l'historique
 reste vrai.
 
 **4. Le stock est prouvable.** `GET /api/stock/reconcile` recalcule chaque
@@ -172,7 +172,7 @@ npm test
 ```
 
 16 vérifications, dont celle qui compte le plus : **20 sorties simultanées pour
-10 unités disponibles — exactement 10 réussissent, le stock finit à 0, jamais
+10 unités disponibles - exactement 10 réussissent, le stock finit à 0, jamais
 négatif.**
 
 Sont également couverts : le retour arrière d'une transaction dont une ligne
@@ -191,7 +191,7 @@ docker compose exec db pg_dump -U siprocom siprocom_sgs > backups/sgs-$(date +%F
 docker compose exec -T db psql -U siprocom siprocom_sgs < backups/sgs-2026-08-09.sql
 ```
 
-À automatiser quotidiennement et à tester périodiquement — une sauvegarde
+À automatiser quotidiennement et à tester périodiquement - une sauvegarde
 jamais restaurée n'est pas une sauvegarde.
 
 ---
