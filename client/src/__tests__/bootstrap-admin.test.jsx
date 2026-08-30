@@ -31,13 +31,33 @@ vi.mock('@/api/client', () => {
 
 import api, { ApiError } from '@/api/client';
 import BootstrapAdminPage from '@/features/auth/BootstrapAdminPage';
+import { AuthContext } from '@/context/AuthContext';
+
+/**
+ * The page signs the new administrator in on success, so it needs the auth
+ * context. `login` is a spy rather than the real mutation: what matters here is
+ * that the page calls it with the credentials just typed, not that a round trip
+ * to a server nobody started would have worked.
+ */
+const login = vi.fn().mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } });
 
 const renderPage = () => {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const auth = {
+    user: null,
+    isLoading: false,
+    isAuthenticated: false,
+    login,
+    logout: vi.fn(),
+    can: () => false,
+  };
+
   return render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter>
-        <BootstrapAdminPage />
+        <AuthContext.Provider value={auth}>
+          <BootstrapAdminPage />
+        </AuthContext.Provider>
       </MemoryRouter>
     </QueryClientProvider>
   );
@@ -67,6 +87,7 @@ function submit(container, values = {}) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  login.mockResolvedValue({ user: { id: 'u1', role: 'ADMIN' } });
 });
 
 describe('break-glass admin screen', () => {
@@ -121,6 +142,59 @@ describe('break-glass admin screen', () => {
 
     await waitFor(() => expect(container.textContent).toMatch(/Compte existant remplacé/));
     expect(container.textContent).toMatch(/Désactivez la récupération maintenant/);
+  });
+
+  it('signs the new administrator in with the credentials just typed', async () => {
+    api.post.mockResolvedValue({
+      user: { id: 'u1', name: 'Nom Complet', email: 'admin@siprocom.com', role: 'ADMIN', locale: 'fr' },
+      replacedExistingAccount: false,
+    });
+
+    const { container } = renderPage();
+    submit(container);
+
+    // The endpoint issues no cookie on purpose, so the page has to sign in
+    // through the ordinary route. Passing anything but what was typed would
+    // hand back a session for a password that was never proven to work.
+    await waitFor(() =>
+      expect(login).toHaveBeenCalledWith({
+        email: 'admin@siprocom.com',
+        password: 'unMotDePasseLong1',
+      })
+    );
+  });
+
+  it('offers the dashboard immediately, and says the redirect is coming', async () => {
+    api.post.mockResolvedValue({
+      user: { id: 'u1', name: 'Nom Complet', email: 'admin@siprocom.com', role: 'ADMIN', locale: 'fr' },
+      replacedExistingAccount: false,
+    });
+
+    const { container } = renderPage();
+    submit(container);
+
+    await waitFor(() =>
+      expect(within(container).getByRole('button', { name: /tableau de bord/i })).toBeTruthy()
+    );
+    // Counted down on screen rather than jumping, so the warning above it is
+    // read as an instruction instead of glimpsed.
+    expect(container.textContent).toMatch(/Redirection dans/);
+  });
+
+  it('falls back to the login link when the automatic sign-in fails', async () => {
+    api.post.mockResolvedValue({
+      user: { id: 'u1', name: 'Nom Complet', email: 'admin@siprocom.com', role: 'ADMIN', locale: 'fr' },
+      replacedExistingAccount: false,
+    });
+    login.mockRejectedValue(new ApiError('NETWORK_ERROR', undefined, 0));
+
+    const { container } = renderPage();
+    submit(container);
+
+    // The account exists either way; only the sign-in failed. Reporting a
+    // failure that did not happen would send someone creating it a second time.
+    await waitFor(() => expect(container.textContent).toMatch(/la connexion automatique a échoué/));
     expect(within(container).getByRole('link', { name: /connexion/i })).toBeTruthy();
+    expect(container.textContent).not.toMatch(/Redirection dans/);
   });
 });

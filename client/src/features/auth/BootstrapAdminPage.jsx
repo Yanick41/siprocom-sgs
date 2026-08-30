@@ -1,11 +1,12 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { useMutation } from '@tanstack/react-query';
 import { FiEye, FiEyeOff, FiAlertTriangle, FiCheckCircle, FiArrowLeft } from 'react-icons/fi';
 
 import { authApi } from '@/api/resources';
+import { useAuth } from '@/context/AuthContext';
 import { useErrorMessage } from '@/hooks/useErrorMessage';
 import FormField from '@/components/FormField';
 import PublicHeader, { HeaderAction } from '@/components/PublicHeader';
@@ -24,13 +25,34 @@ import PublicHeader, { HeaderAction } from '@/components/PublicHeader';
  * telling the operator to switch the secret back off. A recovery tool that
  * does not say that is how a break-glass becomes permanent.
  */
+/** Long enough to read the warning above it, short enough not to feel stuck. */
+const REDIRECT_SECONDS = 5;
+
 export default function BootstrapAdminPage() {
   const { t } = useTranslation(['auth', 'common', 'errors']);
   const translateError = useErrorMessage();
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const [showPassword, setShowPassword] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [result, setResult] = useState(null);
+  const [signInFailed, setSignInFailed] = useState(false);
+  const [countdown, setCountdown] = useState(REDIRECT_SECONDS);
+
+  /**
+   * Counts down on screen rather than redirecting silently, so the warning
+   * above it is read as an instruction and not as a flash of green.
+   */
+  useEffect(() => {
+    if (!result || signInFailed) return undefined;
+    if (countdown <= 0) {
+      navigate('/dashboard', { replace: true });
+      return undefined;
+    }
+    const timer = setTimeout(() => setCountdown((n) => n - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [result, signInFailed, countdown, navigate]);
 
   const {
     register,
@@ -43,9 +65,33 @@ export default function BootstrapAdminPage() {
 
   const password = watch('password') ?? '';
 
+  /**
+   * Signs the new administrator in and sends them to the dashboard.
+   *
+   * The endpoint deliberately issues no cookie, so this signs in through the
+   * ordinary /login route with the credentials just typed. That keeps the
+   * property the endpoint was written for - the password is proven to work,
+   * rather than a session being handed over that hides a typo until the next
+   * time anyone tries - while still landing on the dashboard without anyone
+   * retyping anything.
+   *
+   * The redirect waits a few seconds rather than firing at once, because the
+   * confirmation carries the instruction to unset ADMIN_BOOTSTRAP_SECRET. That
+   * sentence is the difference between a recovery tool and a permanent back
+   * door, and a page nobody sees cannot deliver it.
+   */
   const mutation = useMutation({
     mutationFn: authApi.bootstrapAdmin,
-    onSuccess: setResult,
+    onSuccess: async (data, variables) => {
+      setResult(data);
+      try {
+        await login({ email: variables.email, password: variables.password });
+      } catch {
+        // The account exists; only the sign-in failed. Say so and leave the
+        // login link, rather than reporting a failure that did not happen.
+        setSignInFailed(true);
+      }
+    },
     onError: setSubmitError,
   });
 
@@ -76,9 +122,27 @@ export default function BootstrapAdminPage() {
             <p className="mt-1">{t('auth:bootstrap.turnOffBody')}</p>
           </div>
 
-          <Link to="/login" className="btn-primary w-full justify-center">
-            {t('auth:bootstrap.goToLogin')}
-          </Link>
+          {signInFailed ? (
+            <>
+              <p className="mb-4 text-sm text-slate-600">{t('auth:bootstrap.signInFailed')}</p>
+              <Link to="/login" className="btn-primary w-full justify-center">
+                {t('auth:bootstrap.goToLogin')}
+              </Link>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => navigate('/dashboard', { replace: true })}
+                className="btn-primary w-full justify-center"
+              >
+                {t('auth:bootstrap.goToDashboard')}
+              </button>
+              <p aria-live="polite" className="mt-3 text-center text-sm text-slate-500">
+                {t('auth:bootstrap.redirecting', { count: countdown })}
+              </p>
+            </>
+          )}
         </main>
       </div>
     );
