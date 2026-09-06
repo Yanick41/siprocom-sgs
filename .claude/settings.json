@@ -2,6 +2,7 @@
   "permissions": {
     "allow": [
       "Bash(node -e ' *)",
+      "Bash(node -e \"*)",
       "Bash(npx vitest *)",
       "Bash(sed -i \"s|console.log\\(document.body.innerHTML.slice\\(0, 500\\)\\);|require\\('fs'\\).writeFileSync\\('dbg-out.txt', document.body.textContent.slice\\(0,600\\)\\);|\" src/__tests__/dbg.test.jsx)",
       "Bash(rm -f src/__tests__/dbg.test.jsx dbg-out.txt)",

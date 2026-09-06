@@ -4,10 +4,11 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
-const { randomUUID } = require('node:crypto');
+const { randomUUID, timingSafeEqual } = require('node:crypto');
 
 const config = require('../config/env');
 const prisma = require('../lib/prisma');
+const logger = require('../lib/logger');
 const {
   UnauthorizedError,
   ForbiddenError,
@@ -26,6 +27,7 @@ const {
   loginSchema,
   updateLocaleSchema,
   setupSchema,
+  bootstrapAdminSchema,
   setPasswordSchema,
   tokenQuerySchema,
   signupRequestSchema,
@@ -213,6 +215,95 @@ router.post(
     res.cookie(config.jwt.cookieName, token, cookieOptions());
 
     res.status(201).json({ user });
+  })
+);
+
+/**
+ * POST /api/auth/bootstrap-admin - break-glass recovery.
+ *
+ * Creates an administrator, or promotes and re-passwords an existing account,
+ * with no session and none of the invitation rules. It is the deliberate
+ * exception to hard rule 12, and it exists because every ordinary way back in
+ * is circular: a password reset must be issued by an ADMIN, /auth/setup seals
+ * itself the moment the users table is non-empty, and create-admin.js needs a
+ * terminal on a machine holding DATABASE_URL. Lose the last administrator
+ * password without one and the application cannot be re-entered at all.
+ *
+ * Four things keep it from being a back door:
+ *
+ *   1. It does not exist unless ADMIN_BOOTSTRAP_SECRET is set. Unset, the
+ *      route answers 404 exactly as an unknown path would, so a scan cannot
+ *      even tell it is there.
+ *   2. A wrong secret answers 404 too. Anything that says "wrong secret" has
+ *      already confirmed the endpoint exists, which is half the work.
+ *   3. The secret is compared in constant time and travels in a header rather
+ *      than the URL, so it stays out of access logs and browser history.
+ *   4. It is rate limited on the same buckets as login, and every use is
+ *      written to the audit log with the calling IP.
+ *
+ * Unset the variable once you are back in. A permanent break-glass is just a
+ * back door with a comment above it.
+ */
+router.post(
+  '/bootstrap-admin',
+  loginIpLimiter,
+  loginLimiter,
+  asyncHandler(async (req, res) => {
+    const configured = config.adminBootstrapSecret;
+
+    // 404, not 401: an endpoint that answers "wrong secret" has confirmed it
+    // exists, and that is the first half of the attacker's work.
+    if (!configured) throw new NotFoundError('Route', req.originalUrl);
+
+    const provided = req.get('x-bootstrap-secret') || '';
+    const a = Buffer.from(provided);
+    const b = Buffer.from(configured);
+    if (a.length !== b.length || !timingSafeEqual(a, b)) {
+      throw new NotFoundError('Route', req.originalUrl);
+    }
+
+    const { name, email, password, locale, role } = bootstrapAdminSchema.parse(req.body);
+    const passwordHash = await bcrypt.hash(password, config.bcryptRounds);
+
+    const existing = await prisma.user.findUnique({ where: { email } });
+
+    // Upsert on purpose: the common case is a forgotten password on an account
+    // that already exists, and refusing it would leave the operator stuck for
+    // the one reason they came here.
+    const user = existing
+      ? await prisma.user.update({
+          where: { email },
+          data: { name, role, locale, isActive: true, password: passwordHash },
+          select: { id: true, name: true, email: true, role: true, locale: true },
+        })
+      : await prisma.user.create({
+          data: { name, email, role, locale, isActive: true, password: passwordHash },
+          select: { id: true, name: true, email: true, role: true, locale: true },
+        });
+
+    logger.warn(
+      { email: user.email, role: user.role, replaced: Boolean(existing), ip: clientIp(req) },
+      'ADMIN_BOOTSTRAP used - unset ADMIN_BOOTSTRAP_SECRET now'
+    );
+
+    await recordAudit({
+      userId: user.id,
+      action: 'BOOTSTRAP_ADMIN',
+      entity: 'User',
+      entityId: user.id,
+      before: existing ? { role: existing.role, isActive: existing.isActive } : undefined,
+      after: { email: user.email, role: user.role, replacedExistingAccount: Boolean(existing) },
+      ipAddress: clientIp(req),
+    });
+
+    // No cookie is issued. Signing in through /login afterwards proves the
+    // password actually works, rather than handing back a session that hides a
+    // typo until the next time anyone tries.
+    res.status(existing ? 200 : 201).json({
+      user,
+      replacedExistingAccount: Boolean(existing),
+      warning: 'Unset ADMIN_BOOTSTRAP_SECRET now that this has been used.',
+    });
   })
 );
 
